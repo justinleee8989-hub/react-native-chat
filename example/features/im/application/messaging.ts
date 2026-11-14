@@ -1,5 +1,7 @@
-import type { IMClient, IMMessage, MediaInput, Conversation } from '../domain/types'
+import type { IMClient, IMMessage, MediaInput, Conversation, LocationInput, ContactCard } from '../domain/types'
 import { createAttachmentBatchManager } from '../messages/attachment-batch'
+import type { AttachmentPersistence } from '../messages/attachment-batch'
+import { attachReply, validateLocation } from '../messages/composer'
 import type { MessageExtra } from '../messages/extras'
 import { projectMessage, searchableText, sdkMessageWithProjection } from '../messages/projection'
 import type { Runtime } from './runtime'
@@ -15,14 +17,17 @@ function compareMessagesNewestFirst (a: IMMessage, b: IMMessage) {
   return (b.sendTime || b.createTime || 0) - (a.sendTime || a.createTime || 0) || b.clientMsgID.localeCompare(a.clientMsgID)
 }
 
-export function createMessaging (runtime: Runtime, client: IMClient, beforeRetry?: (message: IMMessage) => Promise<void>, projection?: MessageProjectionService) {
+export function createMessaging (runtime: Runtime, client: IMClient, beforeRetry?: (message: IMMessage) => Promise<void>, projection?: MessageProjectionService, persistence?: AttachmentPersistence, reconcile?: (conversationID: string, message: IMMessage) => Promise<boolean>) {
   const historyPending = new Set<string>()
   const historyWaiters = new Map<string, Set<(failed: boolean, error?: unknown) => void>>()
   const sending = new Set<string>()
   const attachmentBatches = createAttachmentBatchManager({
     getEpoch: () => runtime.generation,
-    createMedia: media => client.createMedia(media),
-    createText: text => client.createText(text),
+    getScope: () => runtime.state.session ? JSON.stringify([runtime.state.config.api, runtime.state.config.ws, runtime.state.session.userID]) : '',
+    persistence,
+    reconcile,
+    createMedia: async (media, reply) => attachReply(await client.createMedia(media), reply),
+    createText: (text, reply) => reply ? client.createQuote(text, reply) : client.createText(text),
     send: (id, message) => sendPreparedChecked(id, message),
   })
   async function refresh () {
@@ -299,29 +304,61 @@ export function createMessaging (runtime: Runtime, client: IMClient, beforeRetry
     const start = (Math.max(1, Math.floor(page)) - 1) * SEARCH_PAGE_SIZE
     return { messages: matches.slice(start, start + SEARCH_PAGE_SIZE), total: matches.length }
   }
-  async function sendMedia (id: string, media: MediaInput) {
+  async function replySource (id: string, sourceID?: string) {
+    if (!sourceID)
+      return undefined
+    const source = runtime.state.messages[id]?.find(item => item.clientMsgID === sourceID)
+    if (!source || source.status !== 2 || source.contentType >= 1000)
+      throw new Error('引用消息已不可用，请取消回复后重试')
+    const extra = projection ? (await projection.load(id, [sourceID]))[sourceID] : source.projection
+    return sdkMessageWithProjection(source, extra)
+  }
+  async function sendLocation (id: string, location: LocationInput, sourceID?: string) {
+    const epoch = runtime.generation
+    const source = await replySource(id, sourceID)
+    const message = await client.createLocation(validateLocation(location))
+    if (epoch !== runtime.generation)
+      throw new Error('登录已改变，请重新发送')
+    await sendPreparedChecked(id, attachReply(message, source))
+  }
+  async function sendCard (id: string, card: ContactCard, sourceID?: string) {
+    if (!card.userID.trim() || !card.nickname.trim())
+      throw new Error('请选择有效联系人')
+    const epoch = runtime.generation
+    const source = await replySource(id, sourceID)
+    const message = await client.createCard(card)
+    if (epoch !== runtime.generation)
+      throw new Error('登录已改变，请重新发送')
+    await sendPreparedChecked(id, attachReply(message, source))
+  }
+  async function sendMedia (id: string, media: MediaInput, sourceID?: string) {
     // The official recorder releases its take at submit; retain audio before SDK creation.
     if (media.type === 'audio')
-      return sendAttachmentBatchChecked(id, [media])
+      return sendAttachmentBatchChecked(id, [media], '', sourceID)
     if (
       !runtime.state.session ||
       !runtime.state.conversations.some(item => item.conversationID === id)
     )
       throw new Error('会话或登录状态已失效')
     const epoch = runtime.generation
-    const message = await client.createMedia(media)
+    const source = await replySource(id, sourceID)
+    const message = attachReply(await client.createMedia(media), source)
     if (epoch !== runtime.generation)
       throw new Error('登录已改变，请重新发送')
     return sendPreparedChecked(id, message)
   }
-  async function sendAttachmentBatchChecked (id: string, media: MediaInput[], caption = '') {
-    const batch = createAttachmentBatch(id, media, caption)
+  async function sendAttachmentBatchChecked (id: string, media: MediaInput[], caption = '', sourceID?: string) {
+    const batch = await createAttachmentBatch(id, media, caption, sourceID)
     await runAttachmentBatch(batch.id)
   }
-  function createAttachmentBatch (id: string, media: MediaInput[], caption = '') {
+  async function createAttachmentBatch (id: string, media: MediaInput[], caption = '', sourceID?: string) {
     if (!runtime.state.session || !runtime.state.conversations.some(item => item.conversationID === id))
       throw new Error('会话或登录状态已失效')
-    return attachmentBatches.create(id, media, caption)
+    const epoch = runtime.generation
+    const source = await replySource(id, sourceID)
+    if (epoch !== runtime.generation)
+      throw new Error('登录已改变，请重新发送')
+    return persistence ? attachmentBatches.enqueue(id, media, caption, source) : attachmentBatches.create(id, media, caption, source)
   }
   function getAttachmentBatch (batchID: string) {
     const batch = attachmentBatches.get(batchID)
@@ -374,12 +411,15 @@ export function createMessaging (runtime: Runtime, client: IMClient, beforeRetry
     revokeMessage,
     searchMessages,
     sendMedia,
+    sendLocation,
+    sendCard,
     sendAttachmentBatchChecked,
     createAttachmentBatch,
     getAttachmentBatch,
     listAttachmentBatches,
     runAttachmentBatch,
     cancelAttachmentBatch,
+    restoreAttachmentBatches: attachmentBatches.restore,
     subscribeAttachmentBatches: attachmentBatches.subscribe,
     getAttachmentBatchesSnapshot: attachmentBatches.getSnapshot,
     ensureMessageLoaded,

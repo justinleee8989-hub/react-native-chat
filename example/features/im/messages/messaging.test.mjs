@@ -3,15 +3,16 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { runInNewContext } from 'node:vm'
 import ts from 'typescript'
+import * as composerExports from './composer.ts'
 const exports = {}
 const projectionExports = {}
 runInNewContext(ts.transpileModule(readFileSync(new URL('./projection.ts', import.meta.url), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText, { exports: projectionExports, Set, Object, require: () => ({ batchMessageIDs: () => [], messageExtras: async () => ({}) }) })
 const batchExports = {}
 runInNewContext(ts.transpileModule(readFileSync(new URL('./attachment-batch.ts', import.meta.url), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText, { exports: batchExports, Map, Set, Error, Promise, String })
-runInNewContext(ts.transpileModule(readFileSync(new URL('../application/messaging.ts', import.meta.url), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText, { exports, Set, Map, Error, require: path => path.includes('attachment-batch') ? batchExports : projectionExports })
+runInNewContext(ts.transpileModule(readFileSync(new URL('../application/messaging.ts', import.meta.url), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText, { exports, Set, Map, Error, require: path => path.includes('attachment-batch') ? batchExports : path.includes('composer') ? composerExports : projectionExports })
 function setup () {
   const original = { clientMsgID: 'one', status: 2, sendID: 'me', contentType: 101 }
-  const runtime = { generation: 1, historyRevision: {}, state: { session: { userID: 'me' }, conversations: [{ conversationID: 'chat' }], messages: { chat: [original] } }, addMessages: (_id, list) => { const map = new Map(runtime.state.messages.chat.map(item => [item.clientMsgID, item])); list.forEach(item => map.set(item.clientMsgID, item)); runtime.state.messages.chat = [...map.values()] }, mergeConversations: list => { runtime.state.conversations = list }, update: patch => { runtime.state = { ...runtime.state, ...patch } }, reportError: () => {} }
+  const runtime = { generation: 1, historyRevision: {}, state: { config: { api: 'https://api', ws: 'wss://ws' }, session: { userID: 'me' }, conversations: [{ conversationID: 'chat' }], messages: { chat: [original] } }, addMessages: (_id, list) => { const map = new Map(runtime.state.messages.chat.map(item => [item.clientMsgID, item])); list.forEach(item => map.set(item.clientMsgID, item)); runtime.state.messages.chat = [...map.values()] }, mergeConversations: list => { runtime.state.conversations = list }, update: patch => { runtime.state = { ...runtime.state, ...patch } }, reportError: () => {} }
   const calls = []
   const client = { createMedia: async () => ({ clientMsgID: 'media', contentType: 102 }), createText: async text => ({ clientMsgID: 'caption', text, contentType: 101 }), createQuote: async (text, message) => { calls.push(['quote', text, message]); return { ...message, clientMsgID: 'new' } }, createForward: async message => ({ ...message, clientMsgID: 'forward' }), send: async message => ({ ...message, status: 2 }), revoke: async (...args) => calls.push(args), history: async (_id, cursor) => { calls.push(['history', cursor]); return { messageList: [original], isEnd: true } } }
   const projection = { load: async (_id, ids) => { calls.push(['projection', ids]); return {} } }
@@ -328,7 +329,7 @@ test('a batch retry recognizes an attachment already delivered by the failed-mes
       throw new Error('first attempt failed')
     return { ...message, status: 2 }
   }
-  const batch = h.createAttachmentBatch('chat', [{ type: 'file', uri: 'picked-file' }])
+  const batch = await h.createAttachmentBatch('chat', [{ type: 'file', uri: 'picked-file' }])
   await assert.rejects(h.runAttachmentBatch(batch.id), /first attempt failed/)
   const failed = h.runtime.state.messages.chat.find(item => item.clientMsgID === 'stable-batch-message')
   assert.equal(failed.status, 3)
@@ -395,3 +396,29 @@ for (const stale of [false, true])
     assert.equal(reported.length, stale ? 0 : 1)
     unsubscribe()
   })
+
+test('location and contact card sends use native SDK types and carry rich quote metadata', async () => {
+  const h = setup()
+  h.original.sendTime = 1
+  h.client.createLocation = async location => ({ clientMsgID: 'location', contentType: 109, locationElem: location })
+  h.client.createCard = async card => ({ clientMsgID: 'card', contentType: 108, cardElem: card })
+  await h.sendLocation('chat', { latitude: 31, longitude: 121, description: '上海' }, 'one')
+  await h.sendCard('chat', { userID: 'alice', nickname: 'Alice', faceURL: '', ex: '' }, 'one')
+  const location = h.runtime.state.messages.chat.find(item => item.clientMsgID === 'location')
+  const card = h.runtime.state.messages.chat.find(item => item.clientMsgID === 'card')
+  assert.equal(location.contentType, 109)
+  assert.equal(location.locationElem.latitude, 31)
+  assert.equal(card.contentType, 108)
+  assert.equal(card.cardElem.userID, 'alice')
+  assert.equal(composerExports.readReply(card).clientMsgID, 'one')
+  await assert.rejects(h.sendLocation('chat', { latitude: 999, longitude: 0, description: 'invalid' }))
+})
+test('replying with attachments and caption preserves the original source for both', async () => {
+  const h = setup()
+  h.original.sendTime = 1
+  await h.sendAttachmentBatchChecked('chat', [{ type: 'image', uri: 'file://test' }], 'caption', 'one')
+  const media = h.runtime.state.messages.chat.find(item => item.clientMsgID === 'media')
+  assert.equal(media.contentType, 102)
+  assert.equal(composerExports.readReply(media).clientMsgID, 'one')
+  assert.equal(h.calls.find(call => call[0] === 'quote')[2].clientMsgID, 'one')
+})

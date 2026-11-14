@@ -1,5 +1,6 @@
 import { parseInputStatus } from '../../application/composer-state'
 import { client, getSDKClient } from './client.web'
+import { getDraftStorageScope, readLocalDraft, writeLocalDraft } from './composer-storage'
 
 type ComposerSDK = {
   getSelfUserInfo: (operationID?: string) => Promise<unknown>
@@ -14,6 +15,9 @@ const operationID = () => `composer-${Date.now()}-${Math.random().toString(36).s
 const dataOf = (value: unknown): any => (value as { data?: unknown })?.data ?? value
 
 export async function readDraft (userID: string, conversationID: string) {
+  const local = await readLocalDraft(userID, conversationID)
+  if (local !== undefined)
+    return local
   const sdk = await getSDKClient() as ComposerSDK
   const self = dataOf(await sdk.getSelfUserInfo(operationID()))
   if (self?.userID !== userID)
@@ -25,9 +29,13 @@ export async function readDraft (userID: string, conversationID: string) {
 }
 
 export async function writeDraft (userID: string, conversationID: string, text: string) {
+  const scope = getDraftStorageScope()
+  await writeLocalDraft(userID, conversationID, text)
   const sdk = await getSDKClient() as ComposerSDK
   const self = dataOf(await sdk.getSelfUserInfo(operationID()))
   if (self?.userID !== userID)
+    return
+  if (scope !== getDraftStorageScope())
     return
   return sdk.setConversationDraft({ conversationID, draftText: text }, operationID())
 }
@@ -58,10 +66,10 @@ export async function listGroupMembers (groupID: string) {
     if (!Array.isArray(page))
       throw new Error('群成员列表响应格式不正确')
     const previousCount = members.size
-    for (const member of page) 
+    for (const member of page)
       if (typeof member?.userID === 'string' && member.userID !== self.userID)
         members.set(member.userID, { userID: member.userID, nickname: member.nickname || member.userID })
-    
+
     if (page.length < pageSize)
       break
     offset += page.length

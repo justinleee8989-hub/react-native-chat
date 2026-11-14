@@ -19,6 +19,8 @@ import {
   reportError,
   retryMessage,
   sendMedia,
+  sendLocation,
+  sendCard,
   sendAttachmentBatchChecked,
   runAttachmentBatch,
   cancelAttachmentBatch,
@@ -36,9 +38,9 @@ import { useChatListColors } from '../../../components/chat-list/theme'
 import { StartCall, JoinCall } from '../calls/CallControls'
 import { parseCallInvitation } from '../calls/invitation'
 import { AttachmentBatchTray } from './AttachmentBatchTray'
-import { assertMediaReplyAllowed } from './composer'
 import { MentionPicker, useComposerEnhancements } from './ComposerEnhancements'
 import ForwardPicker from './ForwardPicker'
+import { RichComposer, RichMessage } from './RichMessages'
 import { useAttachmentBatches } from './useAttachmentBatches'
 import { useMessageExtras } from './useMessageExtras'
 import { useMessageLocation } from './useMessageLocation'
@@ -91,17 +93,12 @@ function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
   const onSend = useCallback(
     (messages: IMessage[]) => {
       messages.forEach(message => {
-        if (message.audio && message.replyMessage) {
-          setReply(message.replyMessage)
-          reportError(new Error('引用回复仅支持文字，请先取消引用，再发送语音'))
-          return
-        }
         if (message.audio)
           void sendMedia(id, {
             type: 'audio',
             uri: message.audio,
             duration: message.duration,
-          }).catch(reportError)
+          }, message.replyMessage ? String(message.replyMessage._id) : undefined).catch(reportError)
         else if (message.replyMessage)
           void composer.sendWithDraft(() => sendQuote(id, message.text, String(message.replyMessage!._id))).catch(error => {
             setReply(message.replyMessage || null)
@@ -201,6 +198,12 @@ function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
         }}
         />}
       </>}
+      <RichComposer onLocation={async location => {
+        await sendLocation(id, location, reply ? String(reply._id) : undefined); setReply(null)
+      }} onCard={async card => {
+        await sendCard(id, card, reply ? String(reply._id) : undefined); setReply(null)
+      }}
+      />
       <Button title='搜索聊天记录' onPress={() => router.push(`/chats/search/${id}`)} />
       {forward && <ForwardPicker message={forward} onClose={() => setForward(undefined)} />}
       {revoke && <Confirm message='撤回这条消息？是否允许撤回由服务器的时限和权限规则决定。' busy={task.busy}
@@ -208,7 +211,7 @@ function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
           void task.run(async () => {
             await revokeMessage(id, revoke)
             setRevoke(undefined)
-          }) 
+          })
         }}
       />}
       {!!task.error && <Text accessibilityRole='alert' style={styles.error}>{task.error}</Text>}
@@ -240,7 +243,7 @@ function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
       ))}
       {!!reply && (
         <Text style={{ color: colors.subtitle, padding: 8 }}>
-          引用回复仅支持文字；发送附件或语音前请取消引用。
+          文字、附件、语音、名片和位置均会保留当前引用。
         </Text>
       )}
       {locating && <Text accessibilityRole='text'>正在定位消息…</Text>}
@@ -256,32 +259,36 @@ function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
           const mapped = extras.map(toMessage(message))
           return parseCallInvitation(mapped.text) ? { ...mapped, text: '音视频通话邀请（15 分钟内有效）' } : mapped
         })}
-        renderCustomView={({ currentMessage }) => <JoinCall text={rawMessages.find(message => message.clientMsgID === currentMessage?._id)?.textElem?.content || ''} />}
+        renderCustomView={({ currentMessage }) => <>
+          <JoinCall text={rawMessages.find(message => message.clientMsgID === currentMessage?._id)?.textElem?.content || ''} />
+          <RichMessage message={rawMessages.find(message => message.clientMsgID === currentMessage?._id)} onError={reportError} />
+        </>}
         onSend={onSend}
         onEditMessage={extras.edit}
         reactions={{ isEnabled: true, emojis: ['👍', '❤️', '😂', '😮', '😢', '🙏', '🔥', '🎉'], onReactionPress: extras.react, renderExpandedPicker: null }}
         user={{ _id: state.session.userID }}
         isGroupChat={!!conversation.groupID}
         reply={{ message: reply, onReply: setReply, onClear: () => setReply(null) }}
-        attachments={reply ? false : {
+        attachments={{
           tabs: ['gallery', 'camera', 'file'],
           isGalleryGridEnabled: false,
           onPick: async (attachments, { caption }) => {
             try {
-              assertMediaReplyAllowed(activeReply.current)
+              const sourceID = activeReply.current ? String(activeReply.current._id) : undefined
               if (batchSession.current !== state.session)
                 throw new Error('登录已改变，请重新发送附件')
               await sendAttachmentBatchChecked(id, attachments.filter(attachment => attachment.type !== 'location').map(attachment => ({
                 ...attachment,
                 name: attachment.type === 'file' ? attachment.name : attachment.fileName,
-              })), caption)
+              })), caption, sourceID)
+              setReply(null)
             } catch (error) {
               reportError(error)
             }
             return null
           },
         }}
-        audioRecording={reply ? false : {
+        audioRecording={{
           isViewOnceEnabled: false,
           onError: reportError,
           onPermissionDenied: () => reportError(new Error('请在系统设置中允许麦克风访问')),

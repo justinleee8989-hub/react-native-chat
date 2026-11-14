@@ -121,6 +121,12 @@ export const client: IMClient = {
   async createMedia(media) {
     return createWebMedia(await ready(), media)
   },
+  async createLocation(location) {
+    return (await (await ready()).createLocationMessage(location)).data
+  },
+  async createCard(card) {
+    return (await (await ready()).createCardMessage(card)).data
+  },
   async createText(text) {
     return (await (await ready()).createTextMessage(text)).data
   },

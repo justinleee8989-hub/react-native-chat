@@ -41,6 +41,8 @@ export const client: IMClient = {
   history: (conversationID, startClientMsgID) =>
     SDK.getAdvancedHistoryMessageList({ conversationID, startClientMsgID, count: 30, viewType: 0 }),
   createMedia: media => createNativeMedia(media),
+  createLocation: location => SDK.createLocationMessage(location),
+  createCard: card => SDK.createCardMessage(card),
   createText: text => SDK.createTextMessage(text),
   createQuote: (text, message) => SDK.createQuoteMessage({ text, message: message as Parameters<typeof SDK.createForwardMessage>[0] }),
   createForward: message => SDK.createForwardMessage(message as Parameters<typeof SDK.createForwardMessage>[0]),

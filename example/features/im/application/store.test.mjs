@@ -36,7 +36,9 @@ function harness (loginResponse = async () => ({ data: { userID: 'me', imToken: 
     })
     runInNewContext(outputText, {
       exports: module.exports, module, AbortController, setTimeout, clearTimeout,
-      fetch: async url => url.includes('/user/message/extras') && options.projectionFailure
+      fetch: async url => url.includes('/user/message/history')
+        ? ({ ok: true, json: async () => ({ errCode: 0, data: { messages: [], hasMore: false, cursor: '' } }) })
+        : url.includes('/user/message/extras') && options.projectionFailure
         ? ({ ok: false, json: async () => ({ errCode: 500, errMsg: 'projection unavailable' }) })
         : ({ ok: true, json: async () => await loginResponse(url) }),
       require: name => {
@@ -46,6 +48,8 @@ function harness (loginResponse = async () => ({ data: { userID: 'me', imToken: 
         if (name.endsWith('/openim/conversation-client')) return { conversationService: {} }
         if (name === '../config') return { defaultConfig: { chat: 'http://test' }, platformID: 5 }
         if (name === '../domain/model') return model
+        if (name.endsWith('/storage/attachment-outbox')) return { attachmentOutbox: { load: async () => [], save: async () => {}, remove: async () => {}, retain: async (_scope, _id, media) => media } }
+        if (name.endsWith('/openim/composer-storage')) return { setDraftStorageScope: () => {} }
         if (name.endsWith('/storage/storage')) return { storage }
         if (name.startsWith('.')) return load(new URL(name.endsWith('.ts') ? name : name + '.ts', url))
         throw new Error(`Unexpected dependency ${name}`)

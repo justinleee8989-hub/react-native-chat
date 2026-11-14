@@ -5,9 +5,9 @@ import { createComposerState } from '../application/composer-state'
 import { reportError } from '../application/store'
 import type { Conversation } from '../domain/types'
 import { changeInputState, createAtMessage, listGroupMembers, readDraft, subscribeInputStatus, writeDraft } from '../infrastructure/openim/composer-client'
-import { readDraftMentions, writeDraftMentions } from '../infrastructure/openim/composer-storage'
+import { getDraftStorageScope, clearDeliveredDraft, readDraftMentions, writeDraftMentions } from '../infrastructure/openim/composer-storage'
 
-const drafts = createComposerState({ read: readDraft, write: writeDraft, readMentions: readDraftMentions, writeMentions: writeDraftMentions })
+const drafts = createComposerState({ getScope: getDraftStorageScope, clearDelivered: clearDeliveredDraft, read: readDraft, write: writeDraft, readMentions: readDraftMentions, writeMentions: writeDraftMentions })
 
 export interface ComposerMember {
   userID: string
@@ -46,11 +46,12 @@ export function useComposerEnhancements (options: {
   const textRef = useRef('')
   const activeKey = useRef('')
   const lastTypingAt = useRef(0)
+  const serverScope = getDraftStorageScope()
   const convID = conversation.conversationID
   const isGroup = Boolean(conversation.groupID)
 
   useEffect(() => {
-    const identity = `${userID}\u0000${convID}`
+    const identity = `${userID}\u0000${serverScope}\u0000${convID}`
     const sameIdentity = activeKey.current === identity
     if (sameIdentity && exitFlushTimer.current) {
       clearTimeout(exitFlushTimer.current)
@@ -95,13 +96,13 @@ export function useComposerEnhancements (options: {
       const sendWasPending = sending.current
       exitFlushTimer.current = setTimeout(() => {
         exitFlushTimer.current = undefined
-        if (activeKey.current.split('\u0000')[0] === userID)
-          void drafts.flushOnExit(userID, convID, draftAtExit, sendWasPending).catch(() => undefined)
+        if (activeKey.current === identity && getDraftStorageScope() === serverScope)
+          void drafts.flushOnExit(userID, convID, draftAtExit, sendWasPending, serverScope).catch(reportError)
       }, 0)
       if (userID && convID)
-        void changeInputState(convID, false).catch(() => undefined)
+        void changeInputState(convID, false).catch(error => setDraftError(error instanceof Error ? error.message : '草稿保存失败，请重试'))
     }
-  }, [userID, convID, draftRetry])
+  }, [userID, serverScope, convID, draftRetry])
 
   useEffect(() => {
     let current = true
@@ -110,7 +111,7 @@ export function useComposerEnhancements (options: {
       setMembersError(false)
       setMembersLoading(false)
       return () => {
-        current = false 
+        current = false
       }
     }
     setMembers([])
@@ -128,7 +129,7 @@ export function useComposerEnhancements (options: {
       }
     })
     return () => {
-      current = false 
+      current = false
     }
   }, [userID, isGroup, conversation.groupID, membersRetry])
 
@@ -201,7 +202,7 @@ export function useComposerEnhancements (options: {
       lastNonemptyDraft.current = value
       if (draftClearTimer.current)
         clearTimeout(draftClearTimer.current)
-      void drafts.save(convID, value).catch(() => undefined)
+      void drafts.save(convID, value).catch(error => setDraftError(error instanceof Error ? error.message : '草稿保存失败，请重试'))
       startTyping()
     } else {
       stopTyping()
@@ -209,7 +210,7 @@ export function useComposerEnhancements (options: {
         clearTimeout(draftClearTimer.current)
       draftClearTimer.current = setTimeout(() => {
         if (!sending.current)
-          void drafts.save(convID, '').catch(() => undefined)
+          void drafts.save(convID, '').catch(error => setDraftError(error instanceof Error ? error.message : '草稿保存失败，请重试'))
       }, 750)
     }
   }, [convID, startTyping, stopTyping])
@@ -218,7 +219,7 @@ export function useComposerEnhancements (options: {
     if (draftClearTimer.current)
       clearTimeout(draftClearTimer.current)
     sending.current = true
-    const requestKey = `${userID}\u0000${convID}`
+    const requestKey = `${userID}\u0000${serverScope}\u0000${convID}`
     const revisionAtSend = draftRevision.current
     const mentionRevisionAtSend = mentionRevision.current
     const draftAtSend = lastNonemptyDraft.current
@@ -254,7 +255,7 @@ export function useComposerEnhancements (options: {
     } finally {
       sending.current = false
     }
-  }, [userID, convID, stopTyping])
+  }, [userID, serverScope, convID, stopTyping])
 
   const buildAtMessage = useCallback((value: string, selected = members.filter(member => selectedMentionIDs.includes(member.userID))) => {
     if (!isGroup)
@@ -275,17 +276,23 @@ export function useComposerEnhancements (options: {
     mentionIDsRef.current = ids
     mentionRevision.current += 1
     setSelectedMentionIDs(ids)
-    void drafts.saveMentions(convID, ids).catch(() => undefined)
+    void drafts.saveMentions(convID, ids).catch(error => setDraftError(error instanceof Error ? error.message : '草稿保存失败，请重试'))
   }, [convID, members])
   const clearMentions = useCallback(() => {
     mentionIDsRef.current = []
     mentionRevision.current += 1
     setSelectedMentionIDs([])
-    void drafts.saveMentions(convID, []).catch(() => undefined)
+    void drafts.saveMentions(convID, []).catch(error => setDraftError(error instanceof Error ? error.message : '草稿保存失败，请重试'))
   }, [convID])
   const selectedMentions = useMemo(() => members.filter(member => selectedMentionIDs.includes(member.userID)), [members, selectedMentionIDs])
   const retryMembers = useCallback(() => setMembersRetry(value => value + 1), [])
-  const retryDraft = useCallback(() => setDraftRetry(value => value + 1), [])
+  const retryDraft = useCallback(() => {
+    if (!textRef.current && !mentionIDsRef.current.length) {
+      setDraftRetry(value => value + 1)
+      return
+    }
+    void drafts.save(convID, textRef.current).then(() => drafts.saveMentions(convID, mentionIDsRef.current)).then(() => setDraftError(null)).catch(error => setDraftError(error instanceof Error ? error.message : '草稿保存失败，请重试'))
+  }, [convID])
   const restore = useCallback(async () => {
     setDraftRetry(value => value + 1)
   }, [])
@@ -350,7 +357,7 @@ export function MentionPicker (props: {
       }
     })
     return () => {
-      current = false 
+      current = false
     }
   }, [props.visible, props.groupID, attempt])
   return <Modal visible={props.visible} transparent animationType='slide' onRequestClose={props.onClose}>
@@ -360,7 +367,7 @@ export function MentionPicker (props: {
           data={members}
           keyExtractor={member => member.userID}
           renderItem={({ item }) => <Pressable onPress={() => {
-            props.onSelect(item); props.onClose() 
+            props.onSelect(item); props.onClose()
           }} style={{ paddingVertical: 12 }}
           >
             <Text style={{ color: props.theme?.colors?.inputText }}>{item.nickname}</Text>

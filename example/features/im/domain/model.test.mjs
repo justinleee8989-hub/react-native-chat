@@ -84,3 +84,18 @@ test('chat list projection scopes archived state to the current user', () => {
   assert.equal(toChat(conversation, 'alice').isArchived, true)
   assert.equal(toChat(conversation, 'bob').isArchived, false)
 })
+
+test('real card and location messages provide previews and native quote targets', () => {
+  const base = { clientMsgID: 'rich', sendTime: 10, status: 2 }
+  const card = { ...base, contentType: 108, cardElem: { userID: 'alice', nickname: 'Alice' } }
+  assert.equal(toMessage(card).text, '[名片] Alice')
+  assert.equal(toMessage({ ...base, contentType: 109, locationElem: { latitude: 31, longitude: 121, description: '上海' } }).text, '[位置] 上海')
+  assert.equal(toMessage({ ...base, contentType: 114, quoteElem: { text: 'thanks', quoteMessage: card } }).replyMessage.text, '[名片] Alice')
+})
+test('quoted non-text messages retain playable payload plus their original quote', () => {
+  const source = { clientMsgID: 'source', contentType: 102, sendTime: 5, status: 2, pictureElem: { sourcePicture: { url: 'https://example.org/photo' } } }
+  const mapped = toMessage({ clientMsgID: 'response', contentType: 103, sendTime: 10, status: 2, soundElem: { sourceUrl: 'https://example.org/audio', duration: 3 }, ex: JSON.stringify({ imRichReplyV1: source }) })
+  assert.equal(mapped.audio, 'https://example.org/audio')
+  assert.equal(mapped.replyMessage.image, 'https://example.org/photo')
+  assert.equal(mapped.replyMessage._id, 'source')
+})

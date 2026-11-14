@@ -13,7 +13,7 @@ export function useMessageLocation (id: string, messageID?: string) {
     let active = true
     setLocating(true)
     setLocated('')
-    void ensureMessageLoaded(id, messageID).then(() => {
+    void ensureMessageLoaded(id, messageID, () => active).then(() => {
       if (active)
         setLocated(messageID)
     }).catch(error => {
@@ -24,7 +24,7 @@ export function useMessageLocation (id: string, messageID?: string) {
         setLocating(false)
     })
     return () => {
-      active = false 
+      active = false
     }
   }, [id, messageID])
   useEffect(() => {

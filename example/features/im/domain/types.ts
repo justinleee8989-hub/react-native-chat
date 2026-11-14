@@ -1,5 +1,8 @@
 export interface IMMessage {
   clientMsgID: string
+  ex?: string
+  cardElem?: ContactCard
+  locationElem?: LocationInput
   seq?: number
   sendID?: string
   recvID?: string
@@ -61,6 +64,8 @@ export interface IMClient {
     id: string,
     startClientMsgID: string
   ) => Promise<{ messageList: IMMessage[], isEnd: boolean }>
+  createLocation: (location: LocationInput) => Promise<IMMessage>
+  createCard: (card: ContactCard) => Promise<IMMessage>
   createMedia: (media: MediaInput) => Promise<IMMessage>
   createText: (text: string) => Promise<IMMessage>
   createQuote: (text: string, message: IMMessage) => Promise<IMMessage>
@@ -79,4 +84,16 @@ export interface MediaInput {
   width?: number
   height?: number
   duration?: number
+}
+
+export interface LocationInput {
+  latitude: number
+  longitude: number
+  description: string
+}
+export interface ContactCard {
+  userID: string
+  nickname: string
+  faceURL: string
+  ex: string
 }

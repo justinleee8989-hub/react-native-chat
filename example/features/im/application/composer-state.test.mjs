@@ -207,3 +207,46 @@ test('cleanup failure preserves a newer draft and reports no warning to a new ac
   await second
   assert.equal(warnings.length, 1)
 })
+
+test('durable delivered marker survives restart when SDK cleanup fails', async () => {
+  const storage = memory()
+  let delivered = false
+  storage.clearDelivered = async () => { delivered = true }
+  const read = storage.read
+  storage.read = async (...args) => delivered ? '' : read(...args)
+  const first = createComposerState(storage)
+  first.setUser('alice')
+  await first.save('c', 'delivered')
+  storage.write = async () => { throw Error('SDK offline') }
+  await first.send('c', async () => 'sent')
+  const restarted = createComposerState(storage)
+  restarted.setUser('alice')
+  assert.equal(await restarted.restore('c'), '')
+})
+
+test('same user on a different server does not share delivered markers or stale exit writes', async () => {
+  let scope = 'one'
+  const storage = memory()
+  storage.getScope = () => scope
+  const state = createComposerState(storage)
+  state.setUser('alice')
+  await state.save('c', 'first')
+  await state.send('c', async () => 'sent')
+  scope = 'two'
+  await storage.write('alice', 'c', 'second server draft')
+  state.setUser('alice')
+  assert.equal(await state.restore('c'), 'second server draft')
+  await state.flushOnExit('alice', 'c', 'stale first server', false, 'one')
+  assert.equal(await state.restore('c'), 'second server draft')
+})
+
+test('queued draft work is invalidated when scope changes before hook updates', async () => {
+  let scope = 'one'
+  const writes = []
+  const state = createComposerState({ getScope: () => scope, read: async () => '', write: async (_u, _c, text) => { writes.push(text) } })
+  state.setUser('alice')
+  const pending = state.save('c', 'old scope')
+  scope = 'two'
+  await pending
+  assert.deepEqual(writes, [])
+})

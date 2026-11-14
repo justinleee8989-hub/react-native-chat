@@ -81,7 +81,7 @@ function Assets ({ id }: { id: string }) {
         <Label>找不到此会话。请先从会话列表打开聊天，再进入汇总页。</Label>
       ) : (
         <>
-          <Label>内容来自此设备已同步的聊天记录；加载更早的记录后可继续浏览。</Label>
+          <Label>内容来自服务端允许当前账号访问的历史记录，可继续加载更早内容。</Label>
           <View style={styles.actions}>
             {tabs.map(item => (
               <Pressable
@@ -98,7 +98,7 @@ function Assets ({ id }: { id: string }) {
             ))}
           </View>
           {visible.length === 0 && !task.busy && !task.error && !hasMore && (
-            <Label>已检查此设备同步的聊天记录，没有更多{tabs.find(item => item.id === tab)?.label}。</Label>
+            <Label>已检查服务端可访问的聊天记录，没有更多{tabs.find(item => item.id === tab)?.label}。</Label>
           )}
           {visible.map(asset => (
             <AssetRow
@@ -122,9 +122,9 @@ function Assets ({ id }: { id: string }) {
             <Action title='重试加载' disabled={task.busy || !hasMore} onPress={loadNext} />
           )}
           {hasMore && !task.error && (
-            <Action title={task.busy ? '正在加载…' : items.length ? '加载更早内容' : '加载已同步内容'} disabled={task.busy} onPress={loadNext} />
+            <Action title={task.busy ? '正在加载…' : items.length ? '加载更早内容' : '加载服务端内容'} disabled={task.busy} onPress={loadNext} />
           )}
-          {!hasMore && items.length > 0 && <Label>已加载到本机同步历史的末尾。</Label>}
+          {!hasMore && items.length > 0 && <Label>已加载到服务端可访问历史的末尾。</Label>}
         </>
       )}
       <Modal visible={!!preview} transparent animationType='fade' onRequestClose={() => setPreview(undefined)}>

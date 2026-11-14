@@ -1,5 +1,6 @@
 import type { IMessage, ChatListItem } from '@kesha-antonov/react-native-chat'
 import { signalSummary } from '../calls/signaling.ts'
+import { readReply } from '../messages/composer.ts'
 import { applyExtras } from '../messages/extras.ts'
 import { isConversationArchived } from './conversation-archive.ts'
 import type { Conversation, IMMessage } from './types'
@@ -46,9 +47,12 @@ export function toMessage (message: IMMessage): IMessage {
   if (notice)
     return { _id: message.clientMsgID, text: notice, system: true,
       createdAt: new Date(message.sendTime || message.createTime || Date.now()), user: { _id: 'system' } }
+  const quoted = message.quoteElem?.quoteMessage || readReply(message)
   return applyExtras({
     _id: message.clientMsgID,
-    replyMessage: message.quoteElem ? toMessage({ ...message.quoteElem.quoteMessage, quoteElem: undefined }) : undefined,
+    replyMessage: quoted ? toMessage({ ...quoted,
+      ...(quoted.contentType === 114 ? { contentType: 101, textElem: { content: quoted.quoteElem?.text || '' } } : {}),
+      quoteElem: undefined, ex: undefined }) : undefined,
     text:
       message.contentType === 106
         ? (message.atTextElem?.text ?? '')
@@ -56,9 +60,13 @@ export function toMessage (message: IMMessage): IMessage {
           ? (message.quoteElem?.text ?? '')
           : message.contentType === 101
             ? signalSummary(message.textElem?.content ?? '')
-            : [102, 103, 104, 105].includes(message.contentType)
-              ? ''
-              : '[暂不支持的消息类型]',
+            : message.contentType === 108
+              ? `[名片] ${message.cardElem?.nickname || message.cardElem?.userID || ''}`
+              : message.contentType === 109
+                ? `[位置] ${message.locationElem?.description || ''}`
+                : [102, 103, 104, 105].includes(message.contentType)
+                  ? ''
+                  : '[暂不支持的消息类型]',
     createdAt: new Date(message.sendTime || message.createTime || Date.now()),
     user: {
       _id: message.sendID || 'unknown',
