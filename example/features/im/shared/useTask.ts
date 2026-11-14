@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { errorMessage } from './error-message'
 
 export function useTask () {
   const [busy, setBusy] = useState(false)
@@ -20,10 +21,9 @@ export function useTask () {
     try {
       await work(() => alive.current)
     } catch (reason) {
-      if (alive.current) {
-        const value = reason as { message?: string, errMsg?: string }
-        setError(value?.errMsg || value?.message || String(reason))
-      }
+      if (alive.current)
+        setError(errorMessage(reason))
+
     }
     running.current = false
     if (alive.current)

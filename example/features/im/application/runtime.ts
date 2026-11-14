@@ -1,5 +1,6 @@
 import { mergeMessages, routeMessages } from '../domain/model'
 import type { Conversation, IMMessage, ServerConfig, Session } from '../domain/types'
+import { errorMessage } from '../shared/error-message'
 
 interface State {
   initialized: boolean
@@ -33,8 +34,7 @@ export function createRuntime (config: ServerConfig) {
     listeners.forEach(listener => listener())
   }
   function reportError (error: unknown) {
-    const detail = error as { errMsg?: string, message?: string }
-    update({ error: detail?.errMsg || detail?.message || String(error) })
+    update({ error: errorMessage(error) })
   }
   function mergeConversations (incoming: Conversation[]) {
     const map = new Map(state.conversations.map(item => [item.conversationID, item]))

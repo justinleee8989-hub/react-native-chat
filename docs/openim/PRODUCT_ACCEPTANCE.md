@@ -1,3 +1,5 @@
+最新收尾结果见 [FINAL_ACCEPTANCE.md](./FINAL_ACCEPTANCE.md)，下方保留此前各轮记录。
+
 # 产品流程与 H5 验收（2026-11-15）
 
 运行地址：http://127.0.0.1:35881/
