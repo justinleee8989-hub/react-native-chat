@@ -9,7 +9,7 @@ import reactHooks from 'eslint-plugin-react-hooks'
 
 export default [
   {
-    ignores: ['**/node_modules/**', '**/lib/**', '**/build/**', '**/.expo/**', '**/android/**', '**/ios/**'],
+    ignores: ['public/openim-sdk/**', 'public/openim-sdk-loader.js', 'public/wasm_exec.js', '**/node_modules/**', '**/lib/**', '**/build/**', '**/dist/**', '**/.expo/**', '**/android/**', '**/ios/**'],
   },
   {
     files: ['**/*.{js,jsx,ts,tsx}'],

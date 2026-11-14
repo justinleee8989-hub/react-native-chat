@@ -14,8 +14,11 @@ export function useLazyRecorder () {
   // recorder cost about 30ms of every chat opening, for a feature most chats never use.
   const recorderRef = useRef<any>(null)
   const getRecorder = useCallback(() => {
-    if (!recorderRef.current)
-      recorderRef.current = new expoAudio.AudioModule.AudioRecorder(platformRecordingOptions(recorderOptions))
+    if (!recorderRef.current) {
+      // Expo 58 names its browser implementation AudioRecorderWeb; native keeps AudioRecorder.
+      const Recorder = expoAudio.AudioModule.AudioRecorder ?? expoAudio.AudioModule.AudioRecorderWeb
+      recorderRef.current = new Recorder(platformRecordingOptions(recorderOptions))
+    }
     return recorderRef.current
   }, [recorderOptions])
   useEffect(() => () => {

@@ -1,3 +1,3 @@
-import NewMessageScreen from '@/components/chat-list/NewMessageScreen'
+import NewMessageScreen from '@/features/im/conversations/NewMessageScreen'
 
 export default NewMessageScreen

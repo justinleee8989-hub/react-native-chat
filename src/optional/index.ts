@@ -9,6 +9,7 @@
  * `null`) is memoized, so a missing peer costs one failed lookup per app run.
  */
 import { Platform } from 'react-native'
+import { loadVisionCamera } from './visionCamera'
 
 const cache = new Map<string, any>()
 
@@ -152,15 +153,8 @@ export const getExpoSharing = (): any => resolve('expo-sharing', () => {
     return null
   }
 })
-// vision-camera 5 creates its native `CameraFactory` while it loads, so a JS package without the
-// native module behind it throws here and counts as not installed.
-export const getVisionCamera = (): any => resolve('react-native-vision-camera', () => {
-  try {
-    return require('react-native-vision-camera')
-  } catch {
-    return null
-  }
-})
+// A platform-specific loader keeps the native-only camera out of web dependency graphs.
+export const getVisionCamera = (): any => resolve('react-native-vision-camera', loadVisionCamera)
 
 /** Writes plain text to the system clipboard. */
 export interface ClipboardAdapter {

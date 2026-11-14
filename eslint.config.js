@@ -14,7 +14,7 @@ export default [
       // The docs site is its own ESM project with its own toolchain.
       'website/**',
       '**/lib/**',
-      '**/build/**',
+      '**/build/**', '**/dist/**',
       '**/.expo/**',
       '**/android/**',
       '**/ios/**',
@@ -22,6 +22,8 @@ export default [
       'example/*.js',
       'example/*.config.js',
       'example/scripts/**',
+      // Copied unchanged from the OpenIM SDK package.
+      'example/public/wasm_exec.js',
     ],
   },
   {

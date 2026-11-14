@@ -1,8 +1,8 @@
 import { useLocalSearchParams } from 'expo-router'
 
-import ChatScreen from '@/components/chat-list/ChatScreen'
+import ChatScreen from '@/features/im/messages/ChatScreen'
 
 export default function ChatRoute () {
-  const { id } = useLocalSearchParams<{ id: string }>()
-  return <ChatScreen key={id} id={id} />
+  const { id, messageID } = useLocalSearchParams<{ id: string, messageID?: string }>()
+  return <ChatScreen key={id} id={id} messageID={messageID} />
 }

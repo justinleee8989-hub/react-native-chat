@@ -57,3 +57,11 @@ app-example
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+# Generated OpenIM browser SDK assets
+/public/openim.wasm
+/public/sql-wasm.wasm
+/public/wasm_exec.js
+
+/public/openim-sdk/
+/public/openim-sdk-loader.js

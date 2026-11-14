@@ -6,6 +6,8 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { KeyboardProvider } from 'react-native-keyboard-controller'
 import 'react-native-reanimated'
 
+import CallOverlay from '@/features/im/calls/CallOverlay'
+import SessionGuard from '@/features/im/navigation/SessionGuard'
 import { useColorScheme } from '@/hooks/use-color-scheme'
 
 LogBox.ignoreLogs(['Open debugger to view warnings'])
@@ -27,10 +29,13 @@ export default function RootLayout () {
               the tabs, and the chat list in them, do no work while a chat is open on top. */}
           <Stack screenOptions={{ headerShown: false }} activityEnabled>
             <Stack.Screen name='(tabs)' />
+            <Stack.Screen name='auth' />
             <Stack.Screen name='chat' />
             <Stack.Screen name='chats' />
             <Stack.Screen name='modal' options={{ headerShown: true, presentation: 'modal', title: 'Modal' }} />
           </Stack>
+          <CallOverlay />
+          <SessionGuard />
           <StatusBar style='auto' />
         </ThemeProvider>
       </KeyboardProvider>

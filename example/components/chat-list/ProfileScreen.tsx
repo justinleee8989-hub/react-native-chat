@@ -5,8 +5,8 @@ import { ChatListAvatar, IMessage, User } from '@kesha-antonov/react-native-chat
 import { Href, useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
-import { dialogSubtitle } from './ChatScreen'
 import { ME } from './data'
+import { dialogSubtitle } from './format'
 import { chatStore, useDialog, useMessages } from './store'
 import { useChatListColors } from './theme'
 

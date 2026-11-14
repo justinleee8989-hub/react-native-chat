@@ -290,9 +290,10 @@ export interface ChatProps<TMessage extends IMessage> extends Partial<Omit<Messa
   /**
    * Turns on the "Edit" action for your own text messages. Edit puts the text into the
    * composer under an "Editing" banner; sending calls this with the message and the new text
-   * instead of `onSend`.
+   * instead of `onSend`. Return a Promise to keep the editor open until saving succeeds;
+   * rejection preserves the edited text for retry (report the error in your callback).
    */
-  onEditMessage?: (message: TMessage, text: string) => void
+  onEditMessage?: (message: TMessage, text: string) => void | Promise<void>
   /** Turns on the "Delete" action. */
   onDeleteMessage?: (message: TMessage) => void
   /**

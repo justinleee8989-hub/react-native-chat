@@ -1,0 +1,28 @@
+{
+  "verifiedDate": "2026-11-14",
+  "composeProject": "openim-rn-local",
+  "server": {
+    "image": "openim/openim-server:v3.8.3-patch.18",
+    "tag": "v3.8.3-patch.18",
+    "sourceCommit": "120cee6d5783959a02ea1acfa414589fe5aae90f",
+    "observedCheckoutCommit": "a101d85ec16cc21bec60005169725adc1ae5649a"
+  },
+  "chat": {
+    "image": "openim/openim-chat:v1.8.4-patch.5",
+    "tag": "v1.8.4-patch.5",
+    "sourceCommit": "22dc25e296aef327fb6779079c2a8b5b8fce83db",
+    "observedCheckoutCommit": "73e7b82a64fdc997a415f3a55f697e0c5800f1d1"
+  },
+  "sdk": {
+    "web": "3.8.3-patch.15.1",
+    "reactNative": "3.8.3-patch.12.4"
+  },
+  "verifiedRuntime": "Web",
+  "nativeRuntimeVerified": false,
+  "sourceEvidence": [
+    "chat@v1.8.4-patch.5:pkg/common/apistruct/chat.go",
+    "chat@v1.8.4-patch.5:pkg/protocol/chat/chat.pb.go",
+    "chat@v1.8.4-patch.5:internal/api/chat/chat.go",
+    "open-im-server@v3.8.3-patch.18:internal/rpc/group/group.go"
+  ]
+}

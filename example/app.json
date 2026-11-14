@@ -35,7 +35,7 @@
       ]
     },
     "web": {
-      "output": "static",
+      "output": "single",
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
@@ -87,7 +87,9 @@
         }
       ],
       "expo-document-picker",
-      "expo-sharing"
+      "expo-sharing",
+      "@livekit/react-native-expo-plugin",
+      "@config-plugins/react-native-webrtc"
     ],
     "experiments": {
       "typedRoutes": true,

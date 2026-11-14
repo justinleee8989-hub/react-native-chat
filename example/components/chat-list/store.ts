@@ -19,13 +19,15 @@ interface State {
   pinOrder: string[]
 }
 
-let state: State = {
+const initialState: State = {
   dialogs: Object.fromEntries(DIALOGS.map(dialog => [dialog.id, dialog])),
   messages: INITIAL_MESSAGES,
   typing: {},
   typingAction: {},
   pinOrder: DIALOGS.filter(dialog => dialog.isPinned).map(dialog => dialog.id),
 }
+
+let state = initialState
 
 const listeners = new Set<() => void>()
 
@@ -42,7 +44,7 @@ function subscribe (listener: () => void) {
 }
 
 function useStore<T> (selector: (s: State) => T): T {
-  return useSyncExternalStore(subscribe, () => selector(state))
+  return useSyncExternalStore(subscribe, () => selector(state), () => selector(initialState))
 }
 
 function patchDialog (id: string, patch: Partial<Dialog>) {

@@ -90,6 +90,8 @@ export function useRecordGesture ({
 
   const panGesture = usePanGesture({
     activateAfterLongPress: onTap ? HOLD_DELAY_MS : 0,
+    // A single-mode hold starts without moving; dual-mode taps must still win before 150ms.
+    minDistance: onTap ? undefined : 0,
     onActivate: () => {
       isTakeSV.set(1)
       runOnJS(jsStart)()

@@ -250,6 +250,31 @@ describe('Chat defaults', () => {
     expect(queryByText('Editing')).toBeNull()
   })
 
+  it('keeps a failed async edit for retry and waits before restoring the draft', async () => {
+    let rejectSave!: (error: Error) => void
+    const onEditMessage = jest.fn().mockImplementationOnce(() => new Promise<void>((_resolve, reject) => {
+      rejectSave = reject
+    })).mockResolvedValueOnce(undefined)
+    const { getByText, getByDisplayValue, queryByText } = await mountChat(
+      <Chat messages={[message(1, ME, 'typo')]} user={ME} initialText='draft' onEditMessage={onEditMessage} isMultiline={false} />
+    )
+    await longPress()
+    await fireEvent.press(getByText('Edit'))
+    await settle()
+    await fireEvent.changeText(getByDisplayValue('typo'), 'fixed')
+    await fireEvent(getByDisplayValue('fixed'), 'submitEditing')
+    expect(getByText('Editing')).toBeTruthy()
+    await act(async () => {
+      rejectSave(new Error('offline'))
+    })
+    expect(getByDisplayValue('fixed')).toBeTruthy()
+    await fireEvent(getByDisplayValue('fixed'), 'submitEditing')
+    await settle()
+    expect(onEditMessage).toHaveBeenCalledTimes(2)
+    expect(queryByText('Editing')).toBeNull()
+    expect(getByDisplayValue('draft')).toBeTruthy()
+  })
+
   it('sets the draft aside while editing and brings it back, reporting only the draft', async () => {
     const onDraftChange = jest.fn()
     const { getByText, getByDisplayValue } = await mountChat(
@@ -272,6 +297,40 @@ describe('Chat defaults', () => {
 
     await fireEvent.changeText(getByDisplayValue('my draft'), 'my draft!')
     expect(onDraftChange).toHaveBeenLastCalledWith('my draft!')
+  })
+
+  it('edits messages in a controlled composer and restores the controlled draft', async () => {
+    const onDraftChange = jest.fn()
+    const onEditMessage = jest.fn()
+    const { getByText, getByDisplayValue, queryByText } = await mountChat(
+      <Chat messages={[message(1, ME, 'typo')]} onSend={jest.fn()} user={ME} text='my draft' onDraftChange={onDraftChange} onEditMessage={onEditMessage} isMultiline={false} />
+    )
+
+    await longPress()
+    await fireEvent.press(getByText('Edit'))
+    await settle()
+    const input = getByDisplayValue('typo')
+    await fireEvent.changeText(input, 'fixed')
+    expect(getByDisplayValue('fixed')).toBeTruthy()
+    await fireEvent(input, 'submitEditing')
+    await settle()
+
+    expect(onEditMessage).toHaveBeenCalledWith(expect.objectContaining({ _id: 1 }), 'fixed')
+    expect(queryByText('Editing')).toBeNull()
+    expect(getByDisplayValue('my draft')).toBeTruthy()
+    expect(onDraftChange).not.toHaveBeenCalledWith('fixed')
+  })
+
+  it('reports clearing a restored controlled draft', async () => {
+    const onDraftChange = jest.fn()
+    const { getByDisplayValue } = await mountChat(
+      <Chat messages={[]} onSend={jest.fn()} user={ME} text='restored draft' onDraftChange={onDraftChange} isMultiline={false} />
+    )
+
+    await settle()
+    await fireEvent.changeText(getByDisplayValue('restored draft'), '')
+
+    expect(onDraftChange).toHaveBeenLastCalledWith('')
   })
 
   it('turns reactions on once onReactionPress is passed', async () => {

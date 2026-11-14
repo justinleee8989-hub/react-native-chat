@@ -1,9 +1,9 @@
 import { useLocalSearchParams } from 'expo-router'
 
-import ProfileScreen from '@/components/chat-list/ProfileScreen'
+import ConversationAssetsScreen from '@/features/im/messages/ConversationAssetsScreen'
 
-/** A chat's profile, opened from its header. */
+/** Compatibility route for older links; this now shows real OpenIM conversation assets. */
 export default function ProfileRoute () {
   const { id } = useLocalSearchParams<{ id: string }>()
-  return <ProfileScreen key={id} id={id} />
+  return <ConversationAssetsScreen id={id} />
 }

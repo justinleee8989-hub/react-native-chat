@@ -1,0 +1,15 @@
+# IM audit closure implementation plan
+
+**Goal:** Resolve the seven confirmed audit gaps, then implement persistent archive and search-result location without changing the official RN appearance or original experience data.
+**Architecture:** Reuse SDK conversation ex for per-user archive and official Chat ref navigation for search jumps. Keep OpenIM messages immutable but consistently apply authenticated edit metadata at all application presentation and send boundaries. Retain failed uploads/edits for retry. Split RTC and message extension initialization and authorization dependencies. No destructive migration, no commits or unrelated refactors.
+**Tech stack:** RN/Expo TypeScript, pinned native/WASM OpenIM SDK, Go ChatServer, Redis, existing local Docker services.
+
+- [x] Backend: TDD request size/field caps for RTC call/token; separate MESSAGE_EXTRAS_ENABLED initialization and group authorization from RTC; prove extensions remain usable with RTC disabled. Sync exact-tag build copy, race tests, build new image without deploying until integration.
+- [x] Identity: classify confirmed IM token rejection separately from transient connection; preserve transport retry; mark friend relationship and recheck before setting remark; tests for both.
+- [x] Messaging: strict media send propagates errors; stop attachment batch/caption at failure. Shared edit projection for text, quoted source, forwarding, previews, local searchable history; distinguish metadata failure from a legitimate empty edit record.
+- [x] Editor: official component awaits async edit callback, keeps editor text on rejection, blocks duplicate saves; maintain controlled drafts and native-compatible props, preserve sync callback compatibility.
+- [x] Archive: namespace app value inside conversation ex without overwriting unrelated extension keys; SDK persists per-account field; list supports official archive/unarchive and archive folder entry. Tests cover preserved ex and remote failure.
+- [x] Search: filter against projected text and show projected results; press opens original conversation with target message ID, load required history and use Chat ref highlight; show readable unavailable state. No direct DOM code.
+- [x] Verification: lightweight model agents run targeted red/green, root lint/typecheck/Jest, example suite/typecheck; main build with Metro stopped, restart35881, deploy only changed ChatServer, UI/API acceptance only in isolated QA conversations. Update reproducible patch and exact results/remaining scope.
+
+Verification scope: live QA archive/unarchive persisted after reload, edited-text search and deep-link target visibility, and non-friend remark gating passed. The deployed RTC oversize/non-member REST repeat subsequently passed after explicit user authorization for isolated QA login on platform 8: authenticated baselines succeeded, oversized requests returned 1001, and the authenticated dedicated non-member was denied the same extras fixture with 1002. No message/group/original experience data writes occurred. Native devices and video remain outside this round.

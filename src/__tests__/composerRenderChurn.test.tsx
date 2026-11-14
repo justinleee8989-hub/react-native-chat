@@ -37,6 +37,7 @@ it('a keystroke re-renders the composer, not Chat', async () => {
   const { getByTestId } = await render(
     <Chat messages={[]} user={USER} onSend={() => {}} renderSend={renderSend} />
   )
+  await waitForRows()
   await fireEvent(getByTestId('GC_WRAPPER'), 'layout', LAYOUT)
 
   avoidingViewRenders.count = 0

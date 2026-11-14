@@ -147,31 +147,35 @@ export function ChatAvatar (
     return placeholderView
 
   if (user.avatar)
-    return (
+    return onPress || props.onLongPress
+      ? (
+        <TouchableOpacity
+          enabled={!!onPress}
+          onPress={handleOnPress}
+          onLongPress={handleOnLongPress}
+          accessibilityRole='image'
+        >
+          {renderAvatar()}
+        </TouchableOpacity>
+      )
+      : <View accessibilityRole='image'>{renderAvatar()}</View>
+
+  const initialsStyle = [stylesCommon.centerItems, styles.avatarStyle, fillStyle, avatarStyle]
+  return onPress || props.onLongPress
+    ? (
       <TouchableOpacity
         enabled={!!onPress}
         onPress={handleOnPress}
         onLongPress={handleOnLongPress}
+        style={initialsStyle}
         accessibilityRole='image'
       >
-        {renderAvatar()}
+        {renderInitials()}
       </TouchableOpacity>
     )
-
-  return (
-    <TouchableOpacity
-      enabled={!!onPress}
-      onPress={handleOnPress}
-      onLongPress={handleOnLongPress}
-      style={[
-        stylesCommon.centerItems,
-        styles.avatarStyle,
-        fillStyle,
-        avatarStyle,
-      ]}
-      accessibilityRole='image'
-    >
-      {renderInitials()}
-    </TouchableOpacity>
-  )
+    : (
+      <View style={initialsStyle} accessibilityRole='image'>
+        {renderInitials()}
+      </View>
+    )
 }

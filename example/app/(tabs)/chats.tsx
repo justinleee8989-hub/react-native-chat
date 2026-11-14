@@ -1,3 +1,3 @@
-import ChatListScreen from '@/components/chat-list/ChatListScreen'
+import ChatListScreen from '@/features/im/conversations/ChatListScreen'
 
 export default ChatListScreen

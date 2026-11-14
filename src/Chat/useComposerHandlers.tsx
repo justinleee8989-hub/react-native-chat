@@ -15,6 +15,15 @@ const defaultMessageIdGenerator = () => (Math.random() + 1).toString(36).substri
 // a callback from a render input; reading it out here keeps the callback's memoization.
 const clearInput = (ref: RefObject<React.ComponentRef<typeof TextInput> | null>) => ref.current?.clear()
 
+// Keep exception handling outside the hook so the React Compiler can optimize its handlers.
+function invokeEdit<TMessage extends IMessage> (callback: ((message: TMessage, text: string) => void | Promise<void>) | undefined, message: TMessage, text: string) {
+  try {
+    return callback?.(message, text)
+  } catch (error) {
+    return Promise.reject(error)
+  }
+}
+
 /**
  * What the composer does: typing, sending (or saving an edit), and the composer element itself,
  * built from the chat's props and the state `useComposerState` holds.
@@ -39,7 +48,7 @@ export function useComposerHandlers<TMessage extends IMessage> ({
   props: ChatProps<TMessage>
   textInputRef: RefObject<React.ComponentRef<typeof TextInput>>
   messagesContainerRef: RefObject<AnimatedList>
-  actionCallbacksRef: RefObject<{ onEditMessage?: (message: TMessage, text: string) => void }>
+  actionCallbacksRef: RefObject<{ onEditMessage?: (message: TMessage, text: string) => void | Promise<void> }>
   textStore: Store<string>
   replyStore: Store<ReplyMessage | null>
   editStore: Store<TMessage | null>
@@ -104,6 +113,15 @@ export function useComposerHandlers<TMessage extends IMessage> ({
     notifyDraft,
   ])
 
+  const savingEdit = useRef(false)
+  const mounted = useRef(true)
+  useEffect(() => {
+    mounted.current = true
+    return () => {
+      mounted.current = false
+    }
+  }, [])
+
   const _onSend = useCallback(
     (messages: TMessage[] = [], shouldResetInputToolbar = false) => {
       if (!Array.isArray(messages))
@@ -119,12 +137,27 @@ export function useComposerHandlers<TMessage extends IMessage> ({
         !edit.audio &&
         !edit.video
       ) {
-        if (shouldResetInputToolbar === true)
-          resetInputToolbar()
-
-        editStore.set(null)
-        restoreDraft()
-        actionCallbacksRef.current.onEditMessage?.(editingMessage, edit.text)
+        if (savingEdit.current)
+          return
+        const finish = () => {
+          if (!mounted.current || editStore.get() !== editingMessage || textStore.get() !== edit.text)
+            return
+          if (shouldResetInputToolbar === true)
+            resetInputToolbar()
+          editStore.set(null)
+          restoreDraft()
+        }
+        const result = invokeEdit(actionCallbacksRef.current.onEditMessage, editingMessage, edit.text)
+        if (result && typeof result.then === 'function') {
+          savingEdit.current = true
+          void result.then(finish, () => {
+            // The caller reports the error; keep the editor and its text available for retry.
+          }).finally(() => {
+            savingEdit.current = false
+          })
+        } else {
+          finish()
+        }
         return
       }
 
@@ -153,7 +186,7 @@ export function useComposerHandlers<TMessage extends IMessage> ({
       clearTimeout(scrollAfterSendTimeout.current)
       scrollAfterSendTimeout.current = setTimeout(() => scrollToBottom(), 10)
     },
-    [messageIdGenerator, onSend, user, resetInputToolbar, scrollToBottom, getReplyMessage, clearReply, editStore, restoreDraft, actionCallbacksRef]
+    [messageIdGenerator, onSend, user, resetInputToolbar, scrollToBottom, getReplyMessage, clearReply, editStore, restoreDraft, actionCallbacksRef, textStore]
   )
 
   const _onChangeText = useCallback(
@@ -161,11 +194,11 @@ export function useComposerHandlers<TMessage extends IMessage> ({
       props.textInputProps?.onChangeText?.(text)
 
       // Only set state if it's not being overridden by a prop.
-      if (props.text === undefined)
+      if (props.text === undefined || editStore.get())
         textStore.set(text)
       notifyDraft(text)
     },
-    [props.text, props.textInputProps, notifyDraft, textStore]
+    [props.text, props.textInputProps, notifyDraft, textStore, editStore]
   )
   useInsertionEffect(() => {
     changeTextRef.current = _onChangeText
@@ -233,9 +266,9 @@ export function useComposerHandlers<TMessage extends IMessage> ({
   ])
 
   useEffect(() => {
-    if (props.text != null)
+    if (props.text != null && !editStore.get())
       textStore.set(props.text)
-  }, [props.text, textStore])
+  }, [props.text, textStore, editStore])
 
   return { inputToolbarFragment, sendGreeting, notifyInputTextReset }
 }

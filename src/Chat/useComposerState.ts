@@ -110,6 +110,8 @@ export function useComposerState<TMessage extends IMessage> (
   const onDraftChangeRef = useRef(onDraftChange)
   useInsertionEffect(() => {
     onDraftChangeRef.current = onDraftChange
+    if (!isEditingRef.current && props.text !== undefined)
+      draftRef.current = props.text
   })
   const notifyDraft = useCallback((draft: string) => {
     if (isEditingRef.current || draft === draftRef.current)

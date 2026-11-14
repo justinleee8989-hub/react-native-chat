@@ -46,10 +46,10 @@ export function ComposerHost<TProps extends Record<string, any>> ({
   props: TProps
 }) {
   const storedText = useStore(textStore, sameText, '')
-  const text = controlledText === undefined ? storedText : controlledText
   const storedReply = useStore(replyStore, sameValue, null)
   const replyMessage = controlledReply === undefined ? storedReply : controlledReply
   const editMessage = useStore(editStore, sameValue, null)
+  const text = editMessage || controlledText === undefined ? storedText : controlledText
 
   if (render)
     return <CustomInputToolbar render={render} props={{ ...props, text, replyMessage, editMessage }} />

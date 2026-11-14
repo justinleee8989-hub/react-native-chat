@@ -1,4 +1,4 @@
-import ChatListScreen from '@/components/chat-list/ChatListScreen'
+import ChatListScreen from '@/features/im/conversations/ChatListScreen'
 
 /** The Archived Chats folder, pushed from the chat list. */
 export default function ArchivedChatsScreen () {

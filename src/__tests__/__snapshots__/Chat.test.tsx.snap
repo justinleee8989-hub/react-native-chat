@@ -408,7 +408,7 @@ exports[`should render <Chat/> and compare with snapshot 1`] = `
                             <View
                               handlerTags={
                                 [
-                                  1,
+                                  "[handler-tag]",
                                 ]
                               }
                               moduleId={-1}
@@ -495,7 +495,7 @@ exports[`should render <Chat/> and compare with snapshot 1`] = `
                       <View
                         handlerTags={
                           [
-                            2,
+                            "[handler-tag]",
                           ]
                         }
                         moduleId={-1}
@@ -856,7 +856,7 @@ exports[`should render <Chat/> with dark colorScheme and compare with snapshot 1
                             <View
                               handlerTags={
                                 [
-                                  20,
+                                  "[handler-tag]",
                                 ]
                               }
                               moduleId={-1}
@@ -909,8 +909,8 @@ exports[`should render <Chat/> with dark colorScheme and compare with snapshot 1
                                       <View
                                         handlerTags={
                                           [
-                                            22,
-                                            21,
+                                            "[handler-tag]",
+                                            "[handler-tag]",
                                           ]
                                         }
                                         moduleId={-1}
@@ -1420,7 +1420,7 @@ exports[`should render <Chat/> with dark colorScheme and compare with snapshot 1
                             <View
                               handlerTags={
                                 [
-                                  18,
+                                  "[handler-tag]",
                                 ]
                               }
                               moduleId={-1}
@@ -1507,7 +1507,7 @@ exports[`should render <Chat/> with dark colorScheme and compare with snapshot 1
                       <View
                         handlerTags={
                           [
-                            19,
+                            "[handler-tag]",
                           ]
                         }
                         moduleId={-1}
@@ -1868,7 +1868,7 @@ exports[`should render <Chat/> with light colorScheme and compare with snapshot 
                             <View
                               handlerTags={
                                 [
-                                  15,
+                                  "[handler-tag]",
                                 ]
                               }
                               moduleId={-1}
@@ -1921,8 +1921,8 @@ exports[`should render <Chat/> with light colorScheme and compare with snapshot 
                                       <View
                                         handlerTags={
                                           [
-                                            17,
-                                            16,
+                                            "[handler-tag]",
+                                            "[handler-tag]",
                                           ]
                                         }
                                         moduleId={-1}
@@ -2441,7 +2441,7 @@ exports[`should render <Chat/> with light colorScheme and compare with snapshot 
                             <View
                               handlerTags={
                                 [
-                                  13,
+                                  "[handler-tag]",
                                 ]
                               }
                               moduleId={-1}
@@ -2528,7 +2528,7 @@ exports[`should render <Chat/> with light colorScheme and compare with snapshot 
                       <View
                         handlerTags={
                           [
-                            14,
+                            "[handler-tag]",
                           ]
                         }
                         moduleId={-1}

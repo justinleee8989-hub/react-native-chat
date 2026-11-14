@@ -115,8 +115,8 @@ export function Avatar<TMessage extends IMessage = IMessage> (
             imageStyle?.[position],
           ]}
           user={currentMessage.user}
-          onPress={() => onPressAvatar?.(currentMessage.user)}
-          onLongPress={() => onLongPressAvatar?.(currentMessage.user)}
+          onPress={onPressAvatar ? () => onPressAvatar(currentMessage.user) : undefined}
+          onLongPress={onLongPressAvatar ? () => onLongPressAvatar(currentMessage.user) : undefined}
         />
       )
 

@@ -1,4 +1,5 @@
-import { Easing, FadeIn, Keyframe, withDelay, withTiming } from 'react-native-reanimated'
+import { Platform } from 'react-native'
+import { Easing, FadeIn, Keyframe, withDelay, withTiming, ZoomIn, ZoomOut } from 'react-native-reanimated'
 
 // Pausing a take morphs the record circle into the preview pill
 // (`RecordCircle.transformToSeekbar`): over 580ms (voice) or 490ms (video) it
@@ -105,14 +106,21 @@ export type ReturnAnimations = ReturnType<typeof makeReturn>
 // over 220ms on EASE_OUT_QUINT.
 const EASE_OUT_QUINT = Easing.bezier(0.23, 1, 0.32, 1)
 const SWAP_MS = 220
-export const swapIn = new Keyframe({
-  0: { opacity: 0, transform: [{ scale: 0.1 }] },
-  100: { opacity: 1, transform: [{ scale: 1 }], easing: EASE_OUT_QUINT },
-}).duration(SWAP_MS)
-export const swapOut = new Keyframe({
-  0: { opacity: 1, transform: [{ scale: 1 }] },
-  100: { opacity: 0, transform: [{ scale: 0.1 }], easing: EASE_OUT_QUINT },
-}).duration(SWAP_MS)
+// Web's custom-Keyframe cleanup pins the control to absolute snapshot coordinates,
+// so a later viewport resize leaves it outside the toolbar. Named zoom presets
+// retain flex layout while keeping the same scale-swap duration and easing.
+export const swapIn = Platform.OS === 'web'
+  ? ZoomIn.duration(SWAP_MS).easing(EASE_OUT_QUINT)
+  : new Keyframe({
+    0: { opacity: 0, transform: [{ scale: 0.1 }] },
+    100: { opacity: 1, transform: [{ scale: 1 }], easing: EASE_OUT_QUINT },
+  }).duration(SWAP_MS)
+export const swapOut = Platform.OS === 'web'
+  ? ZoomOut.duration(SWAP_MS).easing(EASE_OUT_QUINT)
+  : new Keyframe({
+    0: { opacity: 1, transform: [{ scale: 1 }] },
+    100: { opacity: 0, transform: [{ scale: 0.1 }], easing: EASE_OUT_QUINT },
+  }).duration(SWAP_MS)
 // The emoji button's smile <-> keyboard morph, a short crossfade standing in for a ~300ms Lottie.
 export const EMOJI_ICON_SWAP = { duration: 200, easing: Easing.out(Easing.quad) }
 // The paperclip steps aside while there is text: half size and transparent over 100ms.

@@ -28,18 +28,52 @@ const messages = [
   },
 ]
 
-it('should render <Chat/> and compare with snapshot', async () => {
-  const { toJSON } = await render(
-    <Chat
-      messages={messages}
-      onSend={() => {}}
-      user={{
-        _id: 1,
-      }}
-    />
-  )
+const normalizeGestureHandlerTags = (value: any): any => {
+  if (Array.isArray(value))
+    return value.map(normalizeGestureHandlerTags)
 
-  expect(toJSON()).toMatchSnapshot()
+  if (value == null || typeof value !== 'object')
+    return value
+
+  const prototype = Object.getPrototypeOf(value)
+  if (prototype !== Object.prototype && prototype !== null)
+    return value
+
+  return Object.fromEntries(
+    Object.entries(value).map(([key, child]) => {
+      if (key === 'handlerTags') {
+        const tags = Array.isArray(child) ? child.map(() => '[handler-tag]') : '[handler-tag]'
+        return [key, tags]
+      }
+
+      if (key === 'handlerTag')
+        return [key, '[handler-tag]']
+
+      return [key, normalizeGestureHandlerTags(child)]
+    })
+  )
+}
+
+it('should render <Chat/> and compare with snapshot', async () => {
+  const requestAnimationFrame = jest
+    .spyOn(global, 'requestAnimationFrame')
+    .mockImplementation(() => 0)
+
+  try {
+    const { toJSON } = await render(
+      <Chat
+        messages={messages}
+        onSend={() => {}}
+        user={{
+          _id: 1,
+        }}
+      />
+    )
+
+    expect(normalizeGestureHandlerTags(toJSON())).toMatchSnapshot()
+  } finally {
+    requestAnimationFrame.mockRestore()
+  }
 })
 
 it('preserves the default `text` prop on initial render (#603)', async () => {
@@ -114,7 +148,7 @@ it('should render <Chat/> with light colorScheme and compare with snapshot', asy
   )
   await waitForRows()
 
-  expect(toJSON()).toMatchSnapshot()
+  expect(normalizeGestureHandlerTags(toJSON())).toMatchSnapshot()
 })
 
 it('should render <Chat/> with dark colorScheme and compare with snapshot', async () => {
@@ -130,7 +164,7 @@ it('should render <Chat/> with dark colorScheme and compare with snapshot', asyn
   )
   await waitForRows()
 
-  expect(toJSON()).toMatchSnapshot()
+  expect(normalizeGestureHandlerTags(toJSON())).toMatchSnapshot()
 })
 
 const findKeyboardProviders = (tree: any): any[] => {
