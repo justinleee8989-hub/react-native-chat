@@ -142,7 +142,7 @@ function RequestList({
       {confirm && (
         <>
           <Field value={message} onChangeText={setMessage} placeholder='处理说明（选填）' />
-          <Confirm
+          <Confirm error={task.error}
             busy={task.busy}
             message={`${confirm.accept ? '同意' : '拒绝'} ${confirm.item.nickname || confirm.item.userID} 加入 ${confirm.item.groupName || confirm.item.groupID}？`}
             onCancel={() => setConfirm(undefined)}

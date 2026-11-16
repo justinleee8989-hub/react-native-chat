@@ -25,7 +25,7 @@ export default function PasswordForm () {
     {!!task.error && <Label>{task.error}</Label>}
     {!!repeat && password !== repeat && <Label>两次新密码不一致</Label>}
     <Action title='修改密码' danger disabled={task.busy || !oldPassword || !password || password !== repeat || password === oldPassword} onPress={() => setConfirm(true)} />
-    {confirm && <Confirm message='确认修改密码并退出登录？' busy={task.busy} onCancel={() => setConfirm(false)} onConfirm={() => {
+    {confirm && <Confirm error={task.error} message='确认修改密码并退出登录？' busy={task.busy} onCancel={() => setConfirm(false)} onConfirm={() => {
       void task.run(async current => {
         if (!session)
           throw new Error('请重新登录')

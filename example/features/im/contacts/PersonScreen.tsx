@@ -69,7 +69,7 @@ function PersonDetails ({ id, selfID }: { id: string, selfID: string }) {
       <Action title={blocked ? '移出黑名单' : '加入黑名单'} danger={!blocked} disabled={task.busy || id === selfID} onPress={() => setConfirm(true)} />
     </>}
     {!!notice && <Label>{notice}</Label>}
-    {confirm && <Confirm message={blocked ? '确认移出黑名单？' : '加入黑名单后将无法正常接收对方的消息，确认继续？'} busy={task.busy} onCancel={() => setConfirm(false)} onConfirm={() => {
+    {confirm && <Confirm error={task.error} message={blocked ? '确认移出黑名单？' : '加入黑名单后将无法正常接收对方的消息，确认继续？'} busy={task.busy} onCancel={() => setConfirm(false)} onConfirm={() => {
       void run(async current => {
         await profile.block(id, !blocked)
         if (current()) {

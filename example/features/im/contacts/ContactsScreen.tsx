@@ -133,7 +133,7 @@ function Contacts ({ userID, root }: { userID: string, root: boolean }) {
         </PersonRow>
       ))}
       {remove && (
-        <Confirm
+        <Confirm error={task.error}
           message={`删除好友 ${remove.nickname || remove.userID}？`}
           busy={task.busy}
           onCancel={() => setRemove(undefined)}

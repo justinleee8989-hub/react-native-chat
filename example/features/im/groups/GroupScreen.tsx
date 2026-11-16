@@ -246,7 +246,7 @@ function GroupDetails({ groupID, userID }: { groupID: string, userID: string }) 
         </>
       )}
       {confirm && (
-        <Confirm
+        <Confirm error={task.error}
           message={confirm.message}
           busy={task.busy}
           onCancel={() => setConfirm(undefined)}

@@ -27,7 +27,7 @@ function JoinGroup() {
         onPress={() => setConfirm({ id: id.trim(), reason })}
       />
       {confirm && (
-        <Confirm
+        <Confirm error={task.error}
           busy={task.busy}
           message={`确认申请加入群 ${confirm.id}？`}
           onCancel={() => setConfirm(undefined)}

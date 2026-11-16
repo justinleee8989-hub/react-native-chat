@@ -32,7 +32,7 @@ function SessionForwardPicker ({ message, onClose }: Props) {
         <Action title='取消转发' onPress={onClose} disabled={task.busy} />
         <Text style={{ color: colors.name, padding: 16 }}>选择转发到的会话</Text>
         {!!task.error && <Text accessibilityRole='alert' style={{ color: colors.draft }}>{task.error}</Text>}
-        {target && <Confirm message={`转发给 ${target.showName}？`} busy={task.busy}
+        {target && <Confirm error={task.error} message={`转发给 ${target.showName}？`} busy={task.busy}
           onCancel={() => setTarget(undefined)} onConfirm={() => {
             void task.run(async current => {
               await forwardMessage(target.conversationID, message)

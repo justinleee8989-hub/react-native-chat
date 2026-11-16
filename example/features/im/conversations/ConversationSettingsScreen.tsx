@@ -101,7 +101,7 @@ function Settings({ id }: { id: string }) {
         onPress={() => setConfirmation('delete')}
       />
       {confirmation && (
-        <Confirm
+        <Confirm error={task.error}
           message={
             confirmation === 'delete'
               ? '确认删除这个会话及当前账号的聊天记录？此操作无法在界面中撤销，不会替对方删除消息。'

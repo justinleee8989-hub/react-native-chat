@@ -206,7 +206,7 @@ function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
       />
       <Button title='搜索聊天记录' onPress={() => router.push(`/chats/search/${id}`)} />
       {forward && <ForwardPicker message={forward} onClose={() => setForward(undefined)} />}
-      {revoke && <Confirm message='撤回这条消息？是否允许撤回由服务器的时限和权限规则决定。' busy={task.busy}
+      {revoke && <Confirm error={task.error} message='撤回这条消息？是否允许撤回由服务器的时限和权限规则决定。' busy={task.busy}
         onCancel={() => setRevoke(undefined)} onConfirm={() => {
           void task.run(async () => {
             await revokeMessage(id, revoke)

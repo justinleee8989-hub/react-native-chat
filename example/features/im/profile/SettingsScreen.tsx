@@ -81,7 +81,7 @@ function Settings () {
         <Action title='查看资料' onPress={() => router.push(`/chats/people/${encodeURIComponent(person.userID)}` as Href)} />
         <Action title='移出黑名单' disabled={task.busy} onPress={() => setRemove(person)} />
       </PersonRow>)}
-      {remove && <Confirm message={`将 ${remove.nickname || remove.userID} 移出黑名单？`} busy={task.busy} onCancel={() => setRemove(undefined)} onConfirm={() => {
+      {remove && <Confirm error={task.error} message={`将 ${remove.nickname || remove.userID} 移出黑名单？`} busy={task.busy} onCancel={() => setRemove(undefined)} onConfirm={() => {
         void run(async current => {
           await profile.block(remove.userID, false)
           if (current()) {

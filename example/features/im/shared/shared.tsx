@@ -1,6 +1,7 @@
 import React from 'react'
 import {
   ActivityIndicator,
+  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -127,20 +128,43 @@ export function Confirm ({
   onConfirm,
   onCancel,
   busy,
+  error,
 }: {
   message: string
   onConfirm: () => void
   onCancel: () => void
   busy: boolean
+  error?: string
 }) {
+  const colors = useChatListColors()
+  const cancel = () => {
+    if (!busy)
+      onCancel()
+  }
   return (
-    <View style={styles.confirm}>
-      <Label>{message}</Label>
-      <View style={styles.actions}>
-        <Action title='确认' danger onPress={onConfirm} disabled={busy} />
-        <Action title='取消' onPress={onCancel} disabled={busy} />
+    <Modal
+      testID='confirmation-modal'
+      visible
+      transparent
+      animationType='fade'
+      onRequestClose={cancel}
+    >
+      <View style={styles.confirmOverlay} accessibilityViewIsModal onAccessibilityEscape={cancel}>
+        <ScrollView
+          style={[styles.confirmDialog, { backgroundColor: colors.background }]}
+          contentContainerStyle={styles.confirm}
+          keyboardShouldPersistTaps='handled'
+        >
+          <Label>{message}</Label>
+          {!!error && <Text accessibilityRole='alert' style={{ color: colors.draft }}>{error}</Text>}
+          {busy && <ActivityIndicator accessibilityLabel='正在处理' color={colors.attachment} />}
+          <View style={styles.actions}>
+            <Action title='确认' danger onPress={onConfirm} disabled={busy} />
+            <Action title='取消' onPress={cancel} disabled={busy} />
+          </View>
+        </ScrollView>
       </View>
-    </View>
+    </Modal>
   )
 }
 export const styles = StyleSheet.create({
@@ -165,5 +189,7 @@ export const styles = StyleSheet.create({
   },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center' },
   button: { paddingVertical: 10, paddingHorizontal: 12, borderRadius: 10 },
-  confirm: { padding: 16, gap: 12, borderWidth: 1, borderColor: '#E56555', borderRadius: 12 },
+  confirmOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24, backgroundColor: 'rgba(0,0,0,0.4)' },
+  confirmDialog: { flexGrow: 0, maxHeight: '90%', width: '100%', maxWidth: 480, borderWidth: 1, borderColor: '#E56555', borderRadius: 12 },
+  confirm: { padding: 16, gap: 12 },
 })

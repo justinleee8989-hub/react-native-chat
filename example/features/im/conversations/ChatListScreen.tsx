@@ -1,5 +1,5 @@
 import React, { useCallback, useRef, useState } from 'react'
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native'
+import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 import { ChatList } from '@kesha-antonov/react-native-chat'
 import { Href, useFocusEffect, useRouter } from 'expo-router'
@@ -129,37 +129,21 @@ function SessionChatList ({ archived }: { archived: boolean }) {
           {task.error}
         </Text>
       )}
-      <Modal
-        visible={deleting.length > 0}
-        transparent
-        animationType='fade'
-        onRequestClose={() => {
-          if (!task.busy) 
-            setDeleting([])
-        }}
-      >
-        <View style={styles.modal}>
-          <View style={[styles.dialog, { backgroundColor: colors.background }]}>
-            <Confirm
-              message={`确认删除 ${deleting.length} 个会话及其聊天记录？此操作无法在界面中撤销。`}
-              busy={task.busy}
-              onCancel={() => setDeleting([])}
-              onConfirm={() => {
-                void task.run(async current => {
-                  await removeConversations(deleting)
-                  if (current()) 
-                    setDeleting([])
-                })
-              }}
-            />
-            {!!task.error && (
-              <Text accessibilityRole='alert' style={{ color: colors.draft }}>
-                {task.error}
-              </Text>
-            )}
-          </View>
-        </View>
-      </Modal>
+      {deleting.length > 0 && (
+        <Confirm
+          error={task.error}
+          message={`确认删除 ${deleting.length} 个会话及其聊天记录？此操作无法在界面中撤销。`}
+          busy={task.busy}
+          onCancel={() => setDeleting([])}
+          onConfirm={() => {
+            void task.run(async current => {
+              await removeConversations(deleting)
+              if (current())
+                setDeleting([])
+            })
+          }}
+        />
+      )}
       {!!state.error && (
         <Text accessibilityRole='alert' style={{ color: '#b42318', padding: 8 }}>
           {state.error}
@@ -170,8 +154,6 @@ function SessionChatList ({ archived }: { archived: boolean }) {
 }
 
 const styles = StyleSheet.create({
-  modal: { flex: 1, backgroundColor: 'rgba(0,0,0,0.35)', justifyContent: 'center', padding: 24 },
-  dialog: { maxWidth: 480, width: '100%', alignSelf: 'center', borderRadius: 16, padding: 20 },
   actions: { flexDirection: 'row', alignItems: 'center' },
   action: { width: 40, height: 44, alignItems: 'center', justifyContent: 'center' },
 })

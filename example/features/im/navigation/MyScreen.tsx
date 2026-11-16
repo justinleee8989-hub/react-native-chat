@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react'
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native'
+import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 import { ChatListAvatar } from '@kesha-antonov/react-native-chat'
 import { Href, useFocusEffect, useRouter } from 'expo-router'
@@ -59,20 +59,11 @@ function MyAccount ({ userID }: { userID: string }) {
       </Pressable>)}
     </View>
     <Action title='退出登录' danger disabled={busy} onPress={() => setConfirmLogout(true)} />
-    <Modal visible={confirmLogout} transparent animationType='fade' onRequestClose={() => {
-      if (!busy) 
-        setConfirmLogout(false) 
+    {confirmLogout && <Confirm message='确认退出当前账户？你可以随时重新登录。' busy={busy} onCancel={() => setConfirmLogout(false)} onConfirm={() => {
+      void logout().then(() => router.replace('/auth/login' as Href))
     }}
-    >
-      <View style={styles.overlay}>
-        <View style={[styles.dialog, { backgroundColor: colors.background }]}>
-          <Confirm message='确认退出当前账户？你可以随时重新登录。' busy={busy} onCancel={() => setConfirmLogout(false)} onConfirm={() => {
-            void logout().then(() => router.replace('/auth/login' as Href))
-          }}
-          />
-        </View>
-      </View>
-    </Modal>
+    />}
+
   </Page>
 }
 const styles = StyleSheet.create({
@@ -81,6 +72,4 @@ const styles = StyleSheet.create({
   name: { fontSize: 22, fontWeight: '700' },
   menu: { borderWidth: StyleSheet.hairlineWidth, borderRadius: 16, overflow: 'hidden' },
   item: { flexDirection: 'row', alignItems: 'center', gap: 16, padding: 18, borderBottomWidth: StyleSheet.hairlineWidth },
-  overlay: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24, backgroundColor: 'rgba(0,0,0,0.4)' },
-  dialog: { width: '100%', maxWidth: 440, borderRadius: 16, padding: 20 },
 })

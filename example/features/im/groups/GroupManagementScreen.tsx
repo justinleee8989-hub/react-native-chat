@@ -181,7 +181,7 @@ function Management({ groupID, userID }: { groupID: string, userID: string }) {
         />
       )}
       {pending && (
-        <Confirm
+        <Confirm error={task.error}
           busy={task.busy}
           message={pending.message}
           onCancel={() => setPending(undefined)}
