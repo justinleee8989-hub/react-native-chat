@@ -12,7 +12,7 @@ export default function SessionGuard () {
   const navigation = useRootNavigationState()
   const colors = useChatListColors()
   const auth = segments[0] === 'auth'
-  const development = segments[0] === 'chat' || segments[1] === 'explore'
+  const development = segments[0] === 'chat' || segments[0] === 'explore'
   useEffect(() => {
     if (!navigation?.key || !initialized || (!session && busy) || development)
       return

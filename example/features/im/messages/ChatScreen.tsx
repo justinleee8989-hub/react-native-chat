@@ -123,7 +123,13 @@ function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
   if (!conversation)
     return (
       <View style={styles.container}>
-        <Button title='返回会话列表' onPress={() => router.back()} />
+        <Button title='返回会话列表' onPress={() => {
+          if (router.canGoBack())
+            router.back()
+          else
+            router.replace('/(tabs)/chats')
+        }}
+        />
         <Text>正在同步会话；若刷新后仍不存在，请返回列表重新打开。</Text>
       </View>
     )
@@ -138,7 +144,12 @@ function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
       >
         <View style={styles.headerBar}>
           <Pressable
-            onPress={() => router.back()}
+            onPress={() => {
+              if (router.canGoBack())
+                router.back()
+              else
+                router.replace('/(tabs)/chats')
+            }}
             hitSlop={4}
             style={styles.headerButton}
             accessibilityRole='button'

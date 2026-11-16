@@ -23,7 +23,13 @@ export default function ChatLayout () {
         // No bottom padding: the chat's wallpaper runs under the home indicator, and the
         // composer island keeps itself clear of it.
         headerLeft: () => (
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <TouchableOpacity onPress={() => {
+            if (router.canGoBack())
+              router.back()
+            else
+              router.replace('/explore')
+          }} style={styles.backButton}
+          >
             <Ionicons name='chevron-back' size={24} color='#007AFF' />
           </TouchableOpacity>
         ),

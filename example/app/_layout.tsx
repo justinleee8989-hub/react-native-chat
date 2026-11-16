@@ -12,10 +12,6 @@ import { useColorScheme } from '@/hooks/use-color-scheme'
 
 LogBox.ignoreLogs(['Open debugger to view warnings'])
 
-export const unstable_settings = {
-  anchor: '(tabs)',
-}
-
 export default function RootLayout () {
   const colorScheme = useColorScheme()
 
@@ -31,6 +27,7 @@ export default function RootLayout () {
             <Stack.Screen name='(tabs)' />
             <Stack.Screen name='auth' />
             <Stack.Screen name='chat' />
+            <Stack.Screen name='explore' />
             <Stack.Screen name='chats' />
             <Stack.Screen name='modal' options={{ headerShown: true, presentation: 'modal', title: 'Modal' }} />
           </Stack>

@@ -1,17 +1,16 @@
 import React from 'react'
 import { useWindowDimensions } from 'react-native'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
-import { Tabs, useSegments } from 'expo-router'
+import { Tabs } from 'expo-router'
 import { useChatListColors } from '@/components/chat-list/theme'
 import { useOpenIM } from '../application/store'
 
 export default function ProductTabs () {
-  const segments = useSegments()
   const { width } = useWindowDimensions()
   const colors = useChatListColors()
   const { session, conversations } = useOpenIM()
   const unread = conversations.reduce((total, conversation) => total + (conversation.unreadCount || 0), 0)
-  if (!session && segments[1] !== 'explore')
+  if (!session)
     return null
   return (
     <Tabs backBehavior='initialRoute' screenOptions={{
@@ -29,7 +28,6 @@ export default function ProductTabs () {
       <Tabs.Screen name='groups' options={{ title: '群组', tabBarIcon: ({ focused, size }) => <MaterialCommunityIcons name='account-group-outline' size={size} color={focused ? colors.badge : colors.message} /> }} />
       <Tabs.Screen name='me' options={{ title: '我的', tabBarIcon: ({ focused, size }) => <MaterialCommunityIcons name='account-circle-outline' size={size} color={focused ? colors.badge : colors.message} /> }} />
       <Tabs.Screen name='index' options={{ href: null }} />
-      <Tabs.Screen name='explore' options={{ href: null }} />
     </Tabs>
   )
 }
