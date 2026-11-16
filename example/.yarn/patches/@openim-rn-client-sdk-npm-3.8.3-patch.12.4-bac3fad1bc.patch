@@ -1,0 +1,20 @@
+diff --git a/android/build.gradle b/android/build.gradle
+index 0705b33dfea0d16cdcc3002c7d4be948ee7217be..bba9a24f71a04c4ad72f5ec8e7ab2f582a0145f5 100644
+--- a/android/build.gradle
++++ b/android/build.gradle
+@@ -1,5 +1,5 @@
+ buildscript {
+-    // if (project == rootProject) {
++    if (project == rootProject) {
+         repositories {
+             google()
+             mavenCentral()
+@@ -9,7 +9,7 @@ buildscript {
+         dependencies {
+             classpath 'com.android.tools.build:gradle:4.2.0'
+         }
+-    // }
++    }
+ }
+ 
+ apply plugin: 'com.android.library'

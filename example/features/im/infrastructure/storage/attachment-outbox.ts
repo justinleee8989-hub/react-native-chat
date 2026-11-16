@@ -18,7 +18,7 @@ export const attachmentOutbox: AttachmentPersistence = {
     if (original.size > MAX_BYTES)
       throw new Error('单个附件不能超过 100 MB')
     const target = new File(folder, `${index}-${(media.name || original.name || media.type).replace(/[^a-zA-Z0-9._-]/g, '_')}`)
-    original.copy(target)
+    await original.copy(target)
     return { ...media, uri: target.uri }
   },
   async save (scope, batch) {

@@ -9,7 +9,7 @@ export async function uploadAvatar (asset: AvatarAsset, current: () => boolean) 
     const source = new File(value.uri)
     const name = value.fileName || source.name || 'avatar.jpg'
     const local = new File(Paths.cache, `avatar-${uuid}-${name}`)
-    source.copy(local)
+    await source.copy(local)
     return {
       params: { name, contentType: value.mimeType || 'image/jpeg', uuid, filepath: local.uri.replace('file://', '') },
       dispose: () => {

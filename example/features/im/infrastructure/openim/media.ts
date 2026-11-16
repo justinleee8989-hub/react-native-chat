@@ -11,7 +11,7 @@ export async function createNativeMedia (media: MediaInput) {
     Paths.cache,
     `openim-${Date.now()}-${original.name || media.name || media.type}`
   )
-  original.copy(local)
+  await original.copy(local)
   const path = local.uri.replace('file://', '')
   if (media.type === 'image')
     return SDK.createImageMessageFromFullPath(path)

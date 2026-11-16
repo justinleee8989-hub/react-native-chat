@@ -31,7 +31,7 @@
     "@livekit/react-native-expo-plugin": "^1.1.0",
     "@livekit/react-native-webrtc": "^150.1.1",
     "@lodev09/react-native-true-sheet": "^4.0.1",
-    "@openim/rn-client-sdk": "3.8.3-patch.12.4",
+    "@openim/rn-client-sdk": "patch:@openim/rn-client-sdk@npm%3A3.8.3-patch.12.4#~/.yarn/patches/@openim-rn-client-sdk-npm-3.8.3-patch.12.4-bac3fad1bc.patch",
     "@openim/wasm-client-sdk": "3.8.3-patch.15.1",
     "@radix-ui/react-dialog": "^1.1.1",
     "@radix-ui/react-presence": "^1",
