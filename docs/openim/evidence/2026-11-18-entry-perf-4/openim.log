@@ -1,0 +1,463 @@
+✔ demo dialog hooks support static server rendering, including unknown profile routes (67.084625ms)
+(node:56997) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/czzz/work/kson/code/github/IM/react-native-chat/example/features/im/application/composer-state.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/czzz/work/kson/code/github/IM/react-native-chat/example/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ drafts are scoped to user and conversation (0.73525ms)
+✔ queued writes preserve order and stale user writes are skipped (0.476083ms)
+✔ send failure preserves draft; only successful send clears it (0.260583ms)
+✔ send completion after account switch does not clear the new account draft (0.593375ms)
+✔ send completion does not clear text typed while sending (0.143833ms)
+✔ mention selections restore per account and conversation and clear only after successful send (0.215625ms)
+✔ mention changes during send are not cleared by the older send (0.101125ms)
+✔ exit immediately after clearing flushes the empty draft instead of keeping stale text (0.078166ms)
+✔ exit during a send does not flush the pre-send empty reset over the draft (0.064ms)
+✔ exit flush from an old login cannot write into the current account (0.152834ms)
+✔ input status accepts native and WASM payload shapes and rejects malformed events (0.609917ms)
+✔ delivered send survives write cleanup failure without restoring submitted draft (0.204125ms)
+✔ delivered send survives writeMentions cleanup failure without restoring submitted draft (0.094666ms)
+✔ cleanup failure preserves a newer draft and reports no warning to a new account (3.0875ms)
+✔ durable delivered marker survives restart when SDK cleanup fails (0.277083ms)
+✔ same user on a different server does not share delivered markers or stale exit writes (0.126959ms)
+✔ queued draft work is invalidated when scope changes before hook updates (0.068083ms)
+✔ rapid typing coalesces obsolete queued drafts before delivered cleanup (0.4295ms)
+(node:56998) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/czzz/work/kson/code/github/IM/react-native-chat/example/features/im/application/conversation-actions.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/czzz/work/kson/code/github/IM/react-native-chat/example/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ failed remote pin does not show a false successful local setting (0.639375ms)
+✔ late setting result cannot alter a new account (0.095334ms)
+✔ delete removes local conversation and messages only after remote success (0.145417ms)
+✔ retry after partial batch deletion skips conversations already removed successfully (0.372042ms)
+✔ archive updates the current user ex after remote success and unpins the conversation (0.230708ms)
+✔ delete waits for snapshot persistence, including retry after local removal (3.515042ms)
+✔ partial batch failure still flushes already deleted conversations (0.338208ms)
+✔ clear awaits snapshot cleanup and reports persistence failure (0.323291ms)
+(node:56999) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/czzz/work/kson/code/github/IM/react-native-chat/example/features/im/application/foreground-events.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/czzz/work/kson/code/github/IM/react-native-chat/example/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ native foreground notifies once per inactive-to-active transition and unsubscribes (0.357625ms)
+✔ web visibility and focus events coalesce into one foreground transition (0.122459ms)
+(node:57000) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/czzz/work/kson/code/github/IM/react-native-chat/example/features/im/application/foreground-recovery.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/czzz/work/kson/code/github/IM/react-native-chat/example/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ coalesces concurrent recovery for one active session and conversation (1.169292ms)
+✔ does not load history after the session or active conversation changes during refresh (0.105542ms)
+(node:57001) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/czzz/work/kson/code/github/IM/react-native-chat/example/features/im/application/group-read-notice.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/czzz/work/kson/code/github/IM/react-native-chat/example/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ reads the chat server group read notice in the shapes the SDKs deliver (1.195292ms)
+✔ ignores other business messages and malformed notices (0.096125ms)
+(node:57002) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/czzz/work/kson/code/github/IM/react-native-chat/example/features/im/application/home-persistence.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/czzz/work/kson/code/github/IM/react-native-chat/example/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ required flush cancels debounce and follows an already running stale write (304.7415ms)
+(node:57003) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/czzz/work/kson/code/github/IM/react-native-chat/example/features/im/application/message-cache.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/czzz/work/kson/code/github/IM/react-native-chat/example/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ keeps active history intact and trims only inactive histories (0.790042ms)
+✔ evicts least recently used ordinary chats but protects unsent/failed messages (0.207958ms)
+✔ no-op pruning preserves reference identity (0.059542ms)
+(node:57004) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/czzz/work/kson/code/github/IM/react-native-chat/example/features/im/domain/model.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/czzz/work/kson/code/github/IM/react-native-chat/example/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ offline SDK messages update the current chat without leaving it and remain deduplicated (210.901917ms)
+✔ sync completion reloads the active conversation history after reconnect (247.636334ms)
+✔ foreground recovery coalesces refreshes and reloads history only while the same chat remains active (79.663958ms)
+✔ foreground recovery does not load history into a replacement session (89.810541ms)
+✔ initial login retains a non-blocking message projection warning (61.574ms)
+✔ a rejected refresh from a previous login cannot change the current account status (53.118542ms)
+✔ a stale restore refresh cannot clear the busy state of a new login (61.350167ms)
+✔ media upload failure keeps one retryable message and progress events update the official ring (43.332458ms)
+✔ duplicate retry taps do not issue concurrent SDK sends (48.417792ms)
+✔ logout during pending HTTP login prevents late response from resurrecting session (63.986084ms)
+✔ late restore cannot revive a logged out account (54.16875ms)
+✔ storage removal failure does not skip SDK logout (37.93675ms)
+✔ store module reload restores the session without duplicating SDK event subscriptions (53.292625ms)
+✔ store module disposal clears subscriptions and fences an in-flight SDK login (40.914ms)
+✔ opening an empty new conversation does not mark nonexistent server history read (42.3905ms)
+✔ checked call invite send rejects when SDK send fails (37.509583ms)
+✔ checked call invite send resolves only after SDK delivery succeeds (41.167541ms)
+✔ retrying a call invitation checks server authority before sending it (50.20025ms)
+✔ temporary SDK login failure preserves saved login and can be retried (38.1125ms)
+✔ explicit expired or invalid OpenIM login tokens clear saved credentials (44.512125ms)
+✔ temporary conversation refresh failure preserves saved login for retry (46.079833ms)
+✔ explicit invalid-token event clears saved login (43.93825ms)
+✔ read receipts update only the matching outgoing message and never mark partial group reads as fully read (47.496375ms)
+✔ authoritative group reader details synchronize the matching cached message count (36.006125ms)
+✔ a stale reader request cannot overwrite a newer SDK receipt for the same message (37.89125ms)
+✔ a chat server group read notice asks the open group chat to refresh its read count (40.235791ms)
+✔ the same read counts leave the store state untouched (37.420958ms)
+✔ session initialization waits for storage before allowing an unauthenticated redirect (42.504375ms)
+✔ session initialization completes after storage failure so recovery is accessible (42.692375ms)
+✔ cold restore displays an account snapshot without treating it as authenticated (385.409541ms)
+✔ store deletion returns only after the persisted home snapshot excludes the conversation (343.662333ms)
+(node:57005) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/czzz/work/kson/code/github/IM/react-native-chat/example/features/im/auth/account-api.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/czzz/work/kson/code/github/IM/react-native-chat/example/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ unconfigured verification cannot claim code sent or mutate account (1.759333ms)
+✔ email registration/reset preserve deployed ChatServer wire contract (1.534708ms)
+✔ malformed account responses and missing form fields are rejected (0.56975ms)
+(node:57006) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/czzz/work/kson/code/github/IM/react-native-chat/example/features/im/auth/api.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/czzz/work/kson/code/github/IM/react-native-chat/example/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ login follows ChatServer email contract and retains both distinct tokens (1.376042ms)
+✔ login rejects incomplete success response instead of creating an invalid SDK session (0.296583ms)
+✔ login surfaces backend rejection without storing credentials (0.121667ms)
+✔ login maps the backend PasswordError code to safe account credentials copy (0.090917ms)
+(node:57007) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/czzz/work/kson/code/github/IM/react-native-chat/example/features/im/auth/password-api.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/czzz/work/kson/code/github/IM/react-native-chat/example/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ password change uses ChatServer token, explicit self ID and MD5 secrets (0.967958ms)
+✔ legacy sessions and invalid password never reach network (0.219917ms)
+✔ password rejection stays visible (0.154125ms)
+✔ malformed password response is not success (0.117833ms)
+(node:57008) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/czzz/work/kson/code/github/IM/react-native-chat/example/features/im/auth/sdk-login-error.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/czzz/work/kson/code/github/IM/react-native-chat/example/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ only explicit OpenIM token expired or invalid codes are terminal auth errors (0.446667ms)
+✔ business screens do not import SDKs or demo data, domain stays platform independent (14.432167ms)
+(node:57012) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/czzz/work/kson/code/github/IM/react-native-chat/example/features/im/calls/errors.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/czzz/work/kson/code/github/IM/react-native-chat/example/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ missing hardware and permission errors are actionable Chinese messages (0.373958ms)
+✔ call error details keep useful context while removing credentials (0.204167ms)
+✔ missing or forbidden call rooms have a readable label (0.0905ms)
+(node:57013) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/czzz/work/kson/code/github/IM/react-native-chat/example/features/im/calls/invitation.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/czzz/work/kson/code/github/IM/react-native-chat/example/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ parses a valid OpenIM call invitation (0.617834ms)
+✔ ignores ordinary text and a different marker (0.06625ms)
+✔ rejects invalid JSON, room IDs, and nonnumeric expiration (0.100417ms)
+✔ asserts that an invitation is active at the supplied time (0.202584ms)
+✔ ended room cannot be retried even before invite timestamp expires (0.325625ms)
+(node:57014) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/czzz/work/kson/code/github/IM/react-native-chat/example/features/im/calls/server-controller.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/czzz/work/kson/code/github/IM/react-native-chat/example/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ media preferences survive accept/poll but never leak into another room or account (4.409834ms)
+(node:57015) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/czzz/work/kson/code/github/IM/react-native-chat/example/features/im/calls/media-setup.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/czzz/work/kson/code/github/IM/react-native-chat/example/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ starts the selected media only, releases a late grant after hangup (0.634667ms)
+✔ does not open a camera when outgoing preference was off (0.099791ms)
+(node:57016) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/czzz/work/kson/code/github/IM/react-native-chat/example/features/im/calls/message-projection.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/czzz/work/kson/code/github/IM/react-native-chat/example/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ terminal projection keeps its original ID, sender, time and original data untouched (0.964167ms)
+✔ never combines failed messages, group messages, other participants or expiry (0.561167ms)
+✔ missing terminal does not fabricate missed calls; revoked messages survive (0.076625ms)
+✔ out of order duplicate lifecycle records choose latest terminal but keep future invite (0.072ms)
+✔ labels distinguish local and remote reject and never invent duration (0.074458ms)
+✔ explicitly located or quoted original IDs remain visible after folding (0.054083ms)
+✔ server v2 result wins over a later old-client result for the same call (0.149917ms)
+(node:57017) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/czzz/work/kson/code/github/IM/react-native-chat/example/features/im/calls/server-controller.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/czzz/work/kson/code/github/IM/react-native-chat/example/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ server denial leaves start and accept state unchanged and sends no signal (0.864416ms)
+✔ server terminal states end the active call and surface their matching notice (0.243208ms)
+✔ heartbeat failures retain a call during the grace period and stop it after server state is stale (1.494375ms)
+✔ a connected call without ready media never sends a heartbeat (0.374459ms)
+✔ logout during a pending accept prevents late server and record results from restoring the prior account (0.202875ms)
+✔ an older poll cannot replace a newer accepted call or resurrect a finished call (0.214ms)
+✔ an accept response arriving after finish cannot revive a rejected call (0.095416ms)
+✔ a group call clears when the server no longer lists the current user as a member (0.17875ms)
+(node:57018) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/czzz/work/kson/code/github/IM/react-native-chat/example/features/im/calls/server-controller.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/czzz/work/kson/code/github/IM/react-native-chat/example/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ untrusted IM text cannot accept server-owned calls (0.56725ms)
+✔ server terminal state removes active media and surfaces result (0.17925ms)
+✔ late request from prior login cannot restore call (0.076542ms)
+✔ joining a group call again clears its previous local ignore state (0.162334ms)
+✔ concurrent group join attempts issue only one authority request (0.093ms)
+✔ call record failure preserves a safe SDK explanation (0.668625ms)
+✔ call controller can surface group invitation failure after navigation (0.057959ms)
+✔ records the server terminal outcome instead of the requested finish label (0.348083ms)
+(node:57019) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/czzz/work/kson/code/github/IM/react-native-chat/example/features/im/calls/signaling.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/czzz/work/kson/code/github/IM/react-native-chat/example/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ local cancellation and remote rejection end only the matching outgoing call (0.688833ms)
+✔ a matching busy response ends the call; a busy peer sends busy for a different incoming room (0.150125ms)
+✔ an incoming call times out and reports missed (0.083625ms)
+✔ forged sender, recipient, self echo, group, and non-signal messages cannot change an active call (0.08325ms)
+✔ a terminal signal arriving before its invitation cannot resurrect the call (6.07725ms)
+✔ a stale signal for another room or expiry cannot replace or end the current call (0.200542ms)
+✔ send failures clear outgoing calls and failed accepts restore the incoming call (0.356458ms)
+✔ late send completion after logout cannot restore the previous account call state (1.138166ms)
+✔ signal parsing enforces exact marker, safe expiry, allowed kinds, valid rooms, and bounded names (0.169708ms)
+(node:57020) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/czzz/work/kson/code/github/IM/react-native-chat/example/features/im/calls/signaling.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/czzz/work/kson/code/github/IM/react-native-chat/example/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ accept requires matching authenticated peer; late end cannot resurrect call (0.720916ms)
+✔ incoming can reject; duplicate invitation does not ring twice (0.09875ms)
+✔ busy and unanswered calls produce real signals (3.020875ms)
+✔ offline expired invitation never rings; group messages ignored (0.167417ms)
+✔ a group media room reserves busy state until it is released (1.373042ms)
+(node:57021) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/czzz/work/kson/code/github/IM/react-native-chat/example/features/im/calls/signaling.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/czzz/work/kson/code/github/IM/react-native-chat/example/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ retains validated terminal metadata and rejects invalid duration (0.431125ms)
+✔ does not send duplicate client records when authority owns delivery (0.2725ms)
+(node:57022) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/czzz/work/kson/code/github/IM/react-native-chat/example/features/im/calls/token-api.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/czzz/work/kson/code/github/IM/react-native-chat/example/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ requests a token with the chat token and session user identity (0.919667ms)
+✔ requires a chat token without making a request (0.240625ms)
+✔ rejects a non-200 response (0.126916ms)
+✔ rejects an API error code and uses its message (0.084875ms)
+✔ rejects missing token or server URL (0.104959ms)
+(node:57023) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/czzz/work/kson/code/github/IM/react-native-chat/example/features/im/domain/directory.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/czzz/work/kson/code/github/IM/react-native-chat/example/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ administrators cannot remove equal or higher roles or themselves (0.400333ms)
+✔ missing membership denies actions and owner cannot leave (0.373791ms)
+✔ paged directory replaces duplicates without losing earlier pages (0.093959ms)
+✔ ordinary members may invite in approval groups with a pending-review outcome (0.078667ms)
+✔ directory event subscriptions scope groups and stop invalidating after cleanup (1.454709ms)
+✔ initial synchronization invalidates both contact and group directories (0.144333ms)
+(node:57024) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/czzz/work/kson/code/github/IM/react-native-chat/example/features/im/domain/group-management.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/czzz/work/kson/code/github/IM/react-native-chat/example/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ owner/admin gates protect self, owners and peer administrators (0.804209ms)
+✔ confirmation recheck rejects stale session and revoked privileges (0.345792ms)
+✔ mute labels distinguish unknown, active and expired server values (35.193875ms)
+✔ SDK millisecond mute deadline displays the actual date (0.322209ms)
+(node:57025) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/czzz/work/kson/code/github/IM/react-native-chat/example/features/im/domain/model.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/czzz/work/kson/code/github/IM/react-native-chat/example/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ history and live events merge by client ID and preserve chronological display (0.737833ms)
+✔ incoming direct messages cannot leak into a different chat (0.072791ms)
+✔ failed messages never display a successful delivery receipt (1.345833ms)
+✔ message arriving before conversation metadata stays queued and is delivered once after metadata arrives (2.9505ms)
+✔ persisted media maps to official photo, voice, video and file bubbles (0.15275ms)
+✔ failed media retains local preview and advertises failure; progress uses official transfer ring (0.097375ms)
+✔ quote replies retain original author and bubble reference (0.086125ms)
+✔ revoked media becomes a system notice without the original attachment (0.092292ms)
+✔ group notifications display readable event names (0.055333ms)
+✔ archive metadata is namespaced per user and preserves JSON ex fields (0.171459ms)
+✔ legacy non-JSON ex is wrapped intact before archive metadata is added (0.071666ms)
+✔ chat list projection scopes archived state to the current user (0.101208ms)
+✔ chat list items preserve conversation ids separately from group and private avatar ids (0.047625ms)
+✔ real card and location messages provide previews and native quote targets (0.078791ms)
+✔ quoted non-text messages retain playable payload plus their original quote (0.501459ms)
+✔ avatar upload waits for the local file copy to finish (72.991791ms)
+✔ avatar upload propagates copy failure without calling the SDK (36.348458ms)
+✔ attachment outbox waits for the retained file copy to finish (9.758709ms)
+✔ attachment outbox rejects when retaining the file fails (3.232583ms)
+✔ reloading the web client while ready is pending initializes the page SDK once (153.562583ms)
+✔ a listener registered before reload survives on the active SDK and can still unsubscribe (29.47175ms)
+✔ reloading after login skips SDK login when the same key is already authenticated (22.412291ms)
+✔ reloading after the SDK reports logged out performs login again (12.095542ms)
+✔ a different token is never treated as the authenticated session (20.930875ms)
+✔ a different server configuration is not treated as the authenticated session (12.19875ms)
+✔ a failed SDK login clears the pending attempt so a later module can retry (8.135041ms)
+✔ reloading during a timed out SDK login does not start a duplicate underlying login (14.270833ms)
+✔ simultaneous local text and mentions writes preserve both fields (115.21125ms)
+✔ changing servers during queued writes cannot leak old drafts into the new server (5.645375ms)
+(node:57030) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/czzz/work/kson/code/github/IM/react-native-chat/example/features/im/infrastructure/openim/conversation-service.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/czzz/work/kson/code/github/IM/react-native-chat/example/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ pin and mute use separate OpenIM fields; unmute restores normal receiving (2.262834ms)
+✔ clear history and delete conversation remain distinct operations (0.3255ms)
+✔ archive persists per-user metadata in conversation ex and unpins only when archiving (0.50125ms)
+✔ archive merges metadata into the latest SDK ex for the conversation type (0.26875ms)
+✔ archive honors an explicitly cleared latest ex instead of restoring stale metadata (0.167542ms)
+(node:57031) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/czzz/work/kson/code/github/IM/react-native-chat/example/features/im/infrastructure/openim/directory-service.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/czzz/work/kson/code/github/IM/react-native-chat/example/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ native raw directory preserves pagination and friend request direction (0.8085ms)
+✔ web envelope directory preserves pagination and friend request direction (0.081ms)
+✔ invalid list responses cannot masquerade as a successful empty directory (2.938458ms)
+✔ missing users resolve as an empty result while unrelated SDK errors propagate (1.310791ms)
+(node:57032) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/czzz/work/kson/code/github/IM/react-native-chat/example/features/im/infrastructure/openim/group-management-service.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/czzz/work/kson/code/github/IM/react-native-chat/example/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ native group requests use SDK userID as fromUserID and preserve paging (0.993167ms)
+✔ web group requests use SDK userID as fromUserID and preserve paging (0.171292ms)
+✔ malformed applications are rejected rather than shown as empty (0.235792ms)
+✔ native media waits for content URI copy before calling OpenIM (104.970833ms)
+✔ native media propagates copy failure without calling OpenIM (20.093834ms)
+(node:57034) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/czzz/work/kson/code/github/IM/react-native-chat/example/features/im/infrastructure/openim/media.web.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/czzz/work/kson/code/github/IM/react-native-chat/example/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ web file factory passes actual bytes into SDK for upload instead of persisting a local URL (19.17ms)
+✔ web voice factory retains recorded data and duration for SDK upload (0.451083ms)
+✔ image SDK UUID mutation is shared by source, big and snapshot upload metadata (4.096ms)
+(node:57035) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/czzz/work/kson/code/github/IM/react-native-chat/example/features/im/infrastructure/openim/profile-avatar-service.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/czzz/work/kson/code/github/IM/react-native-chat/example/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ web avatar uploads actual selected image bytes, never a blob URL as the avatar (0.997083ms)
+✔ native avatar sends copied file path and always releases its temporary file (0.115833ms)
+✔ session change before upload and local-only upload result cannot update profile (8.094625ms)
+(node:57036) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/czzz/work/kson/code/github/IM/react-native-chat/example/features/im/infrastructure/openim/profile-service.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/czzz/work/kson/code/github/IM/react-native-chat/example/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ native profiles normalize and preserve blocked friends (1.193292ms)
+✔ web profiles normalize and preserve blocked friends (0.154417ms)
+✔ malformed profiles are errors, never empty successful states (0.108167ms)
+✔ friend remarks recheck relationship and never call updateFriends for a stranger (0.124084ms)
+✔ global quiet mode preserves other profile fields and uses receive-without-notification value (0.087875ms)
+(node:57037) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/czzz/work/kson/code/github/IM/react-native-chat/example/features/im/infrastructure/openim/web-session.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/czzz/work/kson/code/github/IM/react-native-chat/example/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ web logout waits for SDK and replaces the runtime without deleting stored history (0.841709ms)
+✔ failed SDK logout still isolates the next account (0.252958ms)
+(node:57038) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/czzz/work/kson/code/github/IM/react-native-chat/example/features/im/infrastructure/storage/home-snapshot.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/czzz/work/kson/code/github/IM/react-native-chat/example/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ home snapshot is bounded, account/server scoped and contains no tokens (0.821625ms)
+✔ invalid snapshot and storage failures do not block authentication (0.227625ms)
+✔ logout removal follows pending writes, so a queued snapshot cannot reappear (0.114417ms)
+✔ 200 rows with long bounded previews fit the snapshot size budget (3.498084ms)
+✔ required save removes stale snapshot if replacing it fails (0.194667ms)
+✔ required save reports failure when neither write nor removal is possible (0.187916ms)
+✔ extracts image, safe file URL, and projected edited links while excluding revoked and system rows (1.828209ms)
+✔ page cursor uses chronological minimum regardless of SDK response ordering and deduplicates overlaps (0.350333ms)
+✔ projection is fetched for each successful text page and supplies edited link content (0.137625ms)
+✔ stale pages are discarded and repeated cursors fail instead of looping forever (0.28475ms)
+✔ a failed extras read leaves the history cursor unchanged so retry cannot skip the page (0.191542ms)
+✔ an account change while projected extras are loading rejects the old page without advancing (6.995875ms)
+(node:57041) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/czzz/work/kson/code/github/IM/react-native-chat/example/features/im/messages/attachment-batch.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/czzz/work/kson/code/github/IM/react-native-chat/example/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ durable batch resumes explicitly with stable ID after an ambiguous send and isolates accounts (1.175291ms)
+✔ failed durable acceptance does not publish or send the task (0.171958ms)
+✔ checkpoint storage failure prevents network send until persistence succeeds (0.212958ms)
+✔ logout after preparation retains old account task without sending it (0.205916ms)
+✔ a post-send checkpoint failure retries storage without sending delivered media again (0.177959ms)
+✔ ambiguous delivery retry reconciles server history and never resends a delivered ID (0.669625ms)
+✔ history reconciliation failure blocks resend until a successful history check (1.736ms)
+✔ restored sending caption is reconciled before any preparation or resend (0.155875ms)
+✔ completed batches do not exhaust the pending-task limit after 51 sequential sends (2.282083ms)
+(node:57042) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/czzz/work/kson/code/github/IM/react-native-chat/example/features/im/messages/composer.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/czzz/work/kson/code/github/IM/react-native-chat/example/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ non-text quote preserves actual media and round trips through SDK ex (0.70275ms)
+✔ malformed metadata never breaks a bubble and nested quotes are bounded (0.089959ms)
+✔ location validates geographic bounds and opens only fixed maps https endpoint (0.157917ms)
+✔ rich reply to a quoted text preserves visible text without nested chains (0.062083ms)
+(node:57048) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/czzz/work/kson/code/github/IM/react-native-chat/example/features/im/messages/extras.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/czzz/work/kson/code/github/IM/react-native-chat/example/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ edits and actor reactions overlay the official message without changing original (0.793917ms)
+✔ system or revoked messages never resurrect edited text (0.07ms)
+✔ late mutation responses cannot overwrite a newer extra revision (0.097792ms)
+✔ a poll that changes nothing keeps the same extras object (0.112375ms)
+✔ message extra reads are split into ordered batches of at most 100 (0.123958ms)
+✔ extra mutations resolve an unsynced seq from server history (0.102333ms)
+✔ extra mutations reject when server history has no target message (0.184875ms)
+✔ extra mutations reject a target with no positive server sequence (0.06875ms)
+✔ extra sequence pagination rejects a non-advancing cursor (0.09625ms)
+✔ known positive extra sequence avoids a history read (21.928167ms)
+✔ extra sequence resolution follows cursor pages to the target (0.132375ms)
+✔ extra sequence resolution rejects a repeated cursor cycle (0.139334ms)
+(node:57049) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/czzz/work/kson/code/github/IM/react-native-chat/example/features/im/messages/composer.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/czzz/work/kson/code/github/IM/react-native-chat/example/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ quote sends original SDK message, not a lossy bubble projection (0.828ms)
+✔ forward creates a new SDK message and revoke changes display after server success (0.272584ms)
+✔ search scans synced candidates and matches projected edited text (0.631542ms)
+✔ quotes and forwards use projected content without mutating the SDK source (0.187792ms)
+✔ media send failure rejects and attachment batch does not send caption (0.848667ms)
+✔ caption failure is reported even after selected media was sent (0.323417ms)
+✔ ensureMessageLoaded pages older history without marking it read (0.280208ms)
+✔ concurrent history waiters receive the original page failure (2.057625ms)
+✔ preview projection failure does not fail refresh and preserves previous edited preview (0.453958ms)
+✔ failed forwards reject so recipient picker does not report success (0.183458ms)
+✔ clearing history invalidates pending results and permits a new request (0.112541ms)
+✔ quote failures reject so the composer retains its draft (0.287625ms)
+✔ attachment batch retries a failed send with the same prepared message and keeps later items (0.263792ms)
+✔ attachment batch retries failed media preparation with a newly created message (0.138625ms)
+✔ attachment batch refuses continuation after the login generation changes (0.237708ms)
+✔ cancelled attachment batch does not send remaining media or caption (0.133917ms)
+✔ concurrent attachment batch retry taps share one in-flight send (0.994542ms)
+✔ attachment created for an old account is never sent after account switch (0.149208ms)
+✔ cancelling while media preparation is pending prevents its send and releases the native URI (0.469125ms)
+✔ a batch retry recognizes an attachment already delivered by the failed-message retry control (0.343459ms)
+✔ voice creation failure retains the recording for retry without duplicating delivery (0.251583ms)
+✔ focus history/read failures are reported for current account (0.370417ms)
+✔ focus history/read failures are ignored after account change (0.131458ms)
+✔ incoming message read failure is reported for current account (0.330542ms)
+✔ incoming message read failure is ignored after account change (0.130125ms)
+✔ location and contact card sends use native SDK types and carry rich quote metadata (0.232584ms)
+✔ replying with attachments and caption preserves the original source for both (0.1115ms)
+✔ history loading follows the shared request and clears after failure (0.077208ms)
+✔ stale history completion does not clear a new sessions loading state (0.057834ms)
+✔ conversation refresh stays silent while earlier history reports paging (0.071542ms)
+(node:57050) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/czzz/work/kson/code/github/IM/react-native-chat/example/features/im/domain/model.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/czzz/work/kson/code/github/IM/react-native-chat/example/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ projection is display metadata on a copy and never alters SDK fields (0.414834ms)
+✔ quote and forward source copy applies edited text and removes projection metadata (0.11425ms)
+✔ revoked and system messages never gain projected content (0.048667ms)
+✔ message and conversation previews consume projection metadata and preserve revoked notices (0.330625ms)
+(node:57051) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/czzz/work/kson/code/github/IM/react-native-chat/example/features/im/messages/readers.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/czzz/work/kson/code/github/IM/react-native-chat/example/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ reader details require authenticated synchronized messages (0.566791ms)
+✔ reader request uses chat authentication and exact original message identity (0.638708ms)
+✔ read failures are explicit, never rendered as everyone unread (0.186791ms)
+✔ empty filtered page retains continuation cursor and uses user token (25.634125ms)
+✔ permission failures and stalled/malformed pages fail instead of silently exhausting (21.122292ms)
+✔ no credentials do not dispatch a request (2.631333ms)
+(node:57053) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/czzz/work/kson/code/github/IM/react-native-chat/example/features/im/navigation/layout.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/czzz/work/kson/code/github/IM/react-native-chat/example/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ deep links keep their matching master section (0.4955ms)
+✔ desktop breakpoint does not change mobile navigation (0.065666ms)
+✔ missing user is a Chinese recovery prompt, never a backend stack trace (30.291875ms)
+✔ unknown internal error hides paths and leaves retry enabled (10.221125ms)
+✔ local actionable Chinese validation stays visible (17.113333ms)
+✔ first failure is not successful data and later success survives refresh failure (6.370791ms)
+(node:57055) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/czzz/work/kson/code/github/IM/react-native-chat/example/features/im/ui/preferences-model.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/czzz/work/kson/code/github/IM/react-native-chat/example/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ appearance follows system only in auto mode (0.367084ms)
+✔ invalid saved appearance safely uses system (0.068166ms)
+ℹ tests 287
+ℹ suites 0
+ℹ pass 287
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2852.031333
