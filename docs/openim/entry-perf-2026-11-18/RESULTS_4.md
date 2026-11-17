@@ -1,6 +1,6 @@
 # 进入会话测试结果 · 第四轮
 
-> 说明见 [`ENTRY_PERF_TEST_4.md`](ENTRY_PERF_TEST_4.md)。时间都是 `sinceMs`（从 `press-in` 算起），单位 ms。
+> 说明见 [`TEST_4.md`](TEST_4.md)。时间都是 `sinceMs`（从 `press-in` 算起），单位 ms。
 > 日志：`docs/openim/evidence/2026-11-18-entry-perf-4/`
 
 ## 环境

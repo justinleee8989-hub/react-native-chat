@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { LayoutChangeEvent } from 'react-native'
 import type { ChatProps, IMessage } from '@kesha-antonov/react-native-chat'
 import { reportError } from '../application/store'
-import { getEntryExperiments } from '../navigation/entry-experiments'
 
 type MessageList = NonNullable<NonNullable<ChatProps<IMessage>['messagesContainerRef']>['current']>
 
@@ -12,9 +11,9 @@ const BUFFER_EXPAND_FALLBACK_MS = 700
 /** Reflow the virtualized rows without replacing the chat, composer or visible-item anchor. */
 export function useMessageListLayout () {
   const [width, setWidth] = useState<number>()
-  // The first build: only the viewport by default (entry-experiments `firstBuffer`), since a page
-  // that was not prepared ahead cannot open until these rows are built.
-  const [drawDistance, setDrawDistance] = useState(() => getEntryExperiments().firstBuffer === 'viewport' ? 0 : 600)
+  // The first build is only the viewport: a chat that was not prepared ahead cannot open until these
+  // rows are built (600 built about twice the rows and opened ~190ms later on Android, round three).
+  const [drawDistance, setDrawDistance] = useState(0)
   const ready = useRef(false)
   const expanded = useRef(false)
   const transitionDone = useRef(false)
@@ -38,14 +37,13 @@ export function useMessageListLayout () {
       })
     })
   }, [expand])
-  // The list first builds only the rows near the viewport (600); the full two-screen buffer is
-  // added after. Added while the page slides in, those extra rows are built in the same frames as
+  // The list first builds only the viewport; the full two-screen buffer is added after. Added while the page slides in, those extra rows are built in the same frames as
   // the push animation, so by default it waits for the transition to end.
   const onReady = useCallback(() => {
     if (ready.current)
       return
     ready.current = true
-    if (getEntryExperiments().bufferExpand === 'two-frames' || transitionDone.current)
+    if (transitionDone.current)
       expandInTwoFrames()
     else
       bufferTimer.current = setTimeout(expand, BUFFER_EXPAND_FALLBACK_MS)

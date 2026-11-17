@@ -1,8 +1,8 @@
 # 进入会话耗时测试说明 · 第三轮（Android Release）— 2026-11-18
 
-前两轮结果见 [`ENTRY_PERF_RESULTS.md`](ENTRY_PERF_RESULTS.md) 和 [`ENTRY_PERF_RESULTS_2.md`](ENTRY_PERF_RESULTS_2.md)。构建方法、抓日志方法和打点含义同 [`ENTRY_PERF_TEST.md`](ENTRY_PERF_TEST.md)。
+前两轮结果见 [`RESULTS_1.md`](RESULTS_1.md) 和 [`RESULTS_2.md`](RESULTS_2.md)。构建方法、抓日志方法和打点含义同 [`TEST_1.md`](TEST_1.md)。
 
-测完后填写 [`ENTRY_PERF_RESULTS_3.md`](ENTRY_PERF_RESULTS_3.md)，原始日志放到 `docs/openim/evidence/2026-11-18-entry-perf-3/`，然后提交并推送到 `perf/openim-open-chat`。
+测完后填写 [`RESULTS_3.md`](RESULTS_3.md)，原始日志放到 `docs/openim/evidence/2026-11-18-entry-perf-3/`，然后提交并推送到 `perf/openim-open-chat`。
 
 ## 一、第二轮遗留的问题
 
@@ -66,4 +66,4 @@
 
 ## 五、怎么回复
 
-填写 [`ENTRY_PERF_RESULTS_3.md`](ENTRY_PERF_RESULTS_3.md)，日志放到 `evidence/2026-11-18-entry-perf-3/`，然后提交并推送。
+填写 [`RESULTS_3.md`](RESULTS_3.md)，日志放到 `evidence/2026-11-18-entry-perf-3/`，然后提交并推送。

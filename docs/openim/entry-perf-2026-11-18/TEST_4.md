@@ -1,8 +1,8 @@
 # 进入会话测试说明 · 第四轮（Android Release）— 2026-11-18
 
-第三轮结果见 [`ENTRY_PERF_RESULTS_3.md`](ENTRY_PERF_RESULTS_3.md)。构建、抓日志和打点含义同 [`ENTRY_PERF_TEST.md`](ENTRY_PERF_TEST.md)。
+第三轮结果见 [`RESULTS_3.md`](RESULTS_3.md)。构建、抓日志和打点含义同 [`TEST_1.md`](TEST_1.md)。
 
-测完后填 [`ENTRY_PERF_RESULTS_4.md`](ENTRY_PERF_RESULTS_4.md)，日志放到 `docs/openim/evidence/2026-11-18-entry-perf-4/`，提交并推送到 `perf/openim-open-chat`。
+测完后填 [`RESULTS_4.md`](RESULTS_4.md)，日志放到 `docs/openim/evidence/2026-11-18-entry-perf-4/`，提交并推送到 `perf/openim-open-chat`。
 
 ## 一、本轮针对第三轮的三个问题
 
@@ -12,7 +12,8 @@
 | 预热 3 个时，第一个会话卡 1.5 秒后 `entry-failed` | 日志显示点击后没有触发 `prepare`。同一时间只能保留一个预加载页面，后预热的会挤掉先预热的；但代码记着"已准备过"，所以不再重新准备，只能等到超时 | **去掉"预热 3 个"实验**；`prepare` 只记住最后准备的那一个，准备别的会话后，再点回原会话会重新准备。<br>**这也修复了一个原有隐患**：按下 A 不点进去、改按 B，同一次停留里再点 A，原来也会卡 1.5 秒后失败 |
 | 对方真实阅读后，当前页已读人数不刷新 | 群成员阅读只会推进他在服务端的已读位置，OpenIM 不会为此推送群已读回执，当前页收不到通知 | 停留在群聊页、且自己最新那条消息**还有人未读**时，**每 5 秒**向已读接口查询一次；全部已读后停止，App 在后台时不查。人数没变时不更新 store，不会引起重渲染 |
 
-面板现在剩 5 个按钮：`进入`、`Activity`、`缓冲`、`动画`、`首屏`。默认值不变，分别是 `wait-ready` / `on` / `after-transition` / `ios_from_right` / `viewport`。
+> **更新（整改后）**：实验面板和开关已经全部移除，测出的结论已直接写进代码：等页面就绪后再导航、`activityEnabled` 保持开启、转场结束后再扩展缓冲、推入动画用 `ios_from_right`、首屏只渲染视口。诊断包里只保留 `[IMEntry]` 打点。
+> 下面的 **V3 已作废**：已读人数改为由服务端推送，测试方法见 [`GROUP_READ_PUSH_2026-11-18.md`](../GROUP_READ_PUSH_2026-11-18.md)。
 
 ## 二、要测什么
 
@@ -32,7 +33,7 @@
 
 应该正常进入，不会卡 1.5 秒，日志里也不应出现 `entry-failed`。请重复 3 次。
 
-### V3 已读人数实时刷新
+### V3 已读人数实时刷新（已作废，见上方说明）
 
 用和第三轮相同的 Android Release + 真实 H5 伙伴客户端：
 

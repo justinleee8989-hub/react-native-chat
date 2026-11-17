@@ -68,8 +68,8 @@
 
 ## 证据
 
-- [逐次指标](evidence/2026-11-18-entry-perf/summary.json)；R1.log–R5.log保留每次窗口匿名IMEntry事件，未清空系统日志。
-- [R1冷长会话](evidence/2026-11-18-entry-perf/R1-long-1-sheet.png)、[R2冷长会话](evidence/2026-11-18-entry-perf/R2-long-1-sheet.png)、[R2热长会话](evidence/2026-11-18-entry-perf/R2-long-2-sheet.png)。
-- [R3冷长会话空白](evidence/2026-11-18-entry-perf/R3-long-1-sheet.png)、[R4冷长会话](evidence/2026-11-18-entry-perf/R4-long-1-sheet.png)、[R5冷长会话空白](evidence/2026-11-18-entry-perf/R5-long-1-sheet.png)。
+- [逐次指标](../evidence/2026-11-18-entry-perf/summary.json)；R1.log–R5.log保留每次窗口匿名IMEntry事件，未清空系统日志。
+- [R1冷长会话](../evidence/2026-11-18-entry-perf/R1-long-1-sheet.png)、[R2冷长会话](../evidence/2026-11-18-entry-perf/R2-long-1-sheet.png)、[R2热长会话](../evidence/2026-11-18-entry-perf/R2-long-2-sheet.png)。
+- [R3冷长会话空白](../evidence/2026-11-18-entry-perf/R3-long-1-sheet.png)、[R4冷长会话](../evidence/2026-11-18-entry-perf/R4-long-1-sheet.png)、[R5冷长会话空白](../evidence/2026-11-18-entry-perf/R5-long-1-sheet.png)。
 
 诊断包完成后冷启动恢复默认实验配置wait-ready/on/after-transition；面板保留供后续验证。未合并至产品主开发分支。

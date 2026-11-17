@@ -71,7 +71,7 @@
 
 ## 证据与复现
 
-- 原始阶段日志：[T1](evidence/2026-11-18-entry-perf-2/T1.log)、[T2](evidence/2026-11-18-entry-perf-2/T2.log)、[T3](evidence/2026-11-18-entry-perf-2/T3.log)；[逐次指标](evidence/2026-11-18-entry-perf-2/summary.json)。日志仅包含匿名IMEntry事件，不含账号令牌或密码。
+- 原始阶段日志：[T1](../evidence/2026-11-18-entry-perf-2/T1.log)、[T2](../evidence/2026-11-18-entry-perf-2/T2.log)、[T3](../evidence/2026-11-18-entry-perf-2/T3.log)；[逐次指标](../evidence/2026-11-18-entry-perf-2/summary.json)。日志仅包含匿名IMEntry事件，不含账号令牌或密码。
 - 同目录T1/T2/T3的sheet.png用于200ms抽帧观察。原始录像在本机/tmp/im-entryperf2/，未上传构建产物。
 - functional/保存已读错误/恢复、回应增删、复制转发撤回、伙伴收取的UI XML和深色/窄屏截图。没有保存登录页XML或凭据。
 - 自动脚本曾误点标签或遇到转发确认未提交，未把这些尝试记为成功；使用当前UI重新定位后完成对应流程。首次调用用户token直发REST被服务器NoPermission拒绝，未绕过权限；改用真实App发送完成文字/名片/位置验证。

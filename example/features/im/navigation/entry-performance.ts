@@ -1,7 +1,7 @@
 // Opt-in Release diagnostics. Never include account IDs, tokens or message content.
 // Each line: [IMEntry] {"sample","phase","atMs","sinceMs"?,"detail"?,"rows"?}. `sinceMs` counts from the
 // finger going down on that conversation (`press-in`), or from the press itself (`press-cached` /
-// `press-cold`) when there was no press-in just before. See docs/openim/ENTRY_PERF_TEST.md.
+// `press-cold`) when there was no press-in just before. See docs/openim/entry-perf-2026-11-18/TEST_1.md.
 export const entryTraceEnabled = process.env.EXPO_PUBLIC_OPENIM_ENTRY_TRACE === '1'
 
 /** How long after a press long JS frames are reported, and what counts as long. */

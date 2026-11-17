@@ -1,8 +1,8 @@
 # 进入会话耗时测试说明 · 第二轮（Android Release）— 2026-11-18
 
-第一轮结果见 [`ENTRY_PERF_RESULTS.md`](ENTRY_PERF_RESULTS.md)。构建、抓日志、打点含义和第一轮相同，见 [`ENTRY_PERF_TEST.md`](ENTRY_PERF_TEST.md)；这里只写第二轮的变化和要测的内容。
+第一轮结果见 [`RESULTS_1.md`](RESULTS_1.md)。构建、抓日志、打点含义和第一轮相同，见 [`TEST_1.md`](TEST_1.md)；这里只写第二轮的变化和要测的内容。
 
-测完后填写 [`ENTRY_PERF_RESULTS_2.md`](ENTRY_PERF_RESULTS_2.md)，原始日志放进 `docs/openim/evidence/2026-11-18-entry-perf-2/`，提交并推送到 `perf/openim-open-chat`。
+测完后填写 [`RESULTS_2.md`](RESULTS_2.md)，原始日志放进 `docs/openim/evidence/2026-11-18-entry-perf-2/`，提交并推送到 `perf/openim-open-chat`。
 
 ## 一、第一轮发现了什么
 

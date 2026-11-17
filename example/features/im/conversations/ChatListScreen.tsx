@@ -17,7 +17,6 @@ import { parseCallInvitation } from '../calls/invitation'
 import { toChat } from '../domain/model'
 import { useDesktopNavigation, useMasterNavigation } from '../navigation/DesktopNavigation'
 import { traceChatEntry } from '../navigation/entry-performance'
-import { EntryExperimentsPanel } from '../navigation/EntryExperimentsPanel'
 import { useStartupReadiness } from '../navigation/StartupReadiness'
 import { useChatEntry } from '../navigation/useChatEntry'
 import { ConnectionStatus } from '../shared/ConnectionStatus'
@@ -405,7 +404,6 @@ function SessionChatList ({ archived, autoRefresh }: { archived: boolean, autoRe
           />
         )}
       </View>
-      <EntryExperimentsPanel />
     </SafeAreaView>
   )
 }

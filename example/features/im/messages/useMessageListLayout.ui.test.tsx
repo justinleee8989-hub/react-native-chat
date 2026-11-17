@@ -4,7 +4,6 @@ import { act, renderHook } from '@testing-library/react-native'
 import { useMessageListLayout } from './useMessageListLayout'
 
 jest.mock('../application/store', () => ({ reportError: jest.fn() }))
-jest.mock('../navigation/entry-experiments', () => ({ getEntryExperiments: () => ({ bufferExpand: 'after-transition' }) }))
 let frames: Map<number, FrameRequestCallback>
 let nextFrame: number
 beforeEach(() => {
@@ -80,10 +79,10 @@ it('buffers two viewports and updates on height-only changes without clearing ro
   expect(result.current.drawDistance).toBe(2400)
 })
 
-it('prepares a bounded first viewport before expanding the normal fling buffer', async () => {
+it('builds only the viewport first and expands the normal fling buffer after the push', async () => {
   const { result } = await renderHook(useMessageListLayout)
   await act(() => result.current.onLayout(layout(390, 700)))
-  expect(result.current.drawDistance).toBe(600)
+  expect(result.current.drawDistance).toBe(0)
   await act(() => result.current.onReady())
   await act(() => result.current.onTransitionEnd())
   await flushFrame()
@@ -97,7 +96,7 @@ it('keeps the first viewport while the page slides in and grows after the push e
   await act(() => result.current.onReady())
   await flushFrame()
   await flushFrame()
-  expect(result.current.drawDistance).toBe(600)
+  expect(result.current.drawDistance).toBe(0)
   await act(() => result.current.onTransitionEnd())
   await flushFrame()
   await flushFrame()
@@ -119,7 +118,7 @@ it('grows at once when the user starts scrolling during the push', async () => {
   const { result } = await renderHook(useMessageListLayout)
   await act(() => result.current.onLayout(layout(390, 700)))
   await act(() => result.current.onReady())
-  expect(result.current.drawDistance).toBe(600)
+  expect(result.current.drawDistance).toBe(0)
   await act(() => result.current.onScrollBeginDrag())
   expect(result.current.drawDistance).toBe(1400)
   await act(() => result.current.onTransitionEnd())
@@ -134,7 +133,7 @@ it('grows anyway when no push end arrives', async () => {
     const { result } = await renderHook(useMessageListLayout)
     await act(() => result.current.onLayout(layout(390, 700)))
     await act(() => result.current.onReady())
-    expect(result.current.drawDistance).toBe(600)
+    expect(result.current.drawDistance).toBe(0)
     await act(() => jest.advanceTimersByTime(700))
     expect(result.current.drawDistance).toBe(1400)
   } finally {

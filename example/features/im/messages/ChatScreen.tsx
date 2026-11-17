@@ -1,10 +1,9 @@
-import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Button, StyleSheet, Text, View } from 'react-native'
-import { Chat, type ChatProps, IMessage, type MessageMenuItem, ReplyMessage } from '@kesha-antonov/react-native-chat'
+import { Chat, IMessage, ReplyMessage } from '@kesha-antonov/react-native-chat'
 import { useFocusEffect, useNavigation, useRouter } from 'expo-router'
 import {
   focusConversation,
-  loadServerHistory,
   resumeConversation,
   sendQuote,
   revokeMessage,
@@ -23,14 +22,11 @@ import {
   useOpenIM,
 } from '@/features/im/application/store'
 import LoginScreen from '@/features/im/auth/LoginScreen'
-import { toMessage } from '@/features/im/domain/model'
 import type { IMMessage } from '@/features/im/domain/types'
 import { Confirm } from '@/features/im/shared/shared'
 import { useTask } from '@/features/im/shared/useTask'
 import { subscribeForeground } from '../application/foreground'
 import { startConversationCall } from '../calls/CallControls'
-import { parseCallInvitation } from '../calls/invitation'
-import { messageCallSignal, projectCallMessages } from '../calls/message-projection'
 import { traceChatEntryOnce, traceChatRender } from '../navigation/entry-performance'
 import { type NavigationWithTransitions, onOpeningTransition } from '../navigation/opening-transition'
 import { useChatEntryReady } from '../navigation/useChatEntry'
@@ -40,11 +36,9 @@ import { productChatLabels } from '../ui/ProductChatLabels'
 import { useProductChatTheme, productChatIcons } from '../ui/ProductChatTheme'
 import { AttachmentBatchTray } from './AttachmentBatchTray'
 import { useComposerEnhancements } from './ComposerEnhancements'
-import { resolveExtraSequence } from './extras'
 import ForwardPicker from './ForwardPicker'
 import { HistoryLoadIndicator } from './HistoryLoadIndicator'
 import { MentionPicker } from './MentionPicker'
-import { groupReadCount } from './presentation'
 import { ProductChatHeader } from './ProductChatHeader'
 import { ProductComposerMenu } from './ProductComposerMenu'
 import { ProductInputToolbar } from './ProductInputToolbar'
@@ -61,10 +55,9 @@ const reportVoiceRecordingError = (error: unknown) => {
   }
   reportError(error)
 }
-import { MessageCustomContent } from './MessageCustomContent'
-import { ProductMessage, ProductBubble } from './ProductMessage'
 import { ProductTyping } from './ProductMotion'
 import { useAttachmentBatches } from './useAttachmentBatches'
+import { useChatRows } from './useChatRows'
 import { useConversationAccess } from './useConversationAccess'
 import { useLatestGroupReaders } from './useLatestGroupReaders'
 import { useMessageExtras } from './useMessageExtras'
@@ -81,12 +74,6 @@ export default function ChatScreen ({ id, messageID }: { id: string, messageID?:
 }
 
 const EMPTY_MESSAGES: IMMessage[] = []
-/** A message as the list gets it: the projected chat message plus its raw OpenIM message. */
-type RowMessage = IMessage & { imRaw?: IMMessage, imReadCount?: number }
-const rawOf = (message: IMessage) => (message as RowMessage).imRaw
-const REACTION_EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🙏']
-const renderNothing = () => null
-const renderProductBubble: NonNullable<ChatProps<IMessage>['renderBubble']> = props => <ProductBubble {...props} />
 
 function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
   const state = useOpenIM()
@@ -154,36 +141,6 @@ function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
       (message.status === 1 || message.status === 2) && message.contentType < 1000
   )?.clientMsgID
   const extras = useMessageExtras(id, rawMessages)
-  // Kept across renders that leave the messages, their extras and read counts alone: this page
-  // re-renders on every change anywhere in the IM store. Each message carries its raw OpenIM
-  // message and read count (RowMessage), so the row callbacks below never look them up in a list
-  // that changes, and when one message changes only its own row re-renders. Typed as IMessage[]
-  // so `Chat` keeps IMessage as its message type.
-  const extrasMap = extras.map
-  const readInfo = state.messageReadInfo[id]
-  const messages = useMemo<IMessage[]>(
-    () => projectCallMessages(rawMessages, messageID ? [messageID] : []).map((message): RowMessage => {
-      const mapped: RowMessage = {
-        ...extrasMap(toMessage(message)),
-        imRaw: message,
-        imReadCount: groupReadCount(message, readInfo?.[message.clientMsgID]?.readCount),
-      }
-      if (
-        (message.contentType === 108 && !!message.cardElem?.userID) ||
-        (message.contentType === 109 &&
-          message.locationElem &&
-          Number.isFinite(message.locationElem.latitude) &&
-          Math.abs(message.locationElem.latitude) <= 90 &&
-          Number.isFinite(message.locationElem.longitude) &&
-          Math.abs(message.locationElem.longitude) <= 180)
-      )
-        return { ...mapped, text: '' }
-      return messageCallSignal(message) || parseCallInvitation(message.textElem?.content || '')
-        ? { ...mapped, text: '' }
-        : mapped
-    }),
-    [rawMessages, messageID, extrasMap, readInfo]
-  )
   // The push that opens this page: traced, and the list grows its off-screen buffer once it ends.
   const navigation = useNavigation() as unknown as NavigationWithTransitions
   const onListTransitionEnd = messageListLayout.onTransitionEnd
@@ -286,104 +243,21 @@ function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
       await startConversationCall(conversation, id)
     })
   }
-  // What every message row is rendered with. Each keeps its identity until something every row
-  // shows changes: the SDK re-renders every mounted row when one of these changes, and this page
-  // re-renders on any change in the IM store (focus marking the chat read, presence, typing...),
-  // which used to rebuild all of them each time - about 100ms per render in a long chat, several
-  // times while the chat opened. What is per message comes on the message itself (RowMessage).
-  const selfID = state.session?.userID || ''
-  const isGroup = !!conversation?.groupID
-  const rowWidth = messageListLayout.width
-  const latestRequestCall = useRef(requestCall)
-  useLayoutEffect(() => {
-    latestRequestCall.current = requestCall
+
+  // Everything the message rows render with, kept still across this page's frequent re-renders.
+  const rows = useChatRows({
+    id,
+    messageID,
+    rawMessages,
+    extras,
+    readInfo: state.messageReadInfo[id],
+    selfID: state.session?.userID || '',
+    isGroup: !!conversation?.groupID,
+    rowWidth: messageListLayout.width,
+    lastOwnMessageID,
+    requestCall,
+    onRevoke: setRevoke,
   })
-  const callFromRow = useCallback(() => latestRequestCall.current(), [])
-  // The readers page needs the message's server seq. A message just sent has none yet (it comes
-  // with the next sync), and opening the page then failed with "消息尚未同步"; resolve it from
-  // server history first, as editing and reactions already do.
-  const openReaders = useCallback((message: IMessage) => {
-    const raw = rawOf(message)
-    if (!raw)
-      return
-    void (async () => {
-      const seq = await resolveExtraSequence(raw, cursor => loadServerHistory({ conversationID: id, cursor }))
-      router.push({
-        pathname: '/chats/readers/[id]',
-        params: { id, messageID: String(message._id), seq: String(seq) },
-      })
-    })().catch(reportError)
-  }, [id, router])
-  const renderMessage = useCallback<NonNullable<ChatProps<IMessage>['renderMessage']>>(props => (
-    <ProductMessage
-      {...props}
-      containerWidth={rowWidth}
-      onRetry={message => {
-        const raw = rawOf(message)
-        if (raw)
-          void retryMessage(id, raw).catch(reportError)
-      }}
-      readCount={(props.currentMessage as RowMessage).imReadCount}
-      lastOwnID={lastOwnMessageID}
-      group={isGroup}
-      onReaders={openReaders}
-    />
-  ), [rowWidth, lastOwnMessageID, isGroup, openReaders, id])
-  const renderCustomView = useCallback<NonNullable<ChatProps<IMessage>['renderCustomView']>>(({ currentMessage }) => (
-    <MessageCustomContent
-      self={selfID}
-      message={currentMessage ? rawOf(currentMessage) : undefined}
-      onCall={callFromRow}
-      onError={reportError}
-    />
-  ), [selfID, callFromRow])
-  const messageActions = useCallback((message: IMessage, defaults: MessageMenuItem[]) => {
-    const raw = rawOf(message)
-    if (!raw || raw.contentType >= 1000)
-      return []
-    const actions = defaults.filter(
-      action =>
-        ['copy', 'retry'].includes(action.key || '') ||
-        (raw.status === 2 && ['reply', 'forward'].includes(action.key || '')) ||
-        (raw.status === 2 &&
-          raw.contentType === 101 &&
-          raw.sendID === selfID &&
-          !parseCallInvitation(raw.textElem?.content || '') &&
-          !messageCallSignal(raw) &&
-          action.key === 'edit')
-    )
-    if (raw.sendID === selfID && raw.status === 2)
-      actions.push({
-        key: 'revoke',
-        label: '撤回',
-        destructive: true,
-        onPress: () => setRevoke(raw.clientMsgID),
-      })
-    if (
-      raw.groupID &&
-      raw.sendID === selfID &&
-      raw.status === 2 &&
-      (raw.seq || 0) > 0
-    )
-      actions.push({
-        key: 'readers',
-        label: '已读成员',
-        onPress: () =>
-          router.push({
-            pathname: '/chats/readers/[id]',
-            params: { id, messageID: raw.clientMsgID, seq: String(raw.seq) },
-          }),
-      })
-    const order = ['retry', 'reply', 'copy', 'forward', 'edit', 'readers', 'revoke']
-    return actions.sort((a, b) => order.indexOf(a.key || '') - order.indexOf(b.key || ''))
-  }, [selfID, router, id])
-  const reactRow = extras.react
-  const reactions = useMemo(() => ({
-    isEnabled: true,
-    emojis: REACTION_EMOJIS,
-    onReactionPress: reactRow,
-    renderExpandedPicker: null,
-  }), [reactRow])
 
   if (!state.session)
     return <LoginScreen />
@@ -497,10 +371,10 @@ function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
         darkTheme={theme}
         icons={productChatIcons}
         labels={productChatLabels}
-        renderChatEmpty={renderNothing}
-        renderDay={renderNothing}
-        renderBubble={renderProductBubble}
-        renderMessage={renderMessage}
+        renderChatEmpty={rows.renderChatEmpty}
+        renderDay={rows.renderDay}
+        renderBubble={rows.renderBubble}
+        renderMessage={rows.renderMessage}
         renderInputToolbar={props =>
           access.notice && access.notice !== '正在同步会话权限…' ? (
             <View style={{ minHeight: 56, padding: 12, justifyContent: 'center' }}>
@@ -568,11 +442,11 @@ function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
         renderTypingIndicator={() => (
           <ProductTyping group={!!conversation.groupID} user={composer.typingUsers[0]} />
         )}
-        messages={messages}
-        renderCustomView={renderCustomView}
+        messages={rows.messages}
+        renderCustomView={rows.renderCustomView}
         onSend={onSend}
         onEditMessage={extras.edit}
-        reactions={reactions}
+        reactions={rows.reactions}
         user={{ _id: state.session.userID }}
         isGroupChat={!!conversation.groupID}
         reply={{
@@ -644,7 +518,7 @@ function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
           if (raw)
             void retryMessage(id, raw).catch(reportError)
         }}
-        messageActions={messageActions}
+        messageActions={rows.messageActions}
       />
     </View>
   )

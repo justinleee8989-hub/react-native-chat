@@ -1,6 +1,6 @@
 # 群已读人数实时推送 — 部署与测试说明（2026-11-18）
 
-本次改动替换第四轮里"每 5 秒轮询已读接口"的做法（[`ENTRY_PERF_TEST_4.md`](ENTRY_PERF_TEST_4.md) 里的 V3 以本文为准）。轮询已经从客户端移除。
+本次改动替换第四轮里"每 5 秒轮询已读接口"的做法（[`entry-perf-2026-11-18/TEST_4.md`](entry-perf-2026-11-18/TEST_4.md) 里的 V3 以本文为准）。轮询已经从客户端移除。
 
 ## 一、为什么要改服务端
 
@@ -17,7 +17,7 @@
   → chat 服务端 /callback/openim_webhook/<secret>/callbackAfterGroupMsgReadCommand
       - 立即应答，后台处理（10 秒超时）
       - 用管理员 token 拉取 B 已读位置之前最近 20 条消息，找出其中的发送者（排除 B 本人、系统通知和已删除的消息）
-      - 同一会话、同一发送者，1 秒内最多推送一次
+      - 同一会话、同一发送者，1 秒内最多推送一次（用 Redis SET NX 加过期时间实现，多个 chat-api 实例共享；Redis 出错时照常推送，最多多发一次）
       - 对每个发送者调用 /msg/send_business_notification
         key = group_read_progress，data = {conversationID, readerID, hasReadSeq}
         reliabilityLevel = 1（只推给在线用户），不保存为消息
@@ -40,7 +40,9 @@
 
 ### chat 服务端
 
-设置环境变量（**不要写进仓库**）：
+**前提：必须开启 message extras**（`MESSAGE_EXTRAS_ENABLED=true` 并配置 `MESSAGE_EXTRAS_REDIS_ADDR`，或者开启 RTC）。推送要用到的 OpenIM API 地址和 Redis，都是开启 message extras 时才初始化的，和已读明细接口 `/user/message/readers` 的依赖相同。没开启时，回调照样返回成功，但不会推送，日志里会出现一次警告：`group read webhook received but message extras are disabled`。
+
+然后设置环境变量（**不要写进仓库**）：
 
 ```bash
 export OPENIM_WEBHOOK_SECRET='<一段足够长的随机字符串>'
@@ -59,15 +61,18 @@ export IMENV_WEBHOOKS_AFTERGROUPMSGREAD_ENABLE=true
 
 **注意：**
 - `webhooks.url` 是**所有** webhook 共用的地址。目前其它 webhook 都是关闭的；以后如果打开别的 webhook，它们的请求也会发到这个地址，chat 服务端对不认识的回调一律直接返回成功、不做处理。
+- chat 里原本已有的 `/callback/open_im`（上游自带，按 `?callbackCommand=` 转发给 chat RPC，目前只处理加好友前的检查，**没有鉴权**），和这次新增的 `/callback/openim_webhook/<secret>/<command>` 用途不同：前者是上游的 before 类回调，后者是带 secret 的 after 类回调，需要调用 IM 管理接口，所以放在 API 层。两个不要混用。
 - chat-api 的地址应该用内网地址，不要经过公网。secret 是 URL 路径的一部分，**不要**把它打到访问日志里，或者在网关层把这个路径脱敏。
 
 ## 五、已经验证过的
 
 - `open-im-server`：改动的包能编译通过，`go vet` 通过。`internal/rpc/msg` 这个包本身没有单元测试。
-- `chat`：`go test ./internal/api/chat/` 全部通过，其中包括新增的 4 个测试：
-  - 只通知已读范围内其他人发的普通消息的发送者；
-  - 同一发送者 1 秒内只推一次；
-  - secret 错误或未配置时返回 404，其它回调直接返回成功；
+- `chat`：`go test ./internal/api/chat/` 全部通过，其中包括新增的 6 个测试：
+  - 只通知已读范围内其他人发的普通消息的发送者，发送方是配置里的 IM 管理员；
+  - 同一发送者在限流期内只推一次，过期后可以再推；
+  - Redis 出错时照常推送；
+  - Redis 不可达时如实报错（不会静默放行或拦截）；
+  - secret 错误或未配置时返回 404，其它回调、以及没开启 message extras 时的已读回调都直接返回成功；
   - 回调参数校验。
 
   `go vet` 和 `gofmt` 都没有问题。

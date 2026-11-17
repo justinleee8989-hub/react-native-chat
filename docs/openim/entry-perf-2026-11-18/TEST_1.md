@@ -8,7 +8,7 @@
 2. **加入三个运行时实验开关**：只在诊断包里显示，一个 Release 包就能对比不同组合。
 3. **几处默认生效的优化**，见第一节。
 
-测完后请把结果填进 [`ENTRY_PERF_RESULTS.md`](ENTRY_PERF_RESULTS.md)，把原始日志放进 `docs/openim/evidence/2026-11-18-entry-perf/`，提交并推送到本分支。我再根据数据决定下一步。
+测完后请把结果填进 [`RESULTS_1.md`](RESULTS_1.md)，把原始日志放进 `docs/openim/evidence/2026-11-18-entry-perf/`，提交并推送到本分支。我再根据数据决定下一步。
 
 ---
 
@@ -137,6 +137,6 @@ adb logcat -s ReactNativeJS:V | grep IMEntry | tee entry.log
 
 ## 六、怎么回复
 
-1. 填写 [`ENTRY_PERF_RESULTS.md`](ENTRY_PERF_RESULTS.md)。
+1. 填写 [`RESULTS_1.md`](RESULTS_1.md)。
 2. 原始日志按轮次存放：`docs/openim/evidence/2026-11-18-entry-perf/R1.log` 到 `R5.log`。
 3. 提交并推送到 `perf/openim-open-chat`，然后告诉我一声。

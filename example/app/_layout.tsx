@@ -8,7 +8,7 @@ import { KeyboardProvider } from 'react-native-keyboard-controller'
 import 'react-native-reanimated'
 
 import CallOverlay from '@/features/im/calls/CallOverlay'
-import { useEntryExperiments } from '@/features/im/navigation/entry-experiments'
+import { chatPushAnimation } from '@/features/im/navigation/chat-transition'
 import { ProductFrame } from '@/features/im/navigation/ProductShell'
 import SessionGuard from '@/features/im/navigation/SessionGuard'
 import { StartupReadinessProvider } from '@/features/im/navigation/StartupReadiness'
@@ -22,9 +22,6 @@ LogBox.ignoreLogs(['Open debugger to view warnings'])
 
 export default function RootLayout () {
   const colorScheme = useColorScheme()
-  // `activityEnabled` and the chats push animation keep their defaults unless the diagnostic build
-  // switches them (entry-experiments).
-  const { activity, animation } = useEntryExperiments()
 
   return (
     <GestureHandlerRootView style={styles.container}>
@@ -34,12 +31,12 @@ export default function RootLayout () {
         <StartupReadinessProvider><ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
           {/* A screen covered by another stops rendering but keeps its state (React Activity):
               the tabs, and the chat list in them, do no work while a chat is open on top. */}
-          <ProductFrame><Stack screenOptions={{ headerShown: false }} activityEnabled={activity === 'on'}>
+          <ProductFrame><Stack screenOptions={{ headerShown: false }} activityEnabled>
             <Stack.Screen name='(tabs)' />
             <Stack.Screen name='auth' />
             <Stack.Screen name='chat' />
             <Stack.Screen name='explore' />
-            <Stack.Screen name='chats' options={{ animation }} />
+            <Stack.Screen name='chats' options={{ animation: chatPushAnimation }} />
             <Stack.Screen name='modal' options={{ headerShown: true, presentation: 'modal', title: 'Modal' }} />
           </Stack></ProductFrame>
           <CallOverlay />
