@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { Button, StyleSheet, Text, View } from 'react-native'
+import { AppState, Button, StyleSheet, Text, View } from 'react-native'
 import { Chat, type ChatProps, IMessage, type MessageMenuItem, ReplyMessage } from '@kesha-antonov/react-native-chat'
 import { useFocusEffect, useNavigation, useRouter } from 'expo-router'
 import {
@@ -81,6 +81,8 @@ export default function ChatScreen ({ id, messageID }: { id: string, messageID?:
 }
 
 const EMPTY_MESSAGES: IMMessage[] = []
+/** How often the read count of the latest own group message is asked again while not all read. */
+const READER_POLL_MS = 5000
 /** A message as the list gets it: the projected chat message plus its raw OpenIM message. */
 type RowMessage = IMessage & { imRaw?: IMMessage, imReadCount?: number }
 const rawOf = (message: IMessage) => (message as RowMessage).imRaw
@@ -146,6 +148,24 @@ function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
     refreshToken: readerRefreshToken,
     sync: syncMessageReaders,
   })
+  // A group member reading only moves their read position on the server; OpenIM pushes no read
+  // receipt for it, so the count under the latest own message stayed at 0 until the chat was
+  // reopened. While this page is focused and someone has not read it, ask again every few seconds.
+  const latestOwnReadInfo = latestOwnGroupMessage
+    ? state.messageReadInfo[id]?.[latestOwnGroupMessage.clientMsgID]
+    : undefined
+  const isReaderPollNeeded = !!latestOwnGroupMessage && (latestOwnReadInfo === undefined || latestOwnReadInfo.unreadCount > 0)
+  useFocusEffect(
+    useCallback(() => {
+      if (!isReaderPollNeeded)
+        return
+      const timer = setInterval(() => {
+        if (AppState.currentState === 'active')
+          setReaderRefreshToken(value => value + 1)
+      }, READER_POLL_MS)
+      return () => clearInterval(timer)
+    }, [isReaderPollNeeded])
+  )
   // Move the status slot when the optimistic row appears, not again on its acknowledgement.
   const lastOwnMessageID = rawMessages.find(
     message => message.sendID === sessionID &&
@@ -537,6 +557,7 @@ function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
             messageListLayout.onLayout(event)
           },
           onReady: onListReady,
+          onScrollBeginDrag: messageListLayout.onScrollBeginDrag,
           drawDistance: messageListLayout.drawDistance,
           // History prepends and measured row corrections must preserve the visible anchor
           // immediately; animating their positions creates gaps during native flings.

@@ -50,6 +50,16 @@ export function useMessageListLayout () {
     else
       bufferTimer.current = setTimeout(expand, BUFFER_EXPAND_FALLBACK_MS)
   }, [expand, expandInTwoFrames])
+  // The user starts scrolling: grow the buffer now, whatever the push is doing. With only the
+  // viewport built, a fling during or right after the push showed an empty band for ~0.2s.
+  const onScrollBeginDrag = useCallback(() => {
+    if (!ready.current || expanded.current)
+      return
+    if (bufferFrame.current !== undefined)
+      cancelAnimationFrame(bufferFrame.current)
+    bufferFrame.current = undefined
+    expand()
+  }, [expand])
   /** The push animation that opened the page has ended. */
   const onTransitionEnd = useCallback(() => {
     transitionDone.current = true
@@ -97,5 +107,5 @@ export function useMessageListLayout () {
       })
     })
   }, [])
-  return { messagesContainerRef, onLayout, onReady, onTransitionEnd, drawDistance, width }
+  return { messagesContainerRef, onLayout, onReady, onTransitionEnd, onScrollBeginDrag, drawDistance, width }
 }

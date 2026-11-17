@@ -115,6 +115,19 @@ it('grows after the push already ended before the list was ready', async () => {
   expect(result.current.drawDistance).toBe(1400)
 })
 
+it('grows at once when the user starts scrolling during the push', async () => {
+  const { result } = await renderHook(useMessageListLayout)
+  await act(() => result.current.onLayout(layout(390, 700)))
+  await act(() => result.current.onReady())
+  expect(result.current.drawDistance).toBe(600)
+  await act(() => result.current.onScrollBeginDrag())
+  expect(result.current.drawDistance).toBe(1400)
+  await act(() => result.current.onTransitionEnd())
+  await flushFrame()
+  await flushFrame()
+  expect(result.current.drawDistance).toBe(1400)
+})
+
 it('grows anyway when no push end arrives', async () => {
   jest.useFakeTimers({ doNotFake: ['requestAnimationFrame', 'cancelAnimationFrame'] })
   try {

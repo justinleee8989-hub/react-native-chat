@@ -6,16 +6,16 @@ import { isChatEntryReady, registerChatEntryReady, waitForChatEntry } from './ch
 import { describeEntryExperiments, getEntryExperiments } from './entry-experiments'
 import { traceChatEntry } from './entry-performance'
 
-/** The pause between two prepared pages when several are prepared after the list gains focus. */
-const PREWARM_GAP_MS = 300
-
 /** Native preloads the actual route; Web already renders its selected pane in place. */
-export function useChatEntry (account: string, open: (href: Href) => void, hasHistory: (id: string) => boolean = () => false, warmConversationID?: string | string[]) {
+export function useChatEntry (account: string, open: (href: Href) => void, hasHistory: (id: string) => boolean = () => false, warmConversationID?: string) {
   const router = useRouter()
   const intent = useRef(0)
   const requested = useRef<string | undefined>(undefined)
   const committed = useRef(false)
-  const preparing = useRef(new Set<string>())
+  // Only one route is ever kept prepared off-screen: preparing another replaces it. So this holds
+  // the last one only - remembering every prepared id skipped re-preparing one that had since been
+  // replaced, and opening it then waited for a page that was gone (entry-failed after 1.5s).
+  const prepared = useRef<string | undefined>(undefined)
   const previousAccount = useRef(account)
   const lastOpened = useRef<string | undefined>(undefined)
   const warmTarget = useRef({ account, id: warmConversationID, hasHistory })
@@ -23,14 +23,14 @@ export function useChatEntry (account: string, open: (href: Href) => void, hasHi
     warmTarget.current = { account, id: warmConversationID, hasHistory }
   }, [account, warmConversationID, hasHistory])
   const prepare = useCallback((id: string) => {
-    if (Platform.OS === 'web' || committed.current || preparing.current.has(id) || isChatEntryReady(account, id))
+    if (Platform.OS === 'web' || committed.current || prepared.current === id || isChatEntryReady(account, id))
       return
     traceChatEntry(account, id, 'prepare')
-    preparing.current.add(id)
+    prepared.current = id
     try {
       router.prefetch(`/chats/${encodeURIComponent(id)}` as Href)
     } catch {
-      preparing.current.delete(id)
+      prepared.current = undefined
       // Speculative preparation must not disrupt scrolling or show an error.
       // The actual click retains its normal navigation/error fallback.
     }
@@ -38,58 +38,28 @@ export function useChatEntry (account: string, open: (href: Href) => void, hasHi
   useFocusEffect(useCallback(() => {
     if (Platform.OS === 'web')
       return
-    // Prepare after the list has a chance to paint: one route by default, or (entry-experiments
-    // `prewarm`) up to three, one after another so the list never builds two pages at once.
-    let cancelled = false
-    let cancelWait: (() => void) | undefined
-    let gap: ReturnType<typeof setTimeout> | undefined
+    // Only one automatic route per focus: prepare after the list has a chance to paint.
     const timer = setTimeout(() => {
       const target = warmTarget.current
       if (target.account !== account)
         return
-      const limit = getEntryExperiments().prewarm === '3' ? 3 : 1
-      const recent = Array.isArray(target.id) ? target.id : target.id ? [target.id] : []
-      const ids = [...new Set([
-        ...(lastOpened.current && target.hasHistory(lastOpened.current) ? [lastOpened.current] : []),
-        ...recent,
-      ])].filter(id => target.hasHistory(id)).slice(0, limit)
-      void (async () => {
-        for (const [index, id] of ids.entries()) {
-          if (cancelled)
-            return
-          if (index > 0)
-            await new Promise<void>(resolve => {
-              gap = setTimeout(resolve, PREWARM_GAP_MS)
-            })
-          if (cancelled)
-            return
-          prepare(id)
-          if (index < ids.length - 1) {
-            const entry = waitForChatEntry(account, id)
-            cancelWait = entry.cancel
-            await entry.ready
-            cancelWait = undefined
-          }
-        }
-      })()
+      const id = lastOpened.current && target.hasHistory(lastOpened.current)
+        ? lastOpened.current
+        : target.id
+      if (id && target.hasHistory(id))
+        prepare(id)
     }, 200)
-    return () => {
-      cancelled = true
-      clearTimeout(timer)
-      if (gap)
-        clearTimeout(gap)
-      cancelWait?.()
-    }
+    return () => clearTimeout(timer)
   }, [account, prepare]))
   const cancel = useRef<(() => void) | undefined>(undefined)
   useFocusEffect(useCallback(() => {
     committed.current = false
     requested.current = undefined
-    preparing.current.clear()
+    prepared.current = undefined
     return () => {
       intent.current++
       cancel.current?.()
-      preparing.current.clear()
+      prepared.current = undefined
     }
   }, []))
   useLayoutEffect(() => {
@@ -98,7 +68,7 @@ export function useChatEntry (account: string, open: (href: Href) => void, hasHi
     if (previousAccount.current !== account) {
       committed.current = false
       requested.current = undefined
-      preparing.current.clear()
+      prepared.current = undefined
       lastOpened.current = undefined
       previousAccount.current = account
     }
@@ -168,7 +138,8 @@ export function useChatEntry (account: string, open: (href: Href) => void, hasHi
       cancel.current?.()
       traceChatEntry(account, id, 'entry-failed')
       requested.current = undefined
-      preparing.current.delete(id)
+      if (prepared.current === id)
+        prepared.current = undefined
       reportError(error)
     })
   }

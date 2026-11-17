@@ -62,11 +62,7 @@ function SessionChatList ({ archived, autoRefresh }: { archived: boolean, autoRe
     `${state.session?.userID}:${state.session?.imToken}`,
     open,
     id => !!state.messages[id]?.length,
-    // The most recent chats that already have messages, for preparing ahead (useChatEntry).
-    state.conversations
-      .filter(item => state.messages[item.conversationID]?.length)
-      .slice(0, 3)
-      .map(item => item.conversationID)
+    state.conversations.find(item => state.messages[item.conversationID]?.length)?.conversationID
   )
   const t = useProductTheme()
   const theme = useProductChatTheme()

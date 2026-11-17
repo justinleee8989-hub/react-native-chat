@@ -549,6 +549,21 @@ test('a stale reader request cannot overwrite a newer SDK receipt for the same m
   assert.equal(h.store.useOpenIM().messageReadInfo['group-chat']['sent-group'].unreadCount, 0)
 })
 
+test('polling the same read counts leaves the store state untouched', async () => {
+  const h = harness()
+  await h.store.login('me', 'password', { chat: 'http://test' })
+  h.events.get('onConversationChanged')([{ conversationID: 'group-chat', groupID: 'group-1', showName: 'Group', unreadCount: 0 }])
+  h.events.get('onRecvNewMessages')([{ ...message, clientMsgID: 'sent-group', sendID: 'me', recvID: '', groupID: 'group-1', status: 2 }])
+  h.store.syncMessageReaders('group-chat', 'sent-group', 1, 1)
+  const before = h.store.useOpenIM()
+
+  h.store.syncMessageReaders('group-chat', 'sent-group', 1, 1)
+  assert.equal(h.store.useOpenIM(), before)
+
+  h.store.syncMessageReaders('group-chat', 'sent-group', 2, 0)
+  assert.equal(h.store.useOpenIM().messageReadInfo['group-chat']['sent-group'].readCount, 2)
+})
+
 
 test('session initialization waits for storage before allowing an unauthenticated redirect', async () => {
   const h = harness()

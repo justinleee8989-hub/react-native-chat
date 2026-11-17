@@ -116,6 +116,16 @@ it('deduplicates press-in and repeated clicks until navigation takes focus', asy
   await act(async () => view.result.current.open('one'))
   expect(open).toHaveBeenCalledTimes(1)
 })
+it('prepares a conversation again after another one replaced its off-screen page', async () => {
+  const open = jest.fn()
+  const view = await renderHook(() => useChatEntry('replace', open, () => true))
+  const prefetched = (href: string) => mockPrefetch.mock.calls.filter(call => call[0] === href).length
+  await act(() => view.result.current.prepare('first'))
+  await act(() => view.result.current.prepare('second'))
+  await act(() => view.result.current.prepare('first'))
+  expect(prefetched('/chats/first')).toBe(2)
+  expect(prefetched('/chats/second')).toBe(1)
+})
 it('does not navigate to a blank page when layout readiness times out', async () => {
   jest.useFakeTimers()
   try {

@@ -96,6 +96,11 @@ export function createRuntime (config: ServerConfig) {
     const message = state.messages[conversationID]?.find(item => item.clientMsgID === messageID)
     if (!conversation?.groupID || !message || message.groupID !== conversation.groupID || message.sendID !== state.session?.userID || message.status !== 2)
       return
+    // Unchanged counts leave the store alone: the chat page polls them while someone has not read
+    // the latest message, and every store update re-renders the screens that read it.
+    const existing = state.messageReadInfo[conversationID]?.[messageID]
+    if (existing && existing.readCount === readCount && existing.unreadCount === unreadCount)
+      return
     const messageReadInfo = {
       ...state.messageReadInfo,
       [conversationID]: { ...state.messageReadInfo[conversationID], [messageID]: { readCount, unreadCount } },
