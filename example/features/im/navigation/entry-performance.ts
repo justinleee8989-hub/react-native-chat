@@ -1,5 +1,5 @@
 // Opt-in Release diagnostics. Never include account IDs, tokens or message content.
-// Each line: [IMEntry] {"sample","phase","atMs","sinceMs"?,"detail"?}. `sinceMs` counts from the
+// Each line: [IMEntry] {"sample","phase","atMs","sinceMs"?,"detail"?,"rows"?}. `sinceMs` counts from the
 // finger going down on that conversation (`press-in`), or from the press itself (`press-cached` /
 // `press-cold`) when there was no press-in just before. See docs/openim/ENTRY_PERF_TEST.md.
 export const entryTraceEnabled = process.env.EXPO_PUBLIC_OPENIM_ENTRY_TRACE === '1'
@@ -18,10 +18,15 @@ interface Sample {
   watch: number
   once: Set<string>
   renders: number
+  rows: number
 }
 
 const samples = new Map<string, Sample>()
 let nextSample = 0
+/** The conversation pressed last: message rows count towards it. */
+let activeSample: Sample | undefined
+/** Phases that also report how many message rows have rendered since the press. */
+const ROW_PHASES = new Set(['list-ready', 'navigate', 'transition-start', 'transition-end'])
 
 const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now())
 
@@ -29,7 +34,7 @@ function sampleFor (account: string, id: string) {
   const key = JSON.stringify([account, id])
   let sample = samples.get(key)
   if (!sample) {
-    sample = { id: ++nextSample, watch: 0, once: new Set(), renders: 0 }
+    sample = { id: ++nextSample, watch: 0, once: new Set(), renders: 0, rows: 0 }
     if (samples.size >= 20)
       samples.delete(samples.keys().next().value!)
     samples.set(key, sample)
@@ -44,6 +49,8 @@ function write (sample: Sample, phase: string, detail?: string) {
     line.sinceMs = Math.round(at - sample.pressAt)
   if (detail)
     line.detail = detail
+  if (sample === activeSample && ROW_PHASES.has(phase))
+    line.rows = sample.rows
   console.info('[IMEntry]', JSON.stringify(line))
 }
 
@@ -74,6 +81,8 @@ export function traceChatEntry (account: string, id: string, phase: string, deta
     sample.pressAt = t
     sample.once.clear()
     sample.renders = 0
+    sample.rows = 0
+    activeSample = sample
     write(sample, phase, detail)
     watchFrames(sample)
     return
@@ -105,4 +114,14 @@ export function traceChatRender (account: string, id: string) {
     write(sample, 'page-commit', `#${sample.renders}`)
   else if (sample.renders === MAX_RENDER_LINES + 1)
     write(sample, 'page-commit', `more than ${MAX_RENDER_LINES}; further commits not logged`)
+}
+
+/**
+ * Counts message-row renders towards the conversation pressed last. Reported as `rows` on the
+ * list-ready, navigate and transition lines: how many rows the entry built or rebuilt.
+ */
+export function countRowRender () {
+  if (!entryTraceEnabled || !activeSample)
+    return
+  activeSample.rows += 1
 }

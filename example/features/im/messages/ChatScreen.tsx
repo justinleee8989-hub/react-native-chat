@@ -4,6 +4,7 @@ import { Chat, type ChatProps, IMessage, type MessageMenuItem, ReplyMessage } fr
 import { useFocusEffect, useNavigation, useRouter } from 'expo-router'
 import {
   focusConversation,
+  loadServerHistory,
   resumeConversation,
   sendQuote,
   revokeMessage,
@@ -39,6 +40,7 @@ import { productChatLabels } from '../ui/ProductChatLabels'
 import { useProductChatTheme, productChatIcons } from '../ui/ProductChatTheme'
 import { AttachmentBatchTray } from './AttachmentBatchTray'
 import { useComposerEnhancements } from './ComposerEnhancements'
+import { resolveExtraSequence } from './extras'
 import ForwardPicker from './ForwardPicker'
 import { HistoryLoadIndicator } from './HistoryLoadIndicator'
 import { MentionPicker } from './MentionPicker'
@@ -295,6 +297,21 @@ function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
     latestRequestCall.current = requestCall
   })
   const callFromRow = useCallback(() => latestRequestCall.current(), [])
+  // The readers page needs the message's server seq. A message just sent has none yet (it comes
+  // with the next sync), and opening the page then failed with "消息尚未同步"; resolve it from
+  // server history first, as editing and reactions already do.
+  const openReaders = useCallback((message: IMessage) => {
+    const raw = rawOf(message)
+    if (!raw)
+      return
+    void (async () => {
+      const seq = await resolveExtraSequence(raw, cursor => loadServerHistory({ conversationID: id, cursor }))
+      router.push({
+        pathname: '/chats/readers/[id]',
+        params: { id, messageID: String(message._id), seq: String(seq) },
+      })
+    })().catch(reportError)
+  }, [id, router])
   const renderMessage = useCallback<NonNullable<ChatProps<IMessage>['renderMessage']>>(props => (
     <ProductMessage
       {...props}
@@ -307,18 +324,9 @@ function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
       readCount={(props.currentMessage as RowMessage).imReadCount}
       lastOwnID={lastOwnMessageID}
       group={isGroup}
-      onReaders={message =>
-        router.push({
-          pathname: '/chats/readers/[id]',
-          params: {
-            id,
-            messageID: String(message._id),
-            seq: String(rawOf(message)?.seq || 0),
-          },
-        })
-      }
+      onReaders={openReaders}
     />
-  ), [rowWidth, lastOwnMessageID, isGroup, router, id])
+  ), [rowWidth, lastOwnMessageID, isGroup, openReaders, id])
   const renderCustomView = useCallback<NonNullable<ChatProps<IMessage>['renderCustomView']>>(({ currentMessage }) => (
     <MessageCustomContent
       self={selfID}

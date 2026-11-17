@@ -1,6 +1,7 @@
-import React, { useState } from 'react'
+import React, { useLayoutEffect, useState } from 'react'
 import { Pressable, Text, View } from 'react-native'
 import { Message, type MessageProps, type IMessage } from '@kesha-antonov/react-native-chat'
+import { countRowRender } from '../../navigation/entry-performance'
 import { useProductLayout } from '../../ui/preferences'
 import { ProductAvatar } from '../../ui/primitives'
 import { ProductIcon } from '../../ui/ProductIcon'
@@ -18,6 +19,10 @@ export function ProductMessage ({
   onRetry,
   ...props
 }: ProductMessageProps) {
+  // Diagnostics only (EXPO_PUBLIC_OPENIM_ENTRY_TRACE): counts row commits while a chat opens.
+  useLayoutEffect(() => {
+    countRowRender()
+  })
   const t = useProductTheme()
   const { desktop } = useProductLayout()
   const edge = desktop ? 28 : 12

@@ -8,6 +8,8 @@ const ROWS: { key: keyof EntryExperiments, label: string }[] = [
   { key: 'activity', label: 'Activity' },
   { key: 'bufferExpand', label: '缓冲' },
   { key: 'animation', label: '动画' },
+  { key: 'firstBuffer', label: '首屏' },
+  { key: 'prewarm', label: '预热' },
 ]
 
 /**

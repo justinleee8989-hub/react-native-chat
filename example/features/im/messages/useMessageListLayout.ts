@@ -12,7 +12,9 @@ const BUFFER_EXPAND_FALLBACK_MS = 700
 /** Reflow the virtualized rows without replacing the chat, composer or visible-item anchor. */
 export function useMessageListLayout () {
   const [width, setWidth] = useState<number>()
-  const [drawDistance, setDrawDistance] = useState(600)
+  // The first build: only the viewport by default (entry-experiments `firstBuffer`), since a page
+  // that was not prepared ahead cannot open until these rows are built.
+  const [drawDistance, setDrawDistance] = useState(() => getEntryExperiments().firstBuffer === 'viewport' ? 0 : 600)
   const ready = useRef(false)
   const expanded = useRef(false)
   const transitionDone = useRef(false)

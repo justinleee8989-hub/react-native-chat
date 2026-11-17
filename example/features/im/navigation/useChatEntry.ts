@@ -6,8 +6,11 @@ import { isChatEntryReady, registerChatEntryReady, waitForChatEntry } from './ch
 import { describeEntryExperiments, getEntryExperiments } from './entry-experiments'
 import { traceChatEntry } from './entry-performance'
 
+/** The pause between two prepared pages when several are prepared after the list gains focus. */
+const PREWARM_GAP_MS = 300
+
 /** Native preloads the actual route; Web already renders its selected pane in place. */
-export function useChatEntry (account: string, open: (href: Href) => void, hasHistory: (id: string) => boolean = () => false, warmConversationID?: string) {
+export function useChatEntry (account: string, open: (href: Href) => void, hasHistory: (id: string) => boolean = () => false, warmConversationID?: string | string[]) {
   const router = useRouter()
   const intent = useRef(0)
   const requested = useRef<string | undefined>(undefined)
@@ -35,18 +38,48 @@ export function useChatEntry (account: string, open: (href: Href) => void, hasHi
   useFocusEffect(useCallback(() => {
     if (Platform.OS === 'web')
       return
-    // Only one automatic route per focus: prepare after the list has a chance to paint.
+    // Prepare after the list has a chance to paint: one route by default, or (entry-experiments
+    // `prewarm`) up to three, one after another so the list never builds two pages at once.
+    let cancelled = false
+    let cancelWait: (() => void) | undefined
+    let gap: ReturnType<typeof setTimeout> | undefined
     const timer = setTimeout(() => {
       const target = warmTarget.current
       if (target.account !== account)
         return
-      const id = lastOpened.current && target.hasHistory(lastOpened.current)
-        ? lastOpened.current
-        : target.id
-      if (id && target.hasHistory(id))
-        prepare(id)
+      const limit = getEntryExperiments().prewarm === '3' ? 3 : 1
+      const recent = Array.isArray(target.id) ? target.id : target.id ? [target.id] : []
+      const ids = [...new Set([
+        ...(lastOpened.current && target.hasHistory(lastOpened.current) ? [lastOpened.current] : []),
+        ...recent,
+      ])].filter(id => target.hasHistory(id)).slice(0, limit)
+      void (async () => {
+        for (const [index, id] of ids.entries()) {
+          if (cancelled)
+            return
+          if (index > 0)
+            await new Promise<void>(resolve => {
+              gap = setTimeout(resolve, PREWARM_GAP_MS)
+            })
+          if (cancelled)
+            return
+          prepare(id)
+          if (index < ids.length - 1) {
+            const entry = waitForChatEntry(account, id)
+            cancelWait = entry.cancel
+            await entry.ready
+            cancelWait = undefined
+          }
+        }
+      })()
     }, 200)
-    return () => clearTimeout(timer)
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+      if (gap)
+        clearTimeout(gap)
+      cancelWait?.()
+    }
   }, [account, prepare]))
   const cancel = useRef<(() => void) | undefined>(undefined)
   useFocusEffect(useCallback(() => {
