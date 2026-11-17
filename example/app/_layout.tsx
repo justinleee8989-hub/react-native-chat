@@ -22,8 +22,9 @@ LogBox.ignoreLogs(['Open debugger to view warnings'])
 
 export default function RootLayout () {
   const colorScheme = useColorScheme()
-  // `activityEnabled` stays on unless the diagnostic build switches it off (entry-experiments).
-  const { activity } = useEntryExperiments()
+  // `activityEnabled` and the chats push animation keep their defaults unless the diagnostic build
+  // switches them (entry-experiments).
+  const { activity, animation } = useEntryExperiments()
 
   return (
     <GestureHandlerRootView style={styles.container}>
@@ -38,7 +39,7 @@ export default function RootLayout () {
             <Stack.Screen name='auth' />
             <Stack.Screen name='chat' />
             <Stack.Screen name='explore' />
-            <Stack.Screen name='chats' />
+            <Stack.Screen name='chats' options={{ animation }} />
             <Stack.Screen name='modal' options={{ headerShown: true, presentation: 'modal', title: 'Modal' }} />
           </Stack></ProductFrame>
           <CallOverlay />

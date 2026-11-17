@@ -1,13 +1,15 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { defaultLightTheme, mergeTheme, type ChatIcons } from '@kesha-antonov/react-native-chat'
 import { useProductLayout } from './preferences'
 import { ProductIcon } from './ProductIcon'
 import { useProductTheme } from './theme'
 
+// Memoized: the chat resolves its theme by identity, and a new theme object re-renders every
+// bubble on screen, so each render of the chat page must hand it the same one.
 export function useProductChatTheme () {
   const t = useProductTheme()
   const { desktop } = useProductLayout()
-  return mergeTheme(defaultLightTheme, {
+  return useMemo(() => mergeTheme(defaultLightTheme, {
     avatar: { size: 30 },
     composer: { minHeight: 40, maxHeight: 118, fieldPaddingH: 14, insetButtonWidth: 36 },
     sendButton: { size: 40 },
@@ -101,7 +103,7 @@ export function useProductChatTheme () {
       icon: t.text2,
       iconSelected: t.accent,
     },
-  })
+  }), [t, desktop])
 }
 export const productChatIcons: ChatIcons = {
   paperclip: props => <ProductIcon {...props} name='plus' />,

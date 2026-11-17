@@ -21,18 +21,25 @@ export interface EntryExperiments {
    * are not built while the page slides in. `two-frames`: two frames after ready (the old way).
    */
   bufferExpand: 'after-transition' | 'two-frames'
+  /**
+   * The push animation of the chat pages (react-native-screens `animation`). On Android the
+   * `default` push measured 380–460ms on its own (ENTRY_PERF_RESULTS.md), the floor of the entry.
+   */
+  animation: 'default' | 'slide_from_right' | 'ios_from_right' | 'fade' | 'fade_from_bottom' | 'none'
 }
 
 const DEFAULTS: EntryExperiments = {
   entryMode: 'wait-ready',
   activity: 'on',
   bufferExpand: 'after-transition',
+  animation: 'default',
 }
 
 const CHOICES: { [K in keyof EntryExperiments]: EntryExperiments[K][] } = {
   entryMode: ['wait-ready', 'navigate-now'],
   activity: ['on', 'off'],
   bufferExpand: ['after-transition', 'two-frames'],
+  animation: ['default', 'slide_from_right', 'ios_from_right', 'fade', 'fade_from_bottom', 'none'],
 }
 
 let current = DEFAULTS
@@ -60,4 +67,4 @@ export function cycleEntryExperiment (key: keyof EntryExperiments) {
 }
 
 export const describeEntryExperiments = (value = current) =>
-  `entry=${value.entryMode} activity=${value.activity} buffer=${value.bufferExpand}`
+  `entry=${value.entryMode} activity=${value.activity} buffer=${value.bufferExpand} anim=${value.animation}`

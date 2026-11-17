@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Button, StyleSheet, Text, View } from 'react-native'
-import { Chat, IMessage, ReplyMessage } from '@kesha-antonov/react-native-chat'
+import { Chat, type ChatProps, IMessage, type MessageMenuItem, ReplyMessage } from '@kesha-antonov/react-native-chat'
 import { useFocusEffect, useNavigation, useRouter } from 'expo-router'
 import {
   focusConversation,
@@ -79,6 +79,12 @@ export default function ChatScreen ({ id, messageID }: { id: string, messageID?:
 }
 
 const EMPTY_MESSAGES: IMMessage[] = []
+/** A message as the list gets it: the projected chat message plus its raw OpenIM message. */
+type RowMessage = IMessage & { imRaw?: IMMessage, imReadCount?: number }
+const rawOf = (message: IMessage) => (message as RowMessage).imRaw
+const REACTION_EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🙏']
+const renderNothing = () => null
+const renderProductBubble: NonNullable<ChatProps<IMessage>['renderBubble']> = props => <ProductBubble {...props} />
 
 function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
   const state = useOpenIM()
@@ -144,13 +150,20 @@ function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
       (message.status === 1 || message.status === 2) && message.contentType < 1000
   )?.clientMsgID
   const extras = useMessageExtras(id, rawMessages)
-  // Kept across renders that leave the messages and their extras alone: this page re-renders on
-  // every change anywhere in the IM store, and rebuilding every message each time made the list
-  // compare every row again while the page was being prepared.
+  // Kept across renders that leave the messages, their extras and read counts alone: this page
+  // re-renders on every change anywhere in the IM store. Each message carries its raw OpenIM
+  // message and read count (RowMessage), so the row callbacks below never look them up in a list
+  // that changes, and when one message changes only its own row re-renders. Typed as IMessage[]
+  // so `Chat` keeps IMessage as its message type.
   const extrasMap = extras.map
-  const messages = useMemo(
-    () => projectCallMessages(rawMessages, messageID ? [messageID] : []).map(message => {
-      const mapped = extrasMap(toMessage(message))
+  const readInfo = state.messageReadInfo[id]
+  const messages = useMemo<IMessage[]>(
+    () => projectCallMessages(rawMessages, messageID ? [messageID] : []).map((message): RowMessage => {
+      const mapped: RowMessage = {
+        ...extrasMap(toMessage(message)),
+        imRaw: message,
+        imReadCount: groupReadCount(message, readInfo?.[message.clientMsgID]?.readCount),
+      }
       if (
         (message.contentType === 108 && !!message.cardElem?.userID) ||
         (message.contentType === 109 &&
@@ -165,7 +178,7 @@ function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
         ? { ...mapped, text: '' }
         : mapped
     }),
-    [rawMessages, messageID, extrasMap]
+    [rawMessages, messageID, extrasMap, readInfo]
   )
   // The push that opens this page: traced, and the list grows its off-screen buffer once it ends.
   const navigation = useNavigation() as unknown as NavigationWithTransitions
@@ -269,6 +282,99 @@ function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
       await startConversationCall(conversation, id)
     })
   }
+  // What every message row is rendered with. Each keeps its identity until something every row
+  // shows changes: the SDK re-renders every mounted row when one of these changes, and this page
+  // re-renders on any change in the IM store (focus marking the chat read, presence, typing...),
+  // which used to rebuild all of them each time - about 100ms per render in a long chat, several
+  // times while the chat opened. What is per message comes on the message itself (RowMessage).
+  const selfID = state.session?.userID || ''
+  const isGroup = !!conversation?.groupID
+  const rowWidth = messageListLayout.width
+  const latestRequestCall = useRef(requestCall)
+  useLayoutEffect(() => {
+    latestRequestCall.current = requestCall
+  })
+  const callFromRow = useCallback(() => latestRequestCall.current(), [])
+  const renderMessage = useCallback<NonNullable<ChatProps<IMessage>['renderMessage']>>(props => (
+    <ProductMessage
+      {...props}
+      containerWidth={rowWidth}
+      onRetry={message => {
+        const raw = rawOf(message)
+        if (raw)
+          void retryMessage(id, raw).catch(reportError)
+      }}
+      readCount={(props.currentMessage as RowMessage).imReadCount}
+      lastOwnID={lastOwnMessageID}
+      group={isGroup}
+      onReaders={message =>
+        router.push({
+          pathname: '/chats/readers/[id]',
+          params: {
+            id,
+            messageID: String(message._id),
+            seq: String(rawOf(message)?.seq || 0),
+          },
+        })
+      }
+    />
+  ), [rowWidth, lastOwnMessageID, isGroup, router, id])
+  const renderCustomView = useCallback<NonNullable<ChatProps<IMessage>['renderCustomView']>>(({ currentMessage }) => (
+    <MessageCustomContent
+      self={selfID}
+      message={currentMessage ? rawOf(currentMessage) : undefined}
+      onCall={callFromRow}
+      onError={reportError}
+    />
+  ), [selfID, callFromRow])
+  const messageActions = useCallback((message: IMessage, defaults: MessageMenuItem[]) => {
+    const raw = rawOf(message)
+    if (!raw || raw.contentType >= 1000)
+      return []
+    const actions = defaults.filter(
+      action =>
+        ['copy', 'retry'].includes(action.key || '') ||
+        (raw.status === 2 && ['reply', 'forward'].includes(action.key || '')) ||
+        (raw.status === 2 &&
+          raw.contentType === 101 &&
+          raw.sendID === selfID &&
+          !parseCallInvitation(raw.textElem?.content || '') &&
+          !messageCallSignal(raw) &&
+          action.key === 'edit')
+    )
+    if (raw.sendID === selfID && raw.status === 2)
+      actions.push({
+        key: 'revoke',
+        label: '撤回',
+        destructive: true,
+        onPress: () => setRevoke(raw.clientMsgID),
+      })
+    if (
+      raw.groupID &&
+      raw.sendID === selfID &&
+      raw.status === 2 &&
+      (raw.seq || 0) > 0
+    )
+      actions.push({
+        key: 'readers',
+        label: '已读成员',
+        onPress: () =>
+          router.push({
+            pathname: '/chats/readers/[id]',
+            params: { id, messageID: raw.clientMsgID, seq: String(raw.seq) },
+          }),
+      })
+    const order = ['retry', 'reply', 'copy', 'forward', 'edit', 'readers', 'revoke']
+    return actions.sort((a, b) => order.indexOf(a.key || '') - order.indexOf(b.key || ''))
+  }, [selfID, router, id])
+  const reactRow = extras.react
+  const reactions = useMemo(() => ({
+    isEnabled: true,
+    emojis: REACTION_EMOJIS,
+    onReactionPress: reactRow,
+    renderExpandedPicker: null,
+  }), [reactRow])
+
   if (!state.session)
     return <LoginScreen />
   if (!conversation)
@@ -381,36 +487,10 @@ function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
         darkTheme={theme}
         icons={productChatIcons}
         labels={productChatLabels}
-        renderChatEmpty={() => null}
-        renderDay={() => null}
-        renderBubble={props => <ProductBubble {...props} />}
-        renderMessage={props => (
-          <ProductMessage
-            {...props}
-            containerWidth={messageListLayout.width}
-            onRetry={message => {
-              const raw = rawMessages.find(item => item.clientMsgID === message._id)
-              if (raw)
-                void retryMessage(id, raw).catch(reportError)
-            }}
-            readCount={groupReadCount(
-              rawMessages.find(raw => raw.clientMsgID === props.currentMessage._id),
-              state.messageReadInfo[id]?.[String(props.currentMessage._id)]?.readCount
-            )}
-            lastOwnID={lastOwnMessageID}
-            group={!!conversation.groupID}
-            onReaders={message =>
-              router.push({
-                pathname: '/chats/readers/[id]',
-                params: {
-                  id,
-                  messageID: String(message._id),
-                  seq: String(rawMessages.find(raw => raw.clientMsgID === message._id)?.seq || 0),
-                },
-              })
-            }
-          />
-        )}
+        renderChatEmpty={renderNothing}
+        renderDay={renderNothing}
+        renderBubble={renderProductBubble}
+        renderMessage={renderMessage}
         renderInputToolbar={props =>
           access.notice && access.notice !== '正在同步会话权限…' ? (
             <View style={{ minHeight: 56, padding: 12, justifyContent: 'center' }}>
@@ -478,22 +558,10 @@ function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
           <ProductTyping group={!!conversation.groupID} user={composer.typingUsers[0]} />
         )}
         messages={messages}
-        renderCustomView={({ currentMessage }) => (
-          <MessageCustomContent
-            self={state.session?.userID || ''}
-            message={rawMessages.find(message => message.clientMsgID === currentMessage?._id)}
-            onCall={requestCall}
-            onError={reportError}
-          />
-        )}
+        renderCustomView={renderCustomView}
         onSend={onSend}
         onEditMessage={extras.edit}
-        reactions={{
-          isEnabled: true,
-          emojis: ['👍', '❤️', '😂', '😮', '😢', '🙏'],
-          onReactionPress: extras.react,
-          renderExpandedPicker: null,
-        }}
+        reactions={reactions}
         user={{ _id: state.session.userID }}
         isGroupChat={!!conversation.groupID}
         reply={{
@@ -565,46 +633,7 @@ function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
           if (raw)
             void retryMessage(id, raw).catch(reportError)
         }}
-        messageActions={(message, defaults) => {
-          const raw = rawMessages.find(item => item.clientMsgID === message._id)
-          if (!raw || raw.contentType >= 1000)
-            return []
-          const actions = defaults.filter(
-            action =>
-              ['copy', 'retry'].includes(action.key || '') ||
-              (raw.status === 2 && ['reply', 'forward'].includes(action.key || '')) ||
-              (raw.status === 2 &&
-                raw.contentType === 101 &&
-                raw.sendID === state.session?.userID &&
-                !parseCallInvitation(raw.textElem?.content || '') &&
-                !messageCallSignal(raw) &&
-                action.key === 'edit')
-          )
-          if (raw.sendID === state.session?.userID && raw.status === 2)
-            actions.push({
-              key: 'revoke',
-              label: '撤回',
-              destructive: true,
-              onPress: () => setRevoke(raw.clientMsgID),
-            })
-          if (
-            raw.groupID &&
-            raw.sendID === state.session?.userID &&
-            raw.status === 2 &&
-            (raw.seq || 0) > 0
-          )
-            actions.push({
-              key: 'readers',
-              label: '已读成员',
-              onPress: () =>
-                router.push({
-                  pathname: '/chats/readers/[id]',
-                  params: { id, messageID: raw.clientMsgID, seq: String(raw.seq) },
-                }),
-            })
-          const order = ['retry', 'reply', 'copy', 'forward', 'edit', 'readers', 'revoke']
-          return actions.sort((a, b) => order.indexOf(a.key || '') - order.indexOf(b.key || ''))
-        }}
+        messageActions={messageActions}
       />
     </View>
   )
