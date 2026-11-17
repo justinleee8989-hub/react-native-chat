@@ -1,0 +1,55 @@
+chat
+
+d5f9db7a01cc38fd57723d6ccf2615c4828e00c1 feat: enforce message visibility and finalize call records
+
+ad2265ea8390083370412164dafa3fbadc9bbe37 refactor(api): throttle group read pushes in Redis, say when disabled
+
+ docs/backend-extensions.md                         |  59 ---
+ .../backend-v15-container-check.json               |  11 -
+ .../backend-boundaries-v15/backend-v15-smoke.json  |   1 -
+ .../backend-boundaries-v15/verification.json       |  10 -
+ docs/plans/2026-11-17-backend-boundaries.md        |  12 -
+ internal/api/chat/chat.go                          |  40 +-
+ internal/api/chat/group_read_webhook.go            | 176 ++++++++
+ internal/api/chat/group_read_webhook_test.go       | 214 +++++++++
+ internal/api/chat/message_admission.go             |  43 --
+ internal/api/chat/message_admission_test.go        |  33 --
+ internal/api/chat/message_extras.go                |  29 +-
+ .../message_extras_admission_integration_test.go   | 189 --------
+ internal/api/chat/message_extras_input_test.go     |   2 +-
+ internal/api/chat/message_read_progress.go         |  58 ---
+ internal/api/chat/message_readers.go               |  49 ++-
+ internal/api/chat/message_sequence_hints.go        |  85 ----
+ internal/api/chat/message_visibility.go            | 180 --------
+ internal/api/chat/message_visibility_test.go       | 482 ---------------------
+ internal/api/chat/profile_self_test.go             |  86 ----
+ internal/api/chat/rtc_authority.go                 |  16 -
+ internal/api/chat/rtc_record.go                    |  44 --
+ internal/api/chat/rtc_record_test.go               |  29 --
+ internal/api/chat/start.go                         |   3 +-
+ internal/rpc/chat/user.go                          |  47 +-
+ internal/rpc/chat/user_full_info_privacy_test.go   |  57 ---
+ internal/rpc/chat/utils.go                         |  26 --
+ pkg/common/callprotocol/record.go                  |  55 ---
+ pkg/common/callprotocol/record_test.go             |  49 ---
+ pkg/common/messageextras/policy.go                 |  32 --
+ pkg/common/messageextras/policy_test.go            |  29 --
+ pkg/common/messageextras/state.go                  |   8 +-
+ pkg/common/rtcauthority/media.go                   |  16 +-
+ pkg/common/rtcauthority/record.go                  | 135 ------
+ pkg/common/rtcauthority/record_test.go             | 175 --------
+ pkg/common/rtcauthority/service.go                 |  15 +-
+ pkg/common/rtcauthority/state.go                   |  79 +---
+ pkg/common/rtcauthority/store.go                   |  39 +-
+ pkg/common/rtcauthority/store_test.go              | 344 ---------------
+ 38 files changed, 503 insertions(+), 2454 deletions(-)
+
+open-im-server
+
+e089f78246b3424a26d6d4b46054a23c1fed6c0f fix: enforce group role policies and persist request notes
+
+280d0a23dc3e8e11330741104c34393ac8bacca0 feat(webhook): say which group conversation the read webhook is about
+
+ internal/rpc/msg/as_read.go   | 11 +++++++----
+ pkg/callbackstruct/message.go |  5 +++++
+ 2 files changed, 12 insertions(+), 4 deletions(-)

@@ -98,3 +98,9 @@ export IMENV_WEBHOOKS_AFTERGROUPMSGREAD_ENABLE=true
 | 快速滚动时正常 | |
 | 回归 | |
 | 自动测试（UI / typecheck / lint / OpenIM 业务 / chat go test） | |
+
+## 2026-11-18 第四轮测试机补充
+
+RN SDK 事件名已核实：`@openim/rn-client-sdk/src/constants/OpenIMEvents.ts:56` 定义 `OnRecvCustomBusinessMessage: 'onRecvCustomBusinessMessage'`，与客户端监听一致。UI 247 项、业务 287 项、应用 typecheck、源码 lint 及推送分支 `go test ./internal/api/chat/` 均通过。
+
+**端到端部署仍受阻。** 指定 `chat` 分支 `ad2265e` 不含当前 `feature/rtc-terminal-records` / `d5f9db7` 的可见性、消息准入及通话记录等改动。直接部署会回退这些功能，故本轮保持 v17 服务，不合并或修改实现。不能把事件名核实、Go 单测或已读明细页可打开当作实时推送通过。具体分支差异及后续项见 [第四轮报告 V3](entry-perf-2026-11-18/RESULTS_4.md#v3-群已读推送未部署保留阻塞)。

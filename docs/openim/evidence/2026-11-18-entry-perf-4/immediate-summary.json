@@ -1,0 +1,20 @@
+[
+  {
+    "trial": "V2-immediate-1",
+    "B_navigate_ms": 239,
+    "A_navigate_ms": 248,
+    "failed": false
+  },
+  {
+    "trial": "V2-immediate-2",
+    "B_navigate_ms": 155,
+    "A_navigate_ms": 273,
+    "failed": false
+  },
+  {
+    "trial": "V2-immediate-3",
+    "B_navigate_ms": 148,
+    "A_navigate_ms": 305,
+    "failed": false
+  }
+]
