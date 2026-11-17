@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { IMessage } from '@kesha-antonov/react-native-chat'
 import { refresh, reportError, useOpenIM, loadServerHistory } from '../application/store'
 import { parseCallInvitation } from '../calls/invitation'
@@ -9,7 +9,11 @@ export function useMessageExtras (conversationID: string, messages: IMMessage[])
   const { session, config } = useOpenIM()
   const [records, setRecords] = useState<Record<string, MessageExtra>>({})
   const activeContext = useRef({ session, conversationID })
-  activeContext.current = { session, conversationID }
+  // Written after render, not during it: a ref write in the render body makes React Compiler skip
+  // this hook, and then `map` below was a new function on every render of the chat page.
+  useLayoutEffect(() => {
+    activeContext.current = { session, conversationID }
+  }, [session, conversationID])
   const mounted = useRef(true)
   const pending = useRef(new Set<string>())
   const ids = messages.filter(m => m.status === 2 && m.contentType < 1000).flatMap(m => [m.clientMsgID, ...(m.quoteElem?.quoteMessage?.clientMsgID ? [m.quoteElem.quoteMessage.clientMsgID] : [])]).join(',')
@@ -77,12 +81,17 @@ export function useMessageExtras (conversationID: string, messages: IMMessage[])
       pending.current.delete(id)
     }
   }, [session, config.chat, conversationID, messages, records])
-  return { map: (message: IMessage) => {
+  // `map` changes only with the extras themselves, so the chat page can keep its projected
+  // messages (and the rows that show them) across renders that change nothing in them.
+  const map = useCallback((message: IMessage) => {
     const projected = applyExtras(message, records[String(message._id)])
     return projected.replyMessage ? { ...projected, replyMessage: applyExtras(projected.replyMessage as IMessage, records[String(projected.replyMessage._id)]) } : projected
-  },
-  edit: (message: IMessage, text: string) => mutate(message, 'edit', text),
-  react: (message: IMessage, emoji: string) => {
-    void mutate(message, 'react', emoji).catch(() => {})
-  } }
+  }, [records])
+  return useMemo(() => ({
+    map,
+    edit: (message: IMessage, text: string) => mutate(message, 'edit', text),
+    react: (message: IMessage, emoji: string) => {
+      void mutate(message, 'react', emoji).catch(() => {})
+    },
+  }), [map, mutate])
 }

@@ -4,6 +4,7 @@ import { act, renderHook } from '@testing-library/react-native'
 import { useMessageListLayout } from './useMessageListLayout'
 
 jest.mock('../application/store', () => ({ reportError: jest.fn() }))
+jest.mock('../navigation/entry-experiments', () => ({ getEntryExperiments: () => ({ bufferExpand: 'after-transition' }) }))
 let frames: Map<number, FrameRequestCallback>
 let nextFrame: number
 beforeEach(() => {
@@ -65,6 +66,7 @@ it('coalesces resize frames and cancels pending measurement on unmount', async (
 it('buffers two viewports and updates on height-only changes without clearing rows', async () => {
   const { result } = await renderHook(useMessageListLayout)
   await act(() => result.current.onReady())
+  await act(() => result.current.onTransitionEnd())
   await flushFrame()
   await flushFrame()
   await act(() => result.current.onLayout(layout(390, 700)))
@@ -83,9 +85,48 @@ it('prepares a bounded first viewport before expanding the normal fling buffer',
   await act(() => result.current.onLayout(layout(390, 700)))
   expect(result.current.drawDistance).toBe(600)
   await act(() => result.current.onReady())
+  await act(() => result.current.onTransitionEnd())
   await flushFrame()
   await flushFrame()
   expect(result.current.drawDistance).toBe(1400)
+})
+
+it('keeps the first viewport while the page slides in and grows after the push ends', async () => {
+  const { result } = await renderHook(useMessageListLayout)
+  await act(() => result.current.onLayout(layout(390, 700)))
+  await act(() => result.current.onReady())
+  await flushFrame()
+  await flushFrame()
+  expect(result.current.drawDistance).toBe(600)
+  await act(() => result.current.onTransitionEnd())
+  await flushFrame()
+  await flushFrame()
+  expect(result.current.drawDistance).toBe(1400)
+})
+
+it('grows after the push already ended before the list was ready', async () => {
+  const { result } = await renderHook(useMessageListLayout)
+  await act(() => result.current.onLayout(layout(390, 700)))
+  await act(() => result.current.onTransitionEnd())
+  expect(frames.size).toBe(0)
+  await act(() => result.current.onReady())
+  await flushFrame()
+  await flushFrame()
+  expect(result.current.drawDistance).toBe(1400)
+})
+
+it('grows anyway when no push end arrives', async () => {
+  jest.useFakeTimers({ doNotFake: ['requestAnimationFrame', 'cancelAnimationFrame'] })
+  try {
+    const { result } = await renderHook(useMessageListLayout)
+    await act(() => result.current.onLayout(layout(390, 700)))
+    await act(() => result.current.onReady())
+    expect(result.current.drawDistance).toBe(600)
+    await act(() => jest.advanceTimersByTime(700))
+    expect(result.current.drawDistance).toBe(1400)
+  } finally {
+    jest.useRealTimers()
+  }
 })
 
 it('shares the measured viewport width with rows before their own layout callbacks', async () => {

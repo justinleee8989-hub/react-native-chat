@@ -1,7 +1,7 @@
-import React, { useCallback, useLayoutEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Button, StyleSheet, Text, View } from 'react-native'
 import { Chat, IMessage, ReplyMessage } from '@kesha-antonov/react-native-chat'
-import { useFocusEffect, useRouter } from 'expo-router'
+import { useFocusEffect, useNavigation, useRouter } from 'expo-router'
 import {
   focusConversation,
   resumeConversation,
@@ -30,6 +30,8 @@ import { subscribeForeground } from '../application/foreground'
 import { startConversationCall } from '../calls/CallControls'
 import { parseCallInvitation } from '../calls/invitation'
 import { messageCallSignal, projectCallMessages } from '../calls/message-projection'
+import { traceChatEntryOnce, traceChatRender } from '../navigation/entry-performance'
+import { type NavigationWithTransitions, onOpeningTransition } from '../navigation/opening-transition'
 import { useChatEntryReady } from '../navigation/useChatEntry'
 import { ConnectionStatus } from '../shared/ConnectionStatus'
 import { useProductLayout, useProductScheme } from '../ui/preferences'
@@ -76,8 +78,15 @@ export default function ChatScreen ({ id, messageID }: { id: string, messageID?:
   )
 }
 
+const EMPTY_MESSAGES: IMMessage[] = []
+
 function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
   const state = useOpenIM()
+  const entryAccount = `${state.session?.userID}:${state.session?.imToken}`
+  // Diagnostics only (EXPO_PUBLIC_OPENIM_ENTRY_TRACE): one line per commit of this page.
+  useLayoutEffect(() => {
+    traceChatRender(entryAccount, id)
+  })
   const { chatRef, locating, requestLocation } = useMessageLocation(id, messageID)
   const messageListLayout = useMessageListLayout()
 
@@ -95,9 +104,9 @@ function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
   const sessionID = state.session?.userID
   const access = useConversationAccess(conversation, state.session?.userID || '')
   const batches = useAttachmentBatches().filter(batch => batch.conversationID === id)
-  const rawMessages = state.messages[id] || []
+  const rawMessages = state.messages[id] || EMPTY_MESSAGES
   const onEntryReady = useChatEntryReady(
-    `${state.session?.userID}:${state.session?.imToken}`,
+    entryAccount,
     id,
     rawMessages.length > 0 || state.historyEnd[id] !== undefined
   )
@@ -135,6 +144,43 @@ function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
       (message.status === 1 || message.status === 2) && message.contentType < 1000
   )?.clientMsgID
   const extras = useMessageExtras(id, rawMessages)
+  // Kept across renders that leave the messages and their extras alone: this page re-renders on
+  // every change anywhere in the IM store, and rebuilding every message each time made the list
+  // compare every row again while the page was being prepared.
+  const extrasMap = extras.map
+  const messages = useMemo(
+    () => projectCallMessages(rawMessages, messageID ? [messageID] : []).map(message => {
+      const mapped = extrasMap(toMessage(message))
+      if (
+        (message.contentType === 108 && !!message.cardElem?.userID) ||
+        (message.contentType === 109 &&
+          message.locationElem &&
+          Number.isFinite(message.locationElem.latitude) &&
+          Math.abs(message.locationElem.latitude) <= 90 &&
+          Number.isFinite(message.locationElem.longitude) &&
+          Math.abs(message.locationElem.longitude) <= 180)
+      )
+        return { ...mapped, text: '' }
+      return messageCallSignal(message) || parseCallInvitation(message.textElem?.content || '')
+        ? { ...mapped, text: '' }
+        : mapped
+    }),
+    [rawMessages, messageID, extrasMap]
+  )
+  // The push that opens this page: traced, and the list grows its off-screen buffer once it ends.
+  const navigation = useNavigation() as unknown as NavigationWithTransitions
+  const onListTransitionEnd = messageListLayout.onTransitionEnd
+  useEffect(() => {
+    const offStart = onOpeningTransition(navigation, 'transitionStart', () => traceChatEntryOnce(entryAccount, id, 'transition-start'))
+    const offEnd = onOpeningTransition(navigation, 'transitionEnd', () => {
+      traceChatEntryOnce(entryAccount, id, 'transition-end')
+      onListTransitionEnd()
+    })
+    return () => {
+      offStart()
+      offEnd()
+    }
+  }, [navigation, entryAccount, id, onListTransitionEnd])
   const composer = useComposerEnhancements({
     userID: state.session?.userID || '',
     conversation: conversation || {
@@ -241,7 +287,10 @@ function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
       </View>
     )
   return (
-    <View style={[styles.container, { backgroundColor: background }]}>
+    <View
+      style={[styles.container, { backgroundColor: background }]}
+      onLayout={() => traceChatEntryOnce(entryAccount, id, 'page-layout')}
+    >
       <ProductChatHeader
         conversation={conversation}
         memberCount={access.count}
@@ -395,7 +444,10 @@ function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
         onPressAvatar={user => router.push(`/chats/people/${encodeURIComponent(user._id)}`)}
         messagesContainerRef={messageListLayout.messagesContainerRef}
         listProps={{
-          onLayout: messageListLayout.onLayout,
+          onLayout: event => {
+            traceChatEntryOnce(entryAccount, id, 'list-layout')
+            messageListLayout.onLayout(event)
+          },
           onReady: onListReady,
           drawDistance: messageListLayout.drawDistance,
           // History prepends and measured row corrections must preserve the visible anchor
@@ -425,22 +477,7 @@ function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
         renderTypingIndicator={() => (
           <ProductTyping group={!!conversation.groupID} user={composer.typingUsers[0]} />
         )}
-        messages={projectCallMessages(rawMessages, messageID ? [messageID] : []).map(message => {
-          const mapped = extras.map(toMessage(message))
-          if (
-            (message.contentType === 108 && !!message.cardElem?.userID) ||
-            (message.contentType === 109 &&
-              message.locationElem &&
-              Number.isFinite(message.locationElem.latitude) &&
-              Math.abs(message.locationElem.latitude) <= 90 &&
-              Number.isFinite(message.locationElem.longitude) &&
-              Math.abs(message.locationElem.longitude) <= 180)
-          )
-            return { ...mapped, text: '' }
-          return messageCallSignal(message) || parseCallInvitation(message.textElem?.content || '')
-            ? { ...mapped, text: '' }
-            : mapped
-        })}
+        messages={messages}
         renderCustomView={({ currentMessage }) => (
           <MessageCustomContent
             self={state.session?.userID || ''}

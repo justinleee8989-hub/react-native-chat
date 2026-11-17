@@ -18,6 +18,12 @@ test('late mutation responses cannot overwrite a newer extra revision',()=>{
  assert.deepEqual(mergeMessageExtras(current,{a:{text:'older',revision:2}}),current)
  assert.deepEqual(mergeMessageExtras(current,{a:{text:'latest',revision:4}}),{a:{text:'latest',revision:4}})
 })
+test('a poll that changes nothing keeps the same extras object',()=>{
+ const current={a:{text:'same',revision:3,reactions:{'👍':{bob:true}}}}
+ assert.equal(mergeMessageExtras(current,{a:{text:'same',revision:3,reactions:{'👍':{bob:true}}}}),current)
+ assert.equal(mergeMessageExtras(current,{}),current)
+ assert.notEqual(mergeMessageExtras(current,{b:{text:'new',revision:1}}),current)
+})
 test('message extra reads are split into ordered batches of at most 100',()=>{
  const ids=Array.from({length:205},(_,index)=>`message-${index}`)
  const batches=batchMessageIDs(ids)

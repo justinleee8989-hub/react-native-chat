@@ -3,6 +3,7 @@ import { Platform } from 'react-native'
 import { type Href, useFocusEffect, useRouter } from 'expo-router'
 import { prefetchConversationHistory, reportError } from '../application/store'
 import { isChatEntryReady, registerChatEntryReady, waitForChatEntry } from './chat-entry'
+import { describeEntryExperiments, getEntryExperiments } from './entry-experiments'
 import { traceChatEntry } from './entry-performance'
 
 /** Native preloads the actual route; Web already renders its selected pane in place. */
@@ -88,8 +89,16 @@ export function useChatEntry (account: string, open: (href: Href) => void, hasHi
     // Cached entry must not trigger a store-wide refresh before navigation.
     // focusConversation already refreshes the actual focused page.
     const history = cached ? Promise.resolve() : prefetchConversationHistory(id)
-    traceChatEntry(account, id, cached ? 'press-cached' : 'press-cold')
+    traceChatEntry(account, id, cached ? 'press-cached' : 'press-cold', describeEntryExperiments())
     void Promise.resolve(history).then(() => traceChatEntry(account, id, 'history-ready'))
+    // Experiment: go now and let the page build while it slides in, instead of holding the list
+    // until the page is laid out off-screen. History still loads in the background.
+    if (getEntryExperiments().entryMode === 'navigate-now') {
+      committed.current = true
+      traceChatEntry(account, id, 'navigate')
+      open(href)
+      return
+    }
     if (cached && isChatEntryReady(account, id)) {
       committed.current = true
       traceChatEntry(account, id, 'navigate')

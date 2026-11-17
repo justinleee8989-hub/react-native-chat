@@ -17,6 +17,8 @@ import { parseCallInvitation } from '../calls/invitation'
 import { toChat } from '../domain/model'
 import { useDesktopNavigation, useMasterNavigation } from '../navigation/DesktopNavigation'
 import { useStartupReadiness } from '../navigation/StartupReadiness'
+import { traceChatEntry } from '../navigation/entry-performance'
+import { EntryExperimentsPanel } from '../navigation/EntryExperimentsPanel'
 import { useChatEntry } from '../navigation/useChatEntry'
 import { ConnectionStatus } from '../shared/ConnectionStatus'
 import { Confirm } from '../shared/shared'
@@ -270,6 +272,7 @@ function SessionChatList ({ archived, autoRefresh }: { archived: boolean, autoRe
               active={isChatRouteActive(pathname, String(chat.id))}
               onPressIn={() => {
                 if (!selected) {
+                  traceChatEntry(`${state.session?.userID}:${state.session?.imToken}`, String(chat.id), 'press-in')
                   if (!state.messages[String(chat.id)]?.length)
                     void prefetchConversationHistory(String(chat.id))
                   chatEntry.prepare(String(chat.id))
@@ -402,6 +405,7 @@ function SessionChatList ({ archived, autoRefresh }: { archived: boolean, autoRe
           />
         )}
       </View>
+      <EntryExperimentsPanel />
     </SafeAreaView>
   )
 }

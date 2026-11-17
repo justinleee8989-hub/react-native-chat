@@ -13,12 +13,20 @@ export function batchMessageIDs (ids: string[], batchSize = 100) {
     batches.push(ids.slice(index, index + size))
   return batches
 }
+/**
+ * `current` itself when `incoming` changes nothing: the chat page polls every few seconds, and a
+ * new object each time re-projected and re-checked every message on screen.
+ */
 export function mergeMessageExtras (current: Record<string, MessageExtra>, incoming: Record<string, MessageExtra>) {
-  const next = { ...current }
-  for (const [id, value] of Object.entries(incoming))
-    if (!next[id] || next[id].revision <= value.revision)
-      next[id] = value
-  return next
+  let next: Record<string, MessageExtra> | undefined
+  for (const [id, value] of Object.entries(incoming)) {
+    const existing = current[id]
+    if (existing && (existing.revision > value.revision || (existing.revision === value.revision && JSON.stringify(existing) === JSON.stringify(value))))
+      continue
+    next = next || { ...current }
+    next[id] = value
+  }
+  return next || current
 }
 export function applyExtras (message: IMessage, extra?: MessageExtra): IMessage {
   if (!extra || message.system)
