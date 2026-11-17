@@ -1,5 +1,6 @@
 import { mergeMessages } from '../domain/model'
 import type { Conversation, IMClient, IMMessage } from '../domain/types'
+import { groupReadNotice } from './group-read-notice'
 import type { Messaging } from './messaging'
 import type { Runtime } from './runtime'
 
@@ -133,6 +134,14 @@ export function subscribeEvents (
         message.groupID === conversation.groupID && message.status === 2 && !message.isRead)
     if (messages.length)
       runtime.addMessages(conversation.conversationID, messages.map(message => ({ ...message, isRead: true })))
+  })
+  // The chat server's online-only notice that a group member's read position moved past
+  // messages this user sent (chat: internal/api/chat/group_read_webhook.go). OpenIM itself pushes
+  // nothing to the sender when a member reads.
+  on('onRecvCustomBusinessMessage', data => {
+    const notice = groupReadNotice(data)
+    if (notice && runtime.state.conversations.some(item => item.conversationID === notice.conversationID && !!item.groupID))
+      runtime.readersChanged(notice.conversationID)
   })
   on('onRecvNewMessage', receive)
   on('onRecvNewMessages', receive)

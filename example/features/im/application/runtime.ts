@@ -17,6 +17,8 @@ interface State {
   conversations: Conversation[]
   messages: Record<string, IMMessage[]>
   messageReadInfo: Record<string, Record<string, GroupMessageReadInfo>>
+  /** Bumped when the server says someone's read position moved in a group (see readersChanged). */
+  readersChanged?: Record<string, number>
   historyLoading?: Record<string, boolean>
   historyPaging?: Record<string, boolean>
   historyEnd: Record<string, boolean>
@@ -96,8 +98,8 @@ export function createRuntime (config: ServerConfig) {
     const message = state.messages[conversationID]?.find(item => item.clientMsgID === messageID)
     if (!conversation?.groupID || !message || message.groupID !== conversation.groupID || message.sendID !== state.session?.userID || message.status !== 2)
       return
-    // Unchanged counts leave the store alone: the chat page polls them while someone has not read
-    // the latest message, and every store update re-renders the screens that read it.
+    // Unchanged counts leave the store alone: the chat page asks again on every read notice and on
+    // returning to the foreground, and every store update re-renders the screens that read it.
     const existing = state.messageReadInfo[conversationID]?.[messageID]
     if (existing && existing.readCount === readCount && existing.unreadCount === unreadCount)
       return
@@ -106,6 +108,13 @@ export function createRuntime (config: ServerConfig) {
       [conversationID]: { ...state.messageReadInfo[conversationID], [messageID]: { readCount, unreadCount } },
     }
     update({ messageReadInfo })
+  }
+  /**
+   * A group member's read position moved (the chat server's `group_read_progress` notification):
+   * the open chat asks for the read count of the latest own message again.
+   */
+  function readersChanged (conversationID: string) {
+    update({ readersChanged: { ...state.readersChanged, [conversationID]: (state.readersChanged?.[conversationID] || 0) + 1 } })
   }
   function clearMessageReadInfo (conversationID: string) {
     if (!state.messageReadInfo[conversationID])
@@ -140,6 +149,7 @@ export function createRuntime (config: ServerConfig) {
     touchMessageCache,
     pruneMessageCache,
     syncMessageReaders,
+    readersChanged,
     clearMessageReadInfo,
     drainMessages,
     subscribe: (listener: () => void) => {

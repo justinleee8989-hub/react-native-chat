@@ -549,7 +549,24 @@ test('a stale reader request cannot overwrite a newer SDK receipt for the same m
   assert.equal(h.store.useOpenIM().messageReadInfo['group-chat']['sent-group'].unreadCount, 0)
 })
 
-test('polling the same read counts leaves the store state untouched', async () => {
+test('a chat server group read notice asks the open group chat to refresh its read count', async () => {
+  const h = harness()
+  await h.store.login('me', 'password', { chat: 'http://test' })
+  h.events.get('onConversationChanged')([{ conversationID: 'group-chat', groupID: 'group-1', showName: 'Group', unreadCount: 0 }])
+  const notice = (conversationID) => JSON.stringify({ key: 'group_read_progress', data: JSON.stringify({ conversationID, readerID: 'bob', hasReadSeq: 3 }) })
+
+  h.events.get('onRecvCustomBusinessMessage')(notice('group-chat'))
+  assert.equal(h.store.useOpenIM().readersChanged?.['group-chat'], undefined, 'not a group conversation ID')
+
+  h.events.get('onConversationChanged')([{ conversationID: 'sg_group-1', groupID: 'group-1', showName: 'Group', unreadCount: 0 }])
+  h.events.get('onRecvCustomBusinessMessage')(notice('sg_group-1'))
+  h.events.get('onRecvCustomBusinessMessage')(notice('sg_group-1'))
+  assert.equal(h.store.useOpenIM().readersChanged['sg_group-1'], 2)
+  h.events.get('onRecvCustomBusinessMessage')(notice('sg_unknown'))
+  assert.equal(h.store.useOpenIM().readersChanged['sg_unknown'], undefined)
+})
+
+test('the same read counts leave the store state untouched', async () => {
   const h = harness()
   await h.store.login('me', 'password', { chat: 'http://test' })
   h.events.get('onConversationChanged')([{ conversationID: 'group-chat', groupID: 'group-1', showName: 'Group', unreadCount: 0 }])
