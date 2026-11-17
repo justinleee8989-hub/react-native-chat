@@ -1,0 +1,180 @@
+import React from 'react'
+import { ActivityIndicator, ScrollView, Text, View } from 'react-native'
+import { type Href, useRouter } from 'expo-router'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { useDesktopNavigation } from '../navigation/DesktopNavigation'
+import { ProductToast } from '../shared/ProductToast'
+import { useProductLayout } from './preferences'
+import { ProductHeader } from './primitives'
+import { ProductIcon } from './ProductIcon'
+import { ProductPressable as Pressable } from './ProductPressable'
+import { ProductSkeleton, type ProductSkeletonKind } from './ProductSkeleton'
+import { useProductTheme } from './theme'
+
+export function ProductPage ({
+  title,
+  subtitle,
+  root,
+  busy,
+  error,
+  right,
+  children,
+  headerContent,
+  white = false,
+  alwaysShowBack = false,
+  initialLoading = false,
+  skeleton = 'list',
+  onRetry,
+  backHref = '/(tabs)/contacts',
+}: React.PropsWithChildren<{
+  title: string
+  subtitle?: string
+  root?: boolean
+  busy: boolean
+  error: string
+  right?: React.ReactNode
+  headerContent?: React.ReactNode
+  white?: boolean
+  alwaysShowBack?: boolean
+  initialLoading?: boolean
+  skeleton?: ProductSkeletonKind
+  onRetry?: () => void
+  backHref?: Href
+}>) {
+  const router = useRouter()
+  const navigation = useDesktopNavigation()
+  const { desktop } = useProductLayout()
+  const t = useProductTheme()
+  return (
+    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: white ? t.page : t.bg }}>
+      <View
+        style={{
+          flex: 1,
+          width: '100%',
+          maxWidth: !root && desktop ? 680 : undefined,
+          alignSelf: 'center',
+        }}
+      >
+        <ProductHeader
+          detail={!root}
+          backgroundColor={white ? t.page : t.bg}
+          title={title}
+          subtitle={subtitle}
+          large={root}
+          right={right}
+          onBack={
+            !alwaysShowBack && (root || (desktop && navigation?.canGoBackInSection === false))
+              ? undefined
+              : () => {
+                if (router.canGoBack())
+                  router.back()
+                else
+                  router.replace(backHref)
+              }
+          }
+        />
+        {headerContent}
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps='handled'
+          contentContainerStyle={{ paddingBottom: 40 }}
+        >
+          {busy && !initialLoading && <ActivityIndicator accessibilityLabel='正在处理' color={t.accent} />}
+          {!!error && (
+            <Text accessibilityRole='alert' style={{ padding: 16, color: t.danger }}>
+              {error}
+            </Text>
+          )}
+          {initialLoading
+            ? error
+              ? onRetry && (
+                <Pressable accessibilityRole='button' accessibilityLabel='重新加载' disabled={busy} onPress={onRetry} style={{ padding: 20, alignItems: 'center' }}>
+                  <Text style={{ color: t.accent }}>重新加载</Text>
+                </Pressable>
+              )
+              : <ProductSkeleton kind={skeleton} />
+            : children}
+        </ScrollView>
+        <ProductToast />
+      </View>
+    </SafeAreaView>
+  )
+}
+export function ProductIconButton ({
+  name,
+  label,
+  onPress,
+}: {
+  name: React.ComponentProps<typeof ProductIcon>['name']
+  label: string
+  onPress: () => void
+}) {
+  const t = useProductTheme()
+  return (
+    <Pressable
+      accessibilityRole='button'
+      accessibilityLabel={label}
+      onPress={onPress}
+      style={({ pressed }) => ({
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: pressed ? t.surface2 : undefined,
+      })}
+    >
+      <ProductIcon name={name} color={t.text} />
+    </Pressable>
+  )
+}
+export function ProductSection ({
+  children,
+  variant = 'group',
+  side = false,
+}: React.PropsWithChildren<{ variant?: 'group' | 'list', side?: boolean }>) {
+  const t = useProductTheme()
+  const { desktop } = useProductLayout()
+  return (
+    <Text
+      style={{
+        color: t.text2,
+        fontSize: 13,
+        lineHeight: 18,
+        paddingHorizontal: variant === 'group' ? 32 : 20,
+        paddingTop: variant === 'group' ? 24 : side && desktop ? 18 : 22,
+        paddingBottom: variant === 'group' ? 8 : 6,
+      }}
+    >
+      {children}
+    </Text>
+  )
+}
+export function ProductInset ({ children }: React.PropsWithChildren) {
+  return <View style={{ marginHorizontal: 16, gap: 24 }}>{children}</View>
+}
+
+export function ProductEmpty ({ title, subtitle }: { title: string, subtitle?: string }) {
+  const t = useProductTheme()
+  return (
+    <View style={{ paddingVertical: 72, paddingHorizontal: 40, alignItems: 'center' }}>
+      <Text
+        style={{
+          color: t.text2,
+          fontSize: 16,
+          lineHeight: 22,
+          fontWeight: '600',
+          textAlign: 'center',
+          marginBottom: 4,
+        }}
+      >
+        {title}
+      </Text>
+      {!!subtitle && (
+        <Text style={{ color: t.text3, fontSize: 14, lineHeight: 22, textAlign: 'center' }}>
+          {subtitle}
+        </Text>
+      )}
+    </View>
+  )
+}

@@ -182,6 +182,7 @@ export function InputToolbar<TMessage extends IMessage = IMessage> (
           </View>
         )}
         <View style={[styles.islandRow, isRTL && styles.rowReverse]}>
+          {props.actionsPosition === 'leading' && isFieldShown && actionsFragment}
           <View style={styles.island}>
             <GlassSurface color={theme.colors.inputBackground} borderColor={theme.colors.inputFieldBorder} style={styles.islandSurface} />
             {replyPreviewFragment}
@@ -209,12 +210,12 @@ export function InputToolbar<TMessage extends IMessage = IMessage> (
                   )
                   : (
                     <FieldGroup
-                      emojiFragment={emojiFragment}
+                      emojiFragment={props.actionsPosition === 'leading' ? null : emojiFragment}
                       composerFragment={composerFragment}
-                      actionsFragment={actionsFragment}
+                      actionsFragment={props.actionsPosition === 'leading' ? emojiFragment : actionsFragment}
                       videoFragment={videoFragment}
-                      attachStyle={attachStyle}
-                      hasText={hasText}
+                      attachStyle={props.actionsPosition === 'leading' ? undefined : attachStyle}
+                      hasText={props.actionsPosition === 'leading' ? false : hasText}
                       hasHadTake={hasHadTake}
                       canTakeAway={canTakeAway}
                       returning={returning}

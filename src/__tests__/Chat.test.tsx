@@ -277,3 +277,14 @@ it('still lets `keyboardProviderProps` set the translucency explicitly', async (
   expect(provider.props.statusBarTranslucent).toBe(true)
   expect(provider.props.navigationBarTranslucent).toBe(true)
 })
+
+
+it('mounts the message list immediately when deferral is disabled', async () => {
+  const frame = jest.spyOn(global, 'requestAnimationFrame').mockImplementation(() => 0)
+  try {
+    const view = await render(<Chat messages={messages} user={{ _id: 1 }} deferMessageListMount={false} listProps={{ testID: 'immediate-list' }} />)
+    expect(view.getByTestId('immediate-list', { includeHiddenElements: true })).toBeTruthy()
+  } finally {
+    frame.mockRestore()
+  }
+})

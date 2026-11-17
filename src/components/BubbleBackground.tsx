@@ -9,6 +9,7 @@ import Animated, {
 } from 'react-native-reanimated'
 
 import { getSvg } from '../optional'
+import { gradientGeometry, type GradientWindowFrame } from './bubbleGradientGeometry'
 
 const svg = getSvg()
 const Svg: any = svg ? svg.default ?? svg.Svg : null
@@ -34,6 +35,7 @@ export interface BubbleGradientStore {
   /** The list's scroll offset, live: the bubbles' gradient and tails follow it every frame. */
   scrolledY: SharedValue<number>
   listHeight: SharedValue<number>
+  windowFrame?: SharedValue<GradientWindowFrame>
   /**
    * One row's place in list content coordinates, by message id; undefined until the list has
    * placed it. One shared value per message, so a row that moves re-runs its own bubble's
@@ -144,7 +146,7 @@ export const linearGradientStyle = (stops: string[]): ViewStyle => {
 
 interface GradientBackgroundProps {
   stops: string[]
-  mode: 'screen' | 'bubble'
+  mode: 'screen' | 'bubble' | 'window'
   messageId: string | number
   /** Space under the bubble inside its list cell (the gap to the next row). */
   bottomGap: number
@@ -169,9 +171,8 @@ const evenStops = (count: number) => {
  * offset - no measuring on the UI thread.
  */
 const ScreenGradientBackground = ({ stops, messageId, bottomGap, cornerStyle, tailSide, store }: GradientBackgroundProps & { store: BubbleGradientStore }) => {
-  const { scrolledY, listHeight, isInverted } = store
+  const { scrolledY, listHeight, isInverted, windowFrame } = store
   const cellLayout = useMemo(() => store.cellLayout(String(messageId)), [store, messageId])
-  const positions = evenStops(stops.length)
 
   // The gradient slides with the scroll on every frame, so it is one worklet that computes the
   // bubble's bottom edge (in points from the top of the list) and the layer's offset together:
@@ -185,12 +186,28 @@ const ScreenGradientBackground = ({ stops, messageId, bottomGap, cornerStyle, ta
       : isInverted
         ? height + scrolledY.value - layout.y - bottomGap
         : layout.y + layout.height - bottomGap - scrolledY.value
+    const geometry = gradientGeometry(height, bottom, windowFrame?.value)
     return {
-      height,
-      transform: [{ translateY: height - bottom }],
+      height: geometry.height,
+      transform: [{ translateY: geometry.translateY }],
     }
   })
 
+  return (
+    <>
+      <View pointerEvents='none' style={[StyleSheet.absoluteFill, styles.clip, { backgroundColor: stops[stops.length - 1] }, cornerStyle]}>
+        <Animated.View style={[styles.layer, linearGradientStyle(stops), layerStyle]} />
+      </View>
+      {tailSide && <ScreenGradientTail stops={stops} messageId={messageId} bottomGap={bottomGap} side={tailSide} store={store} />}
+    </>
+  )
+}
+
+// Mount the tail worklet only when a tail is visible; rounded bubbles need no color sampling.
+const ScreenGradientTail = ({ stops, messageId, bottomGap, side, store }: Pick<GradientBackgroundProps, 'stops' | 'messageId' | 'bottomGap'> & { side: 'left' | 'right', store: BubbleGradientStore }) => {
+  const { scrolledY, listHeight, isInverted, windowFrame } = store
+  const cellLayout = useMemo(() => store.cellLayout(String(messageId)), [store, messageId])
+  const positions = evenStops(stops.length)
   // The tail samples the gradient at the bubble's bottom, live. Its colour snaps to one of
   // TAIL_COLOR_STEPS along the gradient: the tail is an SVG path, and redrawing it on every frame
   // of a fling cost Android more than the whole sliding gradient. Snapped, it is redrawn only when
@@ -204,25 +221,18 @@ const ScreenGradientBackground = ({ stops, messageId, bottomGap, cornerStyle, ta
     const bottom = isInverted
       ? height + scrolledY.value - layout.y - bottomGap
       : layout.y + layout.height - bottomGap - scrolledY.value
-    const fraction = Math.round(Math.min(1, Math.max(0, bottom / height)) * TAIL_COLOR_STEPS) / TAIL_COLOR_STEPS
+    const fraction = Math.round(gradientGeometry(height, bottom, windowFrame?.value).fraction * TAIL_COLOR_STEPS) / TAIL_COLOR_STEPS
     return interpolateColor(fraction, positions, stops) as string
   })
 
-  return (
-    <>
-      <View pointerEvents='none' style={[StyleSheet.absoluteFill, styles.clip, { backgroundColor: stops[stops.length - 1] }, cornerStyle]}>
-        <Animated.View style={[styles.layer, linearGradientStyle(stops), layerStyle]} />
-      </View>
-      {tailSide && <BubbleTail side={tailSide} color={stops[stops.length - 1]} animatedColor={tailColor} />}
-    </>
-  )
+  return <BubbleTail side={side} color={stops[stops.length - 1]} animatedColor={tailColor} />
 }
 
 /** The gradient behind an outgoing bubble: screen-fixed inside a chat list, else per bubble. */
 export const GradientBubbleBackground = (props: GradientBackgroundProps) => {
   const store = useContext(BubbleGradientContext)
 
-  if (props.mode === 'screen' && store)
+  if (props.mode !== 'bubble' && store)
     return <ScreenGradientBackground {...props} store={store} />
 
   return (

@@ -275,3 +275,31 @@ Same props, same `IMessage`. Swap the package and rename: `GiftedChat` → `Chat
 - [Streaming guide](https://github.com/kesha-antonov/react-native-chat/blob/main/docs/STREAMING.md)
 - [Example app](https://github.com/kesha-antonov/react-native-chat/tree/main/example)
 - [Expo Snack playground](https://snack.expo.dev/@kesha-antonov/react-native-chat-playground)
+
+Composer layout: use renderInputToolbar={props => <InputToolbar {...props} actionsPosition="leading" />} for attachments before the field and emoji after text. Default inside layout is unchanged.
+
+Optional `theme.voice.idleBackground` and `idleIcon` customize only the idle recording control appearance. Use `labels.recordAudioMessage` and `labels.recordVideoMessage` for its accessibility labels. These resolve through the normal labels prop > locale translation > English defaults (`record voice message` / `record video message`) chain. For backward compatibility, deprecated `theme.voice.recordAudioLabel` / `recordVideoLabel`, when non-nullish, take precedence over the corresponding resolved label. Omitted overrides preserve the default appearance and English fallback labels.
+
+Custom attachment menus can call the exported `pickDocuments()`, `pickFromSystemGallery()`, and `takePhoto()` helpers to open the corresponding system picker immediately. Each returns `Promise<PickedAttachment[]>` (empty on cancellation); pass results to `AttachmentMenuRenderProps.onSend` to retain the configured `onPick` pipeline. The helpers use optional Expo peers and return an empty array when unavailable.
+
+Custom bubble action overlays: pass optional `renderContextMenu` to `Bubble` inside `renderBubble`. The exported `ContextMenuProps` provides items, reactions, anchor coordinates, onDismiss, and messagePreview. Omit messagePreview to keep the original bubble visible; default behavior is unchanged.
+
+Custom audio controls: `MessageAudio.renderPlayer` receives `{ isPlaying, isDisabled, duration, currentTime, onToggle }` when `expo-audio` is installed. Use it from `renderMessageAudio` to change appearance while retaining SDK playback coordination, recording interruption, read callbacks and playlist behavior. Without this prop the default waveform UI is unchanged; without Expo audio the existing fallback is used.
+
+`VoiceMessageInput.renderControl` optionally replaces hold controls with an app UI. It receives `isRecording`, `elapsed` (milliseconds), `onStart`, `onCancel`, and `onSend`; the SDK continues to own permissions, capture, cancellation during startup, duration limits and unmount cleanup. Default controls remain unchanged. `theme.composer.insetButtonWidth` optionally adjusts the inset controls width (default 44).
+
+`Bubble.isContextMenuEnabled` opts into browser right-click opening the same message actions/reactions menu; the default remains false. Native long-press is unchanged.
+
+`MessageImage.onPressImage(message)` overrides opening a successfully loaded photo, allowing app-scoped previews. Download, cancel and retry behavior is retained; without this callback the SDK gallery opens as before.
+
+
+### Window-aligned outgoing gradients
+
+Set `theme.bubble.outgoingGradient` to two color stops and
+`theme.bubble.outgoingGradientMode` to `'window'` for a uniform vertical ramp
+across the application window, including navigation and composer space. Each
+outgoing bubble shows its slice and follows scrolling through shared animation
+values. Existing `'screen'` (message-list bounds), `'bubble'` (per bubble), and
+`null` (solid) defaults remain unchanged. No backend integration is required.
+
+For apps that prepare history before navigation, `<Chat deferMessageListMount={false} />` mounts the message list with the composer instead of deferring it by one frame. The default remains `true`. This does not fetch/cache messages or bypass keyboard/layout measurement.

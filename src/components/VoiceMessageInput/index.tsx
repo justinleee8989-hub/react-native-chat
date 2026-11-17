@@ -1,6 +1,8 @@
 import React, { forwardRef } from 'react'
 
+import { useStore } from '../../store'
 import { RecordButton } from '../RecordButton'
+import { RecordingMeter, sameNumber } from '../recordingMeter'
 import { isVoiceResumeAvailable, isVoiceTrimAvailable } from '../voiceEditing'
 import { VoiceMessageInputHandle, VoiceMessageInputProps } from './types'
 import { useVoiceTake } from './useVoiceTake'
@@ -12,6 +14,7 @@ export { isVoiceRecordingAvailable } from './recorder'
 export type {
   VoiceMessageInputHandle,
   VoiceMessageInputProps,
+  VoiceRecordingControlProps,
   VoiceRecordingPreview,
   VoiceRecordingState
 } from './types'
@@ -29,7 +32,7 @@ export type {
  * hooks always run in a stable order.
  */
 function VoiceMessageInputInner (
-  { config, onSend, onStateChange, onTap, hint, onQuickRelease, slideProgressValue, onExit }: VoiceMessageInputProps,
+  { config, onSend, onStateChange, onTap, hint, onQuickRelease, slideProgressValue, onExit, renderControl }: VoiceMessageInputProps,
   ref: React.Ref<VoiceMessageInputHandle>
 ) {
   const {
@@ -46,6 +49,16 @@ function VoiceMessageInputInner (
     sendPreview,
     onSlideProgress,
   } = useVoiceTake({ config, onSend, onStateChange }, ref)
+
+  if (renderControl)
+    return <CustomVoiceControl
+      meter={meter}
+      isRecording={phase === 'recording' || phase === 'locked'}
+      renderControl={renderControl}
+      onStart={() => start()}
+      onCancel={() => stopTake('cancel')}
+      onSend={() => stopTake('send')}
+    />
 
   return (
     <RecordButton
@@ -69,6 +82,19 @@ function VoiceMessageInputInner (
       isViewOnce={isViewOnce}
     />
   )
+}
+
+// Only custom controls subscribe here: the default button keeps its meter-driven animation.
+function CustomVoiceControl ({ meter, renderControl, ...controls }: {
+  meter: RecordingMeter
+  renderControl: NonNullable<VoiceMessageInputProps['renderControl']>
+  isRecording: boolean
+  onStart: () => Promise<void>
+  onCancel: () => void | Promise<void>
+  onSend: () => void | Promise<void>
+}) {
+  const elapsed = useStore(meter.elapsed, sameNumber, 0)
+  return renderControl({ ...controls, elapsed })
 }
 
 export const VoiceMessageInput = forwardRef(VoiceMessageInputInner)

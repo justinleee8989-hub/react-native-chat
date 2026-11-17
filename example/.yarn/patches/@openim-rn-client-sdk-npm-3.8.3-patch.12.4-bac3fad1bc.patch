@@ -1,5 +1,5 @@
 diff --git a/android/build.gradle b/android/build.gradle
-index 0705b33dfea0d16cdcc3002c7d4be948ee7217be..bba9a24f71a04c4ad72f5ec8e7ab2f582a0145f5 100644
+index 0705b33dfea0d16cdcc3002c7d4be948ee7217be..e833547ed6701f76f080f52c4bbc69d49854e899 100644
 --- a/android/build.gradle
 +++ b/android/build.gradle
 @@ -1,5 +1,5 @@
@@ -18,3 +18,10 @@ index 0705b33dfea0d16cdcc3002c7d4be948ee7217be..bba9a24f71a04c4ad72f5ec8e7ab2f58
  }
  
  apply plugin: 'com.android.library'
+@@ -21,5 +21,5 @@ def safeExtGet(prop, fallback) {
+ android {
+-    compileSdkVersion safeExtGet('OpenImSdkRn_compileSdkVersion', 33)
++    compileSdkVersion safeExtGet('OpenImSdkRn_compileSdkVersion', safeExtGet('compileSdkVersion', 33))
+     defaultConfig {
+         minSdkVersion safeExtGet('OpenImSdkRn_minSdkVersion', 16)
+         targetSdkVersion safeExtGet('OpenImSdkRn_targetSdkVersion', 33)

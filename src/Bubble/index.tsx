@@ -139,6 +139,7 @@ export const Bubble = <TMessage extends IMessage = IMessage>(props: BubbleProps<
     return (
       <Animated.View style={containerStyleList}>
         <PressableBubbleRow
+          isContextMenuEnabled={props.isContextMenuEnabled}
           isGestureEnabled={isGestureEnabled}
           isLifted={menu.isLifted}
           onPressMessage={onPressMessageProp}

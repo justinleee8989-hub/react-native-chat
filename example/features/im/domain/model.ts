@@ -48,7 +48,9 @@ export function toMessage (message: IMMessage): IMessage {
     return { _id: message.clientMsgID, text: notice, system: true,
       createdAt: new Date(message.sendTime || message.createTime || Date.now()), user: { _id: 'system' } }
   const quoted = message.quoteElem?.quoteMessage || readReply(message)
+  const imageDimensions = { imageWidth: message.pictureElem?.sourcePicture?.width, imageHeight: message.pictureElem?.sourcePicture?.height }
   return applyExtras({
+    ...imageDimensions,
     _id: message.clientMsgID,
     replyMessage: quoted ? toMessage({ ...quoted,
       ...(quoted.contentType === 114 ? { contentType: 101, textElem: { content: quoted.quoteElem?.text || '' } } : {}),
@@ -99,7 +101,7 @@ export function toMessage (message: IMMessage): IMessage {
     received: message.status === 2 && !!message.isRead,
   }, message.projection)
 }
-export function toChat (conversation: Conversation, userID?: string): ChatListItem {
+export function toChat (conversation: Conversation, userID?: string): ChatListItem & { avatarID: string } {
   let lastMessage: IMessage | undefined
   try {
     if (conversation.latestMsg)
@@ -109,6 +111,7 @@ export function toChat (conversation: Conversation, userID?: string): ChatListIt
   }
   return {
     id: conversation.conversationID,
+    avatarID: conversation.groupID || conversation.userID || conversation.conversationID,
     title: conversation.showName || conversation.userID || conversation.groupID || 'Chat',
     kind: conversation.groupID ? 'group' : 'private',
     avatar: conversation.faceURL,

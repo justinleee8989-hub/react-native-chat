@@ -70,6 +70,8 @@ export function createMessaging (runtime: Runtime, client: IMClient, beforeRetry
       runtime.mergeConversations(page)
       offset += page.length
     } while (page.length === 100)
+    if (epoch === runtime.generation)
+      runtime.update({ conversationsLoaded: true })
     const projectionWarning = projectionUnavailable ? '部分会话的编辑信息暂时无法同步，请稍后刷新' : undefined
     if (projectionWarning && epoch === runtime.generation)
       runtime.reportError(new Error(projectionWarning))
@@ -84,6 +86,7 @@ export function createMessaging (runtime: Runtime, client: IMClient, beforeRetry
     return conversation.conversationID
   }
   async function loadHistory (id: string, earlier = false) {
+    runtime.touchMessageCache(id)
     const revision = runtime.historyRevision?.[id] || 0
     const key = `${runtime.generation}:${revision}:${id}`
     if (historyPending.has(key))
@@ -93,6 +96,10 @@ export function createMessaging (runtime: Runtime, client: IMClient, beforeRetry
         historyWaiters.set(key, waiters)
       })
     historyPending.add(key)
+    runtime.update({
+      historyLoading: { ...runtime.state.historyLoading, [id]: true },
+      historyPaging: { ...runtime.state.historyPaging, [id]: earlier },
+    })
     const epoch = runtime.generation
     const messages = runtime.state.messages[id] || []
     let failure: unknown
@@ -114,6 +121,11 @@ export function createMessaging (runtime: Runtime, client: IMClient, beforeRetry
       failure = error
       throw error
     } finally {
+      if (epoch === runtime.generation && revision === (runtime.historyRevision?.[id] || 0))
+        runtime.update({
+          historyLoading: { ...runtime.state.historyLoading, [id]: false },
+          historyPaging: { ...runtime.state.historyPaging, [id]: false },
+        })
       historyPending.delete(key)
       historyWaiters.get(key)?.forEach(settle => settle(failure !== undefined, failure))
       historyWaiters.delete(key)
@@ -162,6 +174,8 @@ export function createMessaging (runtime: Runtime, client: IMClient, beforeRetry
         runtime.reportError(error)
     }
     runtime.activeID = id
+    runtime.touchMessageCache(id)
+    runtime.pruneMessageCache()
     void loadHistory(id).catch(reportCurrentError)
     const conversation = runtime.state.conversations.find(item => item.conversationID === id)
     if (conversation?.latestMsg || conversation?.unreadCount || runtime.state.messages[id]?.length)

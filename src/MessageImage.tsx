@@ -62,6 +62,8 @@ const createPlaceholderStyles = (theme: ChatTheme) => StyleSheet.create({
 
 export interface MessageImageProps<TMessage extends IMessage> {
   currentMessage: TMessage
+  /** Override opening a loaded photo; download and transfer controls are unchanged. */
+  onPressImage?: (message: TMessage) => void
   containerStyle?: StyleProp<ViewStyle>
   imageSourceProps?: Partial<ImageURISource>
   imageStyle?: StyleProp<ImageStyle>
@@ -74,6 +76,7 @@ export function MessageImage<TMessage extends IMessage = IMessage> ({
   imageSourceProps,
   imageStyle,
   currentMessage,
+  onPressImage,
 }: MessageImageProps<TMessage>) {
   const gallery = useMediaGallery()
   // Outside a `Chat` there is no gallery: the viewer opens on this photo alone.
@@ -144,11 +147,13 @@ export function MessageImage<TMessage extends IMessage = IMessage> ({
   const handleImagePress = useCallback(() => {
     if (!imageSource.uri || !currentMessage)
       return
-    if (gallery)
+    if (onPressImage)
+      onPressImage(currentMessage)
+    else if (gallery)
       gallery.open(currentMessage._id)
     else
       setIsViewerOpen(true)
-  }, [imageSource.uri, currentMessage, gallery])
+  }, [imageSource.uri, currentMessage, gallery, onPressImage])
 
   const closeViewer = useCallback(() => setIsViewerOpen(false), [])
 

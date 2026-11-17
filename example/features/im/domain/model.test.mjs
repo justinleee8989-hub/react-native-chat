@@ -85,6 +85,18 @@ test('chat list projection scopes archived state to the current user', () => {
   assert.equal(toChat(conversation, 'bob').isArchived, false)
 })
 
+test('chat list items preserve conversation ids separately from group and private avatar ids', () => {
+  const group = toChat({ conversationID: 'group-conversation', groupID: 'group-1', showName: 'QA 群', unreadCount: 0 })
+  assert.equal(group.id, 'group-conversation')
+  assert.equal(group.avatarID, 'group-1')
+  assert.equal(group.kind, 'group')
+
+  const direct = toChat({ conversationID: 'private-conversation', userID: 'peer-1', showName: 'Peer', unreadCount: 0 })
+  assert.equal(direct.id, 'private-conversation')
+  assert.equal(direct.avatarID, 'peer-1')
+  assert.equal(direct.kind, 'private')
+})
+
 test('real card and location messages provide previews and native quote targets', () => {
   const base = { clientMsgID: 'rich', sendTime: 10, status: 2 }
   const card = { ...base, contentType: 108, cardElem: { userID: 'alice', nickname: 'Alice' } }

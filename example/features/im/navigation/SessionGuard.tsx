@@ -1,8 +1,9 @@
-import { useEffect } from 'react'
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native'
+import React, { useEffect, useState } from 'react'
 import { Href, useRootNavigationState, useRouter, useSegments } from 'expo-router'
-import { useChatListColors } from '@/components/chat-list/theme'
+import * as SplashScreen from 'expo-splash-screen'
 import { useOpenIM } from '../application/store'
+import { useStartupReadiness } from './StartupReadiness'
+import { StartupScreen } from './StartupScreen'
 
 /** Keep the root navigator mounted while saved credentials are restored. */
 export default function SessionGuard () {
@@ -10,7 +11,6 @@ export default function SessionGuard () {
   const segments = useSegments()
   const router = useRouter()
   const navigation = useRootNavigationState()
-  const colors = useChatListColors()
   const auth = segments[0] === 'auth'
   const development = segments[0] === 'chat' || segments[0] === 'explore'
   useEffect(() => {
@@ -21,11 +21,43 @@ export default function SessionGuard () {
     else if (session && auth)
       router.replace('/(tabs)/chats')
   }, [auth, busy, development, initialized, navigation?.key, router, session])
-  if (development || (initialized && (auth ? !session : !!session)))
+  const { readySession, markReady } = useStartupReadiness()
+  const home = segments[0] === '(tabs)' && (!segments[1] || segments[1] === 'chats')
+  const routeReady = development || (initialized && (auth ? !session : !!session))
+  const homePending = !!session && home && readySession !== session
+  const [presentedSession, setPresentedSession] = useState<typeof session>()
+  const [slow, setSlow] = useState(false)
+  useEffect(() => {
+    if (!homePending)
+      return
+    const timer = setTimeout(() => setSlow(true), 15000)
+    return () => {
+      clearTimeout(timer)
+      setSlow(false)
+    }
+  }, [homePending, session])
+  useEffect(() => {
+    if (!routeReady || homePending || !session)
+      return
+    // Content-size/empty-state layout has committed. Keep the product cover through
+    // the next paint rather than exposing the FlatList's initial mount.
+    let frame = requestAnimationFrame(() => {
+      frame = requestAnimationFrame(() => setPresentedSession(session))
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [homePending, routeReady, session])
+  const ready = routeReady && (!session || !home || presentedSession === session)
+  useEffect(() => {
+    if (!ready)
+      return
+    // A fast restore can skip the RN startup view entirely. Let the resolved route
+    // commit its first frame before removing the native surface above it.
+    let frame = requestAnimationFrame(() => {
+      frame = requestAnimationFrame(() => SplashScreen.hide())
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [ready])
+  if (ready)
     return null
-  return <View style={[StyleSheet.absoluteFill, styles.loading, { backgroundColor: colors.background }]} accessibilityViewIsModal>
-    <ActivityIndicator color={colors.badge} />
-    <Text style={{ color: colors.message }}>正在恢复登录…</Text>
-  </View>
+  return <StartupScreen onContinue={slow && session && routeReady ? () => markReady(session) : undefined} />
 }
-const styles = StyleSheet.create({ loading: { alignItems: 'center', justifyContent: 'center', gap: 16 } })

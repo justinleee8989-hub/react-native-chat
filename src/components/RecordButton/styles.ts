@@ -15,7 +15,7 @@ export const createStyles = (theme: ChatTheme) => StyleSheet.create({
     width: theme.sendButton.size,
     height: theme.sendButton.size,
     borderRadius: theme.radii.sendButton,
-    backgroundColor: theme.colors.accent,
+    backgroundColor: theme.voice.idleBackground ?? theme.colors.accent,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 2,

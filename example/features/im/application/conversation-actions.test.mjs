@@ -3,8 +3,13 @@ import test from 'node:test'
 import { createConversationActions } from './conversation-actions.ts'
 import { isConversationArchived, updateConversationArchiveEx } from '../domain/conversation-archive.ts'
 function runtime () {
-  const value = { generation: 1, activeID: 'c', state: { session: { userID: 'alice' }, conversations: [{ conversationID: 'c', showName: 'Bob' }], messages: { c: [{ clientMsgID: 'm' }] }, historyEnd: { c: true } } }
+  const value = { generation: 1, activeID: 'c', state: { session: { userID: 'alice' }, conversations: [{ conversationID: 'c', showName: 'Bob' }], messages: { c: [{ clientMsgID: 'm' }] }, messageReadInfo: { c: { m: { readCount: 1, unreadCount: 0 } } }, historyEnd: { c: true }, historyLoading: { c: true }, historyPaging: { c: true } } }
   value.update = patch => { value.state = { ...value.state, ...patch } }
+  value.clearMessageReadInfo = id => {
+    const messageReadInfo = { ...value.state.messageReadInfo }
+    delete messageReadInfo[id]
+    value.update({ messageReadInfo })
+  }
   return value
 }
 test('failed remote pin does not show a false successful local setting', async () => {
@@ -29,7 +34,10 @@ test('delete removes local conversation and messages only after remote success',
   await actions.removeConversations(['c'])
   assert.equal(rt.state.conversations.length, 0)
   assert.equal(rt.state.messages.c, undefined)
+  assert.equal(rt.state.messageReadInfo.c, undefined)
   assert.equal(rt.state.historyEnd.c, undefined)
+  assert.equal(rt.state.historyLoading.c, undefined)
+  assert.equal(rt.state.historyPaging.c, undefined)
   assert.equal(rt.activeID, '')
 })
 
@@ -43,6 +51,7 @@ test('retry after partial batch deletion skips conversations already removed suc
     if (id === 'd' && fail) throw new Error('disconnected')
   } })
   await assert.rejects(actions.removeConversations(['c', 'd']), /disconnected/)
+  assert.equal(rt.state.messageReadInfo.c, undefined)
   fail = false
   await actions.removeConversations(['c', 'd'])
   assert.deepEqual(calls, ['c', 'd', 'd'])
@@ -71,4 +80,38 @@ test('archive updates the current user ex after remote success and unpins the co
   assert.equal(rt.state.conversations[0].ex, archivedEx)
   assert.equal(rt.state.conversations[0].isPinned, false)
   assert.equal(isConversationArchived(rt.state.conversations[0].ex, 'alice'), true)
+})
+
+test('delete waits for snapshot persistence, including retry after local removal', async () => {
+  const rt = runtime()
+  let finish
+  let saves = 0
+  const actions = createConversationActions(rt, { remove: async () => {} }, () => { saves++; return new Promise(resolve => { finish = resolve }) })
+  let settled = false
+  const result = actions.removeConversations(['c']).then(() => { settled = true })
+  await new Promise(resolve => setImmediate(resolve))
+  assert.equal(rt.state.conversations.length, 0)
+  assert.equal(settled, false)
+  finish()
+  await result
+  const retry = actions.removeConversations(['c'])
+  await new Promise(resolve => setImmediate(resolve))
+  finish()
+  await retry
+  assert.equal(saves, 2)
+})
+test('partial batch failure still flushes already deleted conversations', async () => {
+  const rt = runtime()
+  rt.state.conversations.push({ conversationID: 'd', showName: 'Other' })
+  let saved
+  const actions = createConversationActions(rt, { remove: async id => { if (id === 'd') throw Error('remote failed') } }, async () => { saved = rt.state.conversations.map(item => item.conversationID) })
+  await assert.rejects(actions.removeConversations(['c', 'd']), /remote failed/)
+  assert.deepEqual(saved, ['d'])
+})
+test('clear awaits snapshot cleanup and reports persistence failure', async () => {
+  const rt = runtime()
+  const actions = createConversationActions(rt, { clear: async () => {} }, async () => { throw Error('snapshot failed') })
+  await assert.rejects(actions.clearConversation('c'), /snapshot failed/)
+  assert.equal(rt.state.messages.c, undefined)
+  assert.equal(rt.state.conversations[0].latestMsg, '')
 })

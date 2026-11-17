@@ -9,6 +9,7 @@ export interface ConversationAsset {
   sendTime: number
   uri?: string
   title: string
+  senderName?: string
   size?: number
 }
 interface HistoryPage {
@@ -70,17 +71,19 @@ export function extractAssets (
   for (const message of messages) {
     if (message.status !== 2 || message.contentType >= 1000 || message.contentType === 2101)
       continue
+    const senderName = message.senderNickname || message.sendID
     const id = message.clientMsgID
     const sendTime = message.sendTime || message.createTime || 0
     if (message.contentType === 102) {
       const uri = imageSource(message)
       if (uri)
-        assets.push({ id: `image:${id}`, kind: 'image', messageID: id, sendTime, uri, title: '图片' })
+        assets.push({ id: `image:${id}`, kind: 'image', messageID: id, sendTime, senderName, uri, title: '图片' })
     }
     if (message.contentType === 105 && message.fileElem)
       assets.push({
         id: `file:${id}`,
         kind: 'file',
+        senderName,
         messageID: id,
         sendTime,
         uri: safeExternalHttpURL(message.fileElem.sourceUrl),
@@ -89,7 +92,7 @@ export function extractAssets (
       })
     if ([101, 106, 114].includes(message.contentType))
       for (const uri of linksFrom(messageText(message, extras)))
-        assets.push({ id: `link:${id}:${uri}`, kind: 'link', messageID: id, sendTime, uri, title: uri })
+        assets.push({ id: `link:${id}:${uri}`, kind: 'link', messageID: id, sendTime, senderName, uri, title: uri })
   }
   return assets
 }

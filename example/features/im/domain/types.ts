@@ -21,7 +21,7 @@ export interface IMMessage {
   uploadProgress?: number
   pictureElem?: {
     sourcePath?: string
-    sourcePicture?: { url?: string }
+    sourcePicture?: { url?: string, width?: number, height?: number }
     snapshotPicture?: { url?: string }
   }
   soundElem?: { sourceUrl?: string, soundPath?: string, duration?: number }
@@ -30,6 +30,8 @@ export interface IMMessage {
   /** Display-only edits/reactions supplied by the message extras service. Never send to the SDK. */
   projection?: { text?: string, editedAt?: number, reactions?: Record<string, Record<string, boolean>>, revision: number }
 }
+export interface GroupMessageReadInfo { readCount: number, unreadCount: number }
+export interface GroupMessageReadGuard { readInfo: GroupMessageReadInfo | undefined, userID: string, imToken: string, chatToken: string }
 export interface Conversation {
   conversationID: string
   conversationType: number

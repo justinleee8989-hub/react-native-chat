@@ -67,7 +67,17 @@ export function createDirectoryService (
       people(
         await (await getSDKClient()).getFriendListPage({ offset, count: 30, filterBlack: true })
       ),
-    users: async (id: string) => people(await (await getSDKClient()).getUsersInfo([id])),
+    users: async (id: string) => {
+      try {
+        return people(await (await getSDKClient()).getUsersInfo([id]))
+      } catch (reason) {
+        const error = reason as { errMsg?: unknown, message?: unknown }
+        const message = typeof error?.errMsg === 'string' ? error.errMsg : typeof error?.message === 'string' ? error.message : typeof reason === 'string' ? reason : ''
+        if (/user\s*(?:id)?\s*(?:not found|does not exist|not exist)/i.test(message))
+          return []
+        throw reason
+      }
+    },
     requests: async (received: boolean, offset = 0) => {
       const sdk = await getSDKClient()
       return requests(

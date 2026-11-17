@@ -24,3 +24,17 @@ test('invalid list responses cannot masquerade as a successful empty directory',
   const service = createDirectoryService(async () => ({ getFriendListPage: async () => ({ unexpected: true }) }), value => value)
   await assert.rejects(service.friends(), /响应格式不正确/)
 })
+
+test('missing users resolve as an empty result while unrelated SDK errors propagate', async () => {
+  for (const missingUser of [
+    new Error('user not found'),
+    { errMsg: 'userID does not exist' },
+  ]) {
+    const missingService = createDirectoryService(async () => ({ getUsersInfo: async () => { throw missingUser } }), value => value)
+    assert.deepEqual(await missingService.users('absent-user'), [])
+  }
+
+  const outage = new Error('directory unavailable')
+  const failingService = createDirectoryService(async () => ({ getUsersInfo: async () => { throw outage } }), value => value)
+  await assert.rejects(failingService.users('existing-user'), error => error === outage)
+})

@@ -341,7 +341,7 @@ function ChatListContent<TChat extends ChatListItem> ({
   const headerTitle = isArchiveOpen ? labels.chatListArchived : title ?? labels.chatListTitle
 
   const empty = renderEmpty
-    ? <>{renderEmpty(!!query)}</>
+    ? <View>{renderEmpty(!!query)}</View>
     : <Text style={[styles.empty, { color: colors.message }]}>{query ? labels.chatListNoResults : labels.chatListEmpty}</Text>
 
   return (

@@ -204,12 +204,22 @@ export interface MessageVideoProps<TMessage extends IMessage> {
   videoProps?: object
 }
 
+export interface AudioPlayerRenderProps {
+  isPlaying: boolean
+  isDisabled: boolean
+  duration: number
+  currentTime: number
+  onToggle: () => void
+}
+
 export interface MessageAudioProps<TMessage extends IMessage> {
   currentMessage: TMessage
   position?: 'left' | 'right'
   containerStyle?: StyleProp<ViewStyle>
   audioStyle?: StyleProp<ViewStyle>
   audioProps?: object
+  /** Custom Expo audio controls; playback, recording coordination and read callbacks stay with the SDK. */
+  renderPlayer?: (props: AudioPlayerRenderProps) => React.ReactNode
 }
 
 export interface MessageFileProps<TMessage extends IMessage> {

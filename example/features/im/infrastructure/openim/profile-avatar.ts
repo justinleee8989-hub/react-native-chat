@@ -13,8 +13,8 @@ export async function uploadAvatar (asset: AvatarAsset, current: () => boolean) 
     return {
       params: { name, contentType: value.mimeType || 'image/jpeg', uuid, filepath: local.uri.replace('file://', '') },
       dispose: () => {
-        if (local.exists) 
-          local.delete() 
+        if (local.exists)
+          local.delete()
       },
     }
   }, params => sdk.uploadFile(params), current)

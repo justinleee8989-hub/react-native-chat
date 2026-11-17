@@ -5,6 +5,7 @@ import { IMessage, ReplyMessage } from '../Models'
 import { Store } from '../store'
 import { ComposerHost } from './ComposerHost'
 import { ChatProps } from './types'
+import { useSendScroll } from './useSendScroll'
 
 // "random" function from here: https://stackoverflow.com/a/8084248/3452513
 // we do not use uuid since it would add extra native dependency (https://www.npmjs.com/package/react-native-get-random-values)
@@ -75,18 +76,7 @@ export function useComposerHandlers<TMessage extends IMessage> ({
   const replyPreviewContainerStyle = reply?.previewStyle?.containerStyle
   const replyPreviewTextStyle = reply?.previewStyle?.textStyle
 
-  const scrollToBottom = useCallback(
-    (isAnimated = true) => {
-      // The list renders oldest first, so the newest message is at its end.
-      messagesContainerRef.current?.scrollToEnd({ animated: isAnimated })
-    },
-    [messagesContainerRef]
-  )
-
-  const scrollAfterSendTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
-  useEffect(() => () => {
-    clearTimeout(scrollAfterSendTimeout.current)
-  }, [])
+  const requestSendScroll = useSendScroll(props.messages, props.user?._id, messagesContainerRef)
 
   // The greeting goes out like any typed message; `_onSend` is defined further down.
   const sendRef = useRef<(messages: TMessage[]) => void>(() => {})
@@ -179,14 +169,12 @@ export function useComposerHandlers<TMessage extends IMessage> ({
       // Clear reply after sending
       clearReply()
 
+      requestSendScroll()
       onSend?.(newMessages)
 
-      // One frame's grace so the new message is laid out before we scroll to it.
-      // Held in a ref so sending and immediately unmounting cannot fire it afterwards.
-      clearTimeout(scrollAfterSendTimeout.current)
-      scrollAfterSendTimeout.current = setTimeout(() => scrollToBottom(), 10)
+
     },
-    [messageIdGenerator, onSend, user, resetInputToolbar, scrollToBottom, getReplyMessage, clearReply, editStore, restoreDraft, actionCallbacksRef, textStore]
+    [messageIdGenerator, onSend, user, resetInputToolbar, requestSendScroll, getReplyMessage, clearReply, editStore, restoreDraft, actionCallbacksRef, textStore]
   )
 
   const _onChangeText = useCallback(

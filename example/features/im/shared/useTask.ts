@@ -4,6 +4,7 @@ import { errorMessage } from './error-message'
 export function useTask () {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [hasSucceeded, setHasSucceeded] = useState(false)
   const alive = useRef(false)
   const running = useRef(false)
   useEffect(() => {
@@ -20,6 +21,8 @@ export function useTask () {
     setError('')
     try {
       await work(() => alive.current)
+      if (alive.current)
+        setHasSucceeded(true)
     } catch (reason) {
       if (alive.current)
         setError(errorMessage(reason))
@@ -29,5 +32,5 @@ export function useTask () {
     if (alive.current)
       setBusy(false)
   }, [])
-  return { busy, error, run }
+  return { busy, error, run, hasSucceeded }
 }

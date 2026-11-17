@@ -11,6 +11,6 @@ export async function callAuthority (session: Session, url: string, data: CallRe
       throw new Error(result.errMsg || '通话服务不可用')
     return (result.data?.calls || []) as ServerCall[]
   } finally {
-    clearTimeout(timer) 
+    clearTimeout(timer)
   }
 }

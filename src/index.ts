@@ -29,7 +29,7 @@ export { EMOJI_CATEGORY_KEYS, DEFAULT_RECENT_EMOJIS } from './emoji/emojiStore'
 export type { EmojiCategoryKey } from './emoji/emojiStore'
 export { AttachmentMenu } from './attachments/AttachmentMenu'
 export type { AttachmentMenuProps } from './attachments/AttachmentMenu'
-export { buildAttachmentMessages, getAttachmentTabs } from './attachments/buildMessages'
+export { buildAttachmentMessages, getAttachmentTabs, pickDocuments, pickFromSystemGallery, takePhoto } from './attachments/buildMessages'
 export type {
   AttachmentTab,
   AttachmentsProps,
@@ -41,10 +41,12 @@ export type {
 export { MediaCard } from './components/MediaCard'
 export { AttachmentSheet } from './components/AttachmentSheet'
 export { ContextMenu } from './components/ContextMenu'
+export type { ContextMenuProps, ContextMenuReactions } from './components/ContextMenu/types'
 export { MarkdownMessageText, isMarkdownAvailable } from './components/MarkdownMessageText'
 export { BasicMarkdown } from './components/BasicMarkdown'
 export { WaveformPlayer, isWaveformAvailable } from './components/WaveformPlayer'
 export { VoiceMessageInput, isVoiceRecordingAvailable } from './components/VoiceMessageInput'
+export type { VoiceMessageInputProps, VoiceRecordingControlProps, VoiceRecordingState } from './components/VoiceMessageInput'
 export { VideoRecordButton, isVideoRecordingAvailable } from './components/VideoRecordButton'
 export { VideoNoteRecorder } from './components/VideoNoteRecorder'
 export { isVisionCameraAvailable } from './components/visionCamera'

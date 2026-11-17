@@ -1,18 +1,17 @@
 import React, { useEffect, useRef, useSyncExternalStore } from 'react'
-import { AppState, Modal, View } from 'react-native'
+import { AppState, Platform, View } from 'react-native'
 import { useRouter } from 'expo-router'
-import { useChatListColors } from '@/components/chat-list/theme'
 import { calls, useOpenIM } from '../application/store'
-import { Action, Label } from '../shared/shared'
 import { useTask } from '../shared/useTask'
+import { ProductModal } from '../ui/ProductModal'
+import { CallControl, CallPresentation } from './CallPresentation'
 import { useRingtone } from './useRingtone'
 
 export default function CallOverlay () {
-  const { session } = useOpenIM()
+  const { session, conversations } = useOpenIM()
   const state = useSyncExternalStore(calls.subscribe, calls.snapshot, calls.snapshot)
   const task = useTask()
   const router = useRouter()
-  const colors = useChatListColors()
   const navigated = useRef('')
   const call = state.active
   const ringing = call?.phase === 'incoming' || call?.phase === 'outgoing'
@@ -23,10 +22,11 @@ export default function CallOverlay () {
         void calls.finish('end').catch(() => {})
     })
     return () => {
-      clearInterval(timer); subscription.remove() 
+      clearInterval(timer)
+      subscription.remove()
     }
   }, [])
-  const playRingtone = useRingtone(ringing)
+  const playRingtone = useRingtone(ringing && call?.media.speaker !== false)
   useEffect(() => {
     if (!call) {
       navigated.current = ''
@@ -34,38 +34,127 @@ export default function CallOverlay () {
     }
     if (call.phase === 'connected' && navigated.current !== call.room) {
       navigated.current = call.room
-      router.push({ pathname: '/chats/call', params: { room: call.room, expires: Date.now() + 15 * 60 * 1000, managed: '1' } })
+      router.push({
+        pathname: '/chats/call',
+        params: { room: call.room, expires: Date.now() + 15 * 60 * 1000, managed: '1' },
+      })
     }
   }, [call, router])
   if (!session)
     return null
   const visible = !!call && call.phase !== 'connected'
-  return <Modal visible={visible || !!state.notice || !!state.error} transparent animationType='fade' onRequestClose={() => {
-    if (call)
-      void calls.finish(call.phase === 'incoming' ? 'reject' : 'cancel').catch(() => {})
-    else
-      calls.dismiss()
-  }}
-  >
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#0008', padding: 24 }}>
-      <View style={{ width: '100%', maxWidth: 420, borderRadius: 20, padding: 24, gap: 16, backgroundColor: colors.background }}>
-        {visible ? <>
-          <Label>{call?.phase === 'incoming' ? '音视频来电' : call?.phase === 'accepting' ? '正在接听' : '正在呼叫'}</Label>
-          <Label>{call?.name || call?.peer}</Label>
-          <Label>45 秒无人接听后自动结束。接听后可开启麦克风和摄像头。</Label>
-          <Action title='播放铃声' onPress={playRingtone} />
-          {call?.phase === 'incoming' && <Action title='接听' disabled={task.busy} onPress={() => {
-            void task.run(calls.accept) 
-          }}
-          />}
-          <Action title={call?.phase === 'incoming' ? '拒接' : '取消呼叫'} danger disabled={task.busy} onPress={() => {
-            void task.run(() => calls.finish(call?.phase === 'incoming' ? 'reject' : 'cancel')) 
-          }}
-          />
-        </> : <Label>{state.notice || '通话提示'}</Label>}
-        {!!(state.error || task.error) && <Label>{state.error || task.error}</Label>}
-        {!visible && <Action title='知道了' onPress={calls.dismiss} />}
-      </View>
-    </View>
-  </Modal>
+  const showNotice = !!state.error || state.notice === '连接中断，通话已结束'
+  if (!visible && !showNotice)
+    return null
+  const conversation =
+    call && (call.groupID || call.peer)
+      ? conversations.find(item =>
+        call.groupID ? item.groupID === call.groupID : item.userID === call.peer
+      )
+      : undefined
+  const finish = () => {
+    if (!task.busy)
+      void task.run(() => calls.finish(call?.phase === 'incoming' ? 'reject' : 'cancel'))
+  }
+  return (
+    <ProductModal
+      visible
+      transparent
+      animationType='fade'
+      onRequestClose={() => {
+        if (call)
+          finish()
+        else
+          calls.dismiss()
+      }}
+    >
+      <CallPresentation
+        group={!!call?.groupID}
+        name={
+          visible ? conversation?.showName || call?.name || call?.peer || '音视频通话' : '通话提示'
+        }
+        id={call?.groupID || call?.peer || ''}
+        uri={conversation?.faceURL}
+        status={
+          visible
+            ? call?.phase === 'incoming'
+              ? '邀请你进行音视频通话'
+              : call?.phase === 'accepting'
+                ? '正在接听…'
+                : '正在呼叫…'
+            : state.notice
+        }
+        error={state.error || task.error}
+      >
+        {visible ? (
+          call?.phase === 'incoming' ? (
+            <View style={{ flexDirection: 'row', gap: 72 }}>
+              <CallControl
+                label='拒接'
+                icon='phone'
+                tone='red'
+                disabled={task.busy}
+                onPress={finish}
+              />
+              <CallControl
+                label='接听'
+                icon='phone'
+                tone='green'
+                disabled={task.busy}
+                onPress={() => {
+                  void task.run(calls.accept)
+                }}
+              />
+            </View>
+          ) : (
+            <>
+              <View style={{ flexDirection: 'row', gap: 26, marginBottom: 34 }}>
+                <CallControl
+                  label={call?.media.microphone ? '麦克风' : '已静音'}
+                  icon={call?.media.microphone ? 'mic' : 'micOff'}
+                  active={call?.media.microphone}
+                  disabled={task.busy}
+                  onPress={() => {
+                    if (call)
+                      calls.setMediaPreference(call.room, 'microphone', !call.media.microphone)
+                  }}
+                />
+                <CallControl
+                  label={Platform.OS === 'web' ? '声音' : '扬声器'}
+                  icon='speaker'
+                  active={call?.media.speaker}
+                  onPress={() => {
+                    if (call) {
+                      calls.setMediaPreference(call.room, 'speaker', !call.media.speaker)
+                      if (!call.media.speaker)
+                        playRingtone()
+                    }
+                  }}
+                />
+                <CallControl
+                  label='摄像头'
+                  icon='video'
+                  active={call?.media.camera}
+                  disabled={task.busy}
+                  onPress={() => {
+                    if (call)
+                      calls.setMediaPreference(call.room, 'camera', !call.media.camera)
+                  }}
+                />
+              </View>
+              <CallControl
+                label='取消'
+                icon='phone'
+                tone='red'
+                disabled={task.busy}
+                onPress={finish}
+              />
+            </>
+          )
+        ) : (
+          <CallControl label='知道了' icon='check' onPress={calls.dismiss} />
+        )}
+      </CallPresentation>
+    </ProductModal>
+  )
 }

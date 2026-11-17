@@ -28,3 +28,6 @@ example_bare/android/.gradle
 
 # argent artifacts (screenshots, screen recordings)
 .argent/
+
+# Generated self-contained offline Expo Web bundle
+/docs/offline/openim-product-demo.html

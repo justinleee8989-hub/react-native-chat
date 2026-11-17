@@ -1,5 +1,5 @@
 import { Pressable, Text, View } from 'react-native'
-import { useTheme } from 'react-native-paper'
+import { useProductTheme } from '../ui/theme'
 import type { AttachmentBatch } from './attachment-batch'
 
 interface AttachmentBatchTrayProps {
@@ -9,8 +9,10 @@ interface AttachmentBatchTrayProps {
 }
 
 export function AttachmentBatchTray ({ batches, onRetry, onCancel }: AttachmentBatchTrayProps) {
-  const { colors } = useTheme()
-  const visible = batches.filter(batch => batch.status !== 'completed' && batch.status !== 'cancelled')
+  const colors = useProductTheme()
+  const visible = batches.filter(
+    batch => batch.status !== 'completed' && batch.status !== 'cancelled'
+  )
   if (!visible.length)
     return null
 
@@ -22,20 +24,29 @@ export function AttachmentBatchTray ({ batches, onRetry, onCancel }: AttachmentB
         const sending = batch.status === 'sending'
         const blocked = batch.status === 'blocked'
         return (
-          <View key={batch.id} style={{ backgroundColor: colors.surfaceVariant, borderRadius: 12, padding: 12, gap: 8 }}>
-            <Text style={{ color: colors.onSurface, fontWeight: '600' }}>
-              {blocked ? '附件批次已暂停（登录已切换）' : sending ? `正在发送附件 ${done}/${total}` : `附件发送未完成 ${done}/${total}`}
+          <View
+            key={batch.id}
+            style={{ backgroundColor: colors.surface2, borderRadius: 12, padding: 12, gap: 8 }}
+          >
+            <Text style={{ color: colors.text, fontWeight: '500', fontSize: 13 }}>
+              {blocked
+                ? '附件批次已暂停（登录已切换）'
+                : sending
+                  ? `正在发送附件 ${done}/${total}`
+                  : `附件发送未完成 ${done}/${total}`}
             </Text>
-            {batch.error ? <Text style={{ color: colors.error }}>{batch.error}</Text> : null}
+            {batch.error ? <Text style={{ color: colors.danger }}>{batch.error}</Text> : null}
             {!sending ? (
               <View style={{ flexDirection: 'row', gap: 16 }}>
                 {!blocked ? (
                   <Pressable accessibilityRole='button' onPress={() => void onRetry(batch.id)}>
-                    <Text style={{ color: colors.primary, fontWeight: '600' }}>继续发送</Text>
+                    <Text style={{ color: colors.accent, fontWeight: '500', fontSize: 13 }}>
+                      继续发送
+                    </Text>
                   </Pressable>
                 ) : null}
                 <Pressable accessibilityRole='button' onPress={() => onCancel(batch.id)}>
-                  <Text style={{ color: colors.onSurfaceVariant }}>取消剩余附件</Text>
+                  <Text style={{ color: colors.text2 }}>取消剩余附件</Text>
                 </Pressable>
               </View>
             ) : null}

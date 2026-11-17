@@ -1,20 +1,27 @@
 import React, { useEffect, useState } from 'react'
 import { useLocalSearchParams, useRouter, type Href } from 'expo-router'
-import { useOpenIM } from '../application/store'
+import { login, useOpenIM } from '../application/store'
 import { platformID } from '../config'
+import { showProductToast } from '../shared/ProductToast'
 import { useTask } from '../shared/useTask'
 import { createAccountService, type AccountMode } from './account-api'
-import { AdvancedSettings, AuthButton, AuthField, AuthLink, AuthNotice, AuthPage } from './AuthForm'
+import { AuthButton, AuthField, AuthLink, AuthNotice, AuthPage } from './AuthForm'
 
 const emailEnabled = process.env.EXPO_PUBLIC_OPENIM_EMAIL_VERIFICATION_ENABLED === 'true'
 export default function AccountScreen ({ mode: requestedMode }: { mode?: AccountMode }) {
-  const params = useLocalSearchParams<{ mode?: string, chat?: string, api?: string, ws?: string, email?: string }>()
+  const params = useLocalSearchParams<{
+    mode?: string
+    chat?: string
+    api?: string
+    ws?: string
+    email?: string
+  }>()
   const router = useRouter()
   const mode = requestedMode || (params.mode === 'reset' ? 'reset' : 'register')
   const registering = mode === 'register'
-  const { config } = useOpenIM()
+  const { config, session, error: loginError, busy: loginBusy } = useOpenIM()
   const task = useTask()
-  const [baseURL, setBaseURL] = useState(params.chat || config.chat)
+  const baseURL = params.chat || config.chat
   const [email, setEmail] = useState(params.email || '')
   const [nickname, setNickname] = useState('')
   const [invitationCode, setInvitationCode] = useState('')
@@ -22,7 +29,11 @@ export default function AccountScreen ({ mode: requestedMode }: { mode?: Account
   const [password, setPassword] = useState('')
   const [repeat, setRepeat] = useState('')
   const [notice, setNotice] = useState('')
-  const [done, setDone] = useState(false)
+  const [created, setCreated] = useState(false)
+  useEffect(() => {
+    if (session)
+      router.replace('/(tabs)/chats')
+  }, [session, router])
   const [cooldown, setCooldown] = useState(0)
   useEffect(() => {
     if (!cooldown)
@@ -32,46 +43,180 @@ export default function AccountScreen ({ mode: requestedMode }: { mode?: Account
   }, [cooldown])
   const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
   const service = createAccountService(baseURL.trim(), platformID, emailEnabled)
-  const backToLogin = () => router.replace({ pathname: '/auth/login', params: { email: email.trim(), chat: baseURL, api: params.api || config.api, ws: params.ws || config.ws } } as Href)
+  const backToLogin = () =>
+    router.replace({
+      pathname: '/auth/login',
+      params: {
+        email: email.trim(),
+        chat: baseURL,
+        api: params.api || config.api,
+        ws: params.ws || config.ws,
+      },
+    } as Href)
   const submit = () => {
+    if (
+      task.busy ||
+      loginBusy ||
+      !emailEnabled ||
+      !validEmail ||
+      (registering && !nickname.trim()) ||
+      !code.trim() ||
+      password.length < 6 ||
+      password !== repeat
+    )
+      return
     void task.run(async current => {
-      await service.submit({ mode, email: email.trim(), code, password, nickname, invitationCode })
-      if (current()) {
+      if (!created) {
+        await service.submit({
+          mode,
+          email: email.trim(),
+          code,
+          password,
+          nickname,
+          invitationCode,
+        })
+        if (!current())
+          return
+        if (registering)
+          setCreated(true)
+      }
+      if (registering) {
+        await login(email.trim(), password, {
+          chat: baseURL,
+          api: params.api || config.api,
+          ws: params.ws || config.ws,
+        })
+      } else if (current()) {
         setPassword('')
         setRepeat('')
         setCode('')
-        setDone(true)
+        showProductToast('密码已重置，请使用新密码登录')
+        backToLogin()
       }
     })
   }
-  return <AuthPage title={done ? (registering ? '注册成功' : '密码已重置') : (registering ? '创建账户' : '找回密码')} subtitle={done ? '一切就绪，使用邮箱和密码登录，开始聊天吧。' : (registering ? '填写账户信息，开启你的第一段对话。' : '通过邮箱验证码，为你的账户设置新密码。')}>
-    {done ? <AuthButton title='返回登录' onPress={backToLogin} /> : <>
-      {!emailEnabled && <AuthNotice>邮箱验证服务尚未开通，注册和找回密码暂不可用，请联系管理员。</AuthNotice>}
-      <AuthField label='邮箱' placeholder='请输入注册邮箱' keyboardType='email-address' autoComplete='email' value={email} onChangeText={setEmail} editable={!task.busy} />
-      {!!email && !validEmail && <AuthNotice error>请填写有效的邮箱地址</AuthNotice>}
-      {registering && <>
-        <AuthField label='昵称' placeholder='朋友们如何称呼你' value={nickname} onChangeText={setNickname} editable={!task.busy} />
-        <AuthField label='邀请码（选填）' placeholder='服务要求时填写' value={invitationCode} onChangeText={setInvitationCode} editable={!task.busy} />
-      </>}
-      <AuthButton title={cooldown ? `${cooldown} 秒后重新发送` : '发送邮箱验证码'} secondary disabled={task.busy || !emailEnabled || !validEmail || cooldown > 0} onPress={() => {
-        void task.run(async current => {
-          await service.sendCode(email.trim(), mode, invitationCode.trim())
-          if (current()) {
-            setNotice('验证码已发送，请检查邮箱及垃圾邮件文件夹。')
-            setCooldown(60)
+  return (
+    <AuthPage
+      brand={false}
+      onBack={backToLogin}
+      title={registering ? '创建账户' : '找回密码'}
+      subtitle={registering ? '用邮箱注册，几步就能开始聊天。' : '通过邮箱验证码重置登录密码。'}
+    >
+      <>
+        {!emailEnabled && (
+          <AuthNotice>邮箱验证服务尚未开通，注册和找回密码暂不可用，请联系管理员。</AuthNotice>
+        )}
+        <AuthField
+          label='邮箱'
+          placeholder={registering ? '邮箱' : '注册邮箱'}
+          keyboardType='email-address'
+          autoComplete='email'
+          value={email}
+          onChangeText={setEmail}
+          editable={!task.busy && !loginBusy && !created}
+        />
+        {!!email && !validEmail && <AuthNotice error>请填写有效的邮箱地址</AuthNotice>}
+        {registering && (
+          <>
+            <AuthField
+              label='昵称'
+              placeholder='昵称：朋友们如何称呼你'
+              value={nickname}
+              onChangeText={setNickname}
+              editable={!task.busy && !loginBusy && !created}
+            />
+          </>
+        )}
+        {!!notice && <AuthNotice>{notice}</AuthNotice>}
+        <AuthField
+          label='邮箱验证码'
+          placeholder='邮箱验证码'
+          autoComplete='one-time-code'
+          value={code}
+          onChangeText={setCode}
+          editable={!task.busy && !loginBusy && !created}
+          trailing={
+            <AuthLink
+              accessibilityLabel={cooldown ? `${cooldown} 秒后重新发送` : '发送邮箱验证码'}
+              title={cooldown ? `${cooldown} 秒后重新发送` : '发送验证码'}
+              disabled={
+                created || loginBusy || task.busy || !emailEnabled || !validEmail || cooldown > 0
+              }
+              onPress={() => {
+                void task.run(async current => {
+                  await service.sendCode(email.trim(), mode, invitationCode.trim())
+                  if (current()) {
+                    setNotice('验证码已发送，请检查邮箱及垃圾邮件文件夹。')
+                    setCooldown(60)
+                  }
+                })
+              }}
+            />
           }
-        })
-      }}
-      />
-      {!!notice && <AuthNotice>{notice}</AuthNotice>}
-      <AuthField label='邮箱验证码' placeholder='请输入收到的验证码' autoComplete='one-time-code' value={code} onChangeText={setCode} editable={!task.busy} />
-      <AuthField label={registering ? '密码' : '新密码'} placeholder='请输入密码' password autoComplete='new-password' value={password} onChangeText={setPassword} editable={!task.busy} />
-      <AuthField label='确认密码' placeholder='再次输入密码' password autoComplete='new-password' value={repeat} onChangeText={setRepeat} editable={!task.busy} />
-      {!!repeat && password !== repeat && <AuthNotice error>两次输入的密码不一致</AuthNotice>}
-      {!!task.error && <AuthNotice error>{task.error}</AuthNotice>}
-      <AuthButton title={task.busy ? '正在处理…' : registering ? '创建账户' : '重置密码'} busy={task.busy} disabled={!emailEnabled || !validEmail || (registering && !nickname.trim()) || !code.trim() || !password || password !== repeat} onPress={submit} />
-      <AuthLink title='返回登录' disabled={task.busy} onPress={backToLogin} />
-      <AdvancedSettings><AuthField label='账户服务地址' keyboardType='url' value={baseURL} onChangeText={setBaseURL} editable={!task.busy} /></AdvancedSettings>
-    </>}
-  </AuthPage>
+        />
+        <AuthField
+          label={registering ? '密码' : '新密码'}
+          placeholder={registering ? '密码（至少 6 位）' : '新密码（至少 6 位）'}
+          password
+          autoComplete='new-password'
+          value={password}
+          onChangeText={setPassword}
+          editable={!task.busy && !loginBusy && !created}
+        />
+        <AuthField
+          label='确认密码'
+          placeholder={registering ? '确认密码' : '确认新密码'}
+          returnKeyType={registering ? 'next' : 'go'}
+          onSubmitEditing={registering ? undefined : submit}
+          password
+          autoComplete='new-password'
+          value={repeat}
+          onChangeText={setRepeat}
+          editable={!task.busy && !loginBusy && !created}
+        />
+        {registering && (
+          <AuthField
+            returnKeyType='go'
+            onSubmitEditing={submit}
+            label='邀请码（选填）'
+            placeholder='邀请码（选填）'
+            value={invitationCode}
+            onChangeText={setInvitationCode}
+            editable={!task.busy && !loginBusy && !created}
+          />
+        )}
+        {!!repeat && password !== repeat && <AuthNotice error>两次输入的密码不一致</AuthNotice>}
+        {!!(task.error || (created ? loginError : '')) && (
+          <AuthNotice error>{task.error || (created ? loginError : '')}</AuthNotice>
+        )}
+        {created && !session && <AuthNotice>账户已创建，请重试登录。</AuthNotice>}
+        <AuthButton
+          title={
+            task.busy || loginBusy
+              ? '正在处理…'
+              : created
+                ? '重试登录'
+                : registering
+                  ? '创建账户'
+                  : '重置密码'
+          }
+          busy={task.busy || loginBusy}
+          disabled={
+            !emailEnabled ||
+            !validEmail ||
+            (registering && !nickname.trim()) ||
+            !code.trim() ||
+            password.length < 6 ||
+            password !== repeat
+          }
+          onPress={submit}
+        />
+        <AuthLink
+          title={registering ? '已有账户？返回登录' : '返回登录'}
+          disabled={task.busy || loginBusy}
+          onPress={backToLogin}
+        />
+      </>
+    </AuthPage>
+  )
 }

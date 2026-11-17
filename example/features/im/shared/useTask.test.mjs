@@ -34,3 +34,14 @@ test('local actionable Chinese validation stays visible', async () => {
   await task.run(async () => { throw new Error('请输入有效群 ID') })
   assert.equal(values[1], '请输入有效群 ID')
 })
+
+test('first failure is not successful data and later success survives refresh failure', async () => {
+  const { task, values } = harness()
+  assert.equal(values[2], false)
+  await task.run(async () => { throw new Error('暂时失败') })
+  assert.equal(values[2], false)
+  await task.run(async () => {})
+  assert.equal(values[2], true)
+  await task.run(async () => { throw new Error('刷新失败') })
+  assert.equal(values[2], true)
+})

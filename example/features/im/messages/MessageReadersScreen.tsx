@@ -1,64 +1,128 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { View } from 'react-native'
-import { useOpenIM } from '../application/store'
+import { useRouter } from 'expo-router'
+import { directory } from '../application/directory'
+import { syncMessageReaders, useOpenIM } from '../application/store'
 import LoginScreen from '../auth/LoginScreen'
-import { Action, Label, Page, PersonRow, styles } from '../shared/shared'
+import type { Person } from '../domain/directory'
+import { HeaderAction, ProductHint } from '../groups/group-ui'
 import { useTask } from '../shared/useTask'
+import { ProductSegment, ProductAvatar, ProductListRow } from '../ui/primitives'
+import { ProductEmpty, ProductPage } from '../ui/ProductPage'
 import { fetchMessageReaders, type ReadersResult } from './readers'
 
-interface Props { id: string, messageID: string, seq: number }
+interface Props {
+  id: string
+  messageID: string
+  seq: number
+}
 export default function MessageReadersScreen (props: Props) {
   const { session } = useOpenIM()
   if (!session)
     return <LoginScreen />
-  return <SessionReaders key={`${session.userID}:${session.imToken}:${props.id}:${props.messageID}`} {...props} />
+  return (
+    <SessionReaders
+      key={`${session.userID}:${session.imToken}:${props.id}:${props.messageID}:${props.seq}`}
+      {...props}
+    />
+  )
 }
 function SessionReaders ({ id, messageID, seq }: Props) {
-  const { session, config } = useOpenIM()
+  const { session, config, conversations } = useOpenIM()
+  const groupID = conversations.find(item => item.conversationID === id)?.groupID
+  const [roles, setRoles] = useState<Person[]>([])
   const { busy, error, run } = useTask()
   const [result, setResult] = useState<ReadersResult>()
-  const [read, setRead] = useState(false)
+  const [read, setRead] = useState(true)
+  const router = useRouter()
   const [limit, setLimit] = useState(50)
   const refresh = useCallback(() => {
     void run(async current => {
       const value = await fetchMessageReaders(session!, config.chat, id, messageID, seq)
-      if (current())
-        setResult(value)
+      if (!current())
+        return
+      syncMessageReaders(id, messageID, value.readCount, value.unreadCount)
+      setResult(value)
+      if (groupID) {
+        setRoles([])
+        const people: Person[] = []
+        let offset = 0
+        while (current()) {
+          const page = await directory.members(groupID, offset)
+          people.push(...page)
+          if (page.length < 30)
+            break
+          offset += page.length
+        }
+        if (current() && people)
+          setRoles(people)
+      }
     })
-  }, [config.chat, id, messageID, run, seq, session])
+  }, [config.chat, id, messageID, run, seq, session, groupID])
   useEffect(() => {
     refresh()
   }, [refresh])
   const members = result?.members.filter(member => member.read === read) || []
   return (
-    <Page title='群消息已读明细' busy={busy} error={error}>
-      <Label>按当前群成员的会话已读进度统计；不含发送者和发送后加入的成员。已退群成员不在此列表中。</Label>
-      <Action title='刷新已读状态' disabled={busy} onPress={refresh} />
-      {result && <>
-        <View style={styles.actions}>
-          <Action
-            title={`未读 ${result.unreadCount}`}
-            disabled={!read}
-            onPress={() => {
-              setRead(false)
+    <ProductPage
+      title='消息已读情况'
+      white
+      busy={busy}
+      error={error}
+      backHref='/chats'
+      right={<HeaderAction title='刷新' disabled={busy} onPress={refresh} />}
+      headerContent={
+        result && (
+          <ProductSegment
+            options={[
+              { value: 'read', label: `已读 ${result.readCount}` },
+              { value: 'unread', label: `未读 ${result.unreadCount}` },
+            ]}
+            value={read ? 'read' : 'unread'}
+            onChange={value => {
+              setRead(value === 'read')
               setLimit(50)
             }}
           />
-          <Action
-            title={`已读 ${result.readCount}`}
-            disabled={read}
-            onPress={() => {
-              setRead(true)
-              setLimit(50)
-            }}
-          />
-        </View>
-        <Label>{read ? '已读成员' : '未读成员'}</Label>
-        {!members.length && <Label>暂无{read ? '已读' : '未读'}成员</Label>}
-        {members.slice(0, limit).map(member => <PersonRow key={member.userID} person={member} />)}
-        {members.length > limit && <Action title='加载更多成员' onPress={() => setLimit(value => value + 50)} />}
-        {!!result.excludedJoinedLater && <Label>已排除发送后加入的 {result.excludedJoinedLater} 名成员</Label>}
-      </>}
-    </Page>
+        )
+      }
+    >
+      {result && (
+        <>
+          {!members.length && <ProductEmpty title={read ? '还没有成员读过' : '所有成员都已读'} />}
+          {members.slice(0, limit).map((member, index) => (
+            <ProductListRow
+              small
+              last={index === Math.min(limit, members.length) - 1}
+              key={member.userID}
+              title={member.nickname || member.userID}
+              subtitle={
+                roles.find(person => person.userID === member.userID)?.roleLevel === 100
+                  ? '群主'
+                  : roles.find(person => person.userID === member.userID)?.roleLevel === 60
+                    ? '管理员'
+                    : roles.some(person => person.userID === member.userID)
+                      ? '成员'
+                      : undefined
+              }
+              leading={
+                <ProductAvatar
+                  id={member.userID}
+                  title={member.nickname || member.userID}
+                  uri={member.faceURL}
+                  size={44}
+                />
+              }
+              onPress={() => router.push(`/chats/people/${encodeURIComponent(member.userID)}`)}
+            />
+          ))}
+          {members.length > limit && (
+            <HeaderAction title='加载更多成员' onPress={() => setLimit(value => value + 50)} />
+          )}
+          {!!result.excludedJoinedLater && (
+            <ProductHint>已排除发送后加入的 {result.excludedJoinedLater} 名成员</ProductHint>
+          )}
+        </>
+      )}
+    </ProductPage>
   )
 }

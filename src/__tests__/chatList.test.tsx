@@ -1,5 +1,5 @@
 import React from 'react'
-import { Alert } from 'react-native'
+import { Alert, Text } from 'react-native'
 import { act, fireEvent, render, renderHook } from '@testing-library/react-native'
 
 import { ChatList, ChatListItem, defaultLabels, getChatPreview, sortChats, useChatList } from '..'
@@ -104,4 +104,11 @@ describe('useChatList', () => {
     await act(async () => result.current.receiveMessage('max', { _id: 10, text: 'New!', createdAt: new Date(), user: { _id: 'max' } }))
     expect(result.current.chats.find(chat => chat.id === 'max')).toMatchObject({ unreadCount: 1, lastMessage: expect.objectContaining({ text: 'New!' }) })
   })
+})
+
+it('gives a custom empty fragment a measurable host for virtualized lists', async () => {
+  const view = await render(<ChatList chats={[]} isHeaderVisible={false} renderEmpty={() => <><Text>No matching chats</Text><Text>Try another query</Text></>} />)
+  const host = view.getByText('No matching chats').parent
+  expect(host?.props.onLayout).toEqual(expect.any(Function))
+  expect(view.getByText('Try another query').parent).toBe(host)
 })

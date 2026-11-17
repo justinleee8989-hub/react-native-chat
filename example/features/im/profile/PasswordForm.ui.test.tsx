@@ -5,6 +5,7 @@ import { changePassword } from '../application/profile'
 import { logout } from '../application/store'
 import PasswordForm from './PasswordForm'
 
+jest.mock('expo-router', () => ({ useRouter: () => ({}) }))
 jest.mock('@/components/chat-list/theme', () => ({
   useChatListColors: () => ({ message: '#333', name: '#111', divider: '#ccc' }),
 }))
@@ -39,7 +40,7 @@ it('does not submit empty, matching-current, or mismatched passwords', async () 
   expect(changePassword).not.toHaveBeenCalled()
   await fillValid()
   await fireEvent.changeText(screen.getByLabelText('确认新密码'), 'different')
-  expect(screen.getByText('两次新密码不一致')).toBeTruthy()
+  expect(screen.getByText('两次输入的密码不一致')).toBeTruthy()
   await fireEvent.press(screen.getByRole('button', { name: '修改密码' }))
   expect(screen.queryByText('确认修改密码并退出登录？')).toBeNull()
   await fireEvent.changeText(screen.getByLabelText('新密码'), 'old-test')
@@ -112,4 +113,13 @@ it('late success after leaving the form does not log out another screen', async 
     finish() 
   })
   expect(logout).not.toHaveBeenCalled()
+})
+
+it('does not offer confirmation for a password shorter than six characters', async () => {
+  await render(<PasswordForm />)
+  await fireEvent.changeText(screen.getByLabelText('当前密码'), 'old-password')
+  await fireEvent.changeText(screen.getByLabelText('新密码'), '12345')
+  await fireEvent.changeText(screen.getByLabelText('确认新密码'), '12345')
+  await fireEvent.press(screen.getByRole('button', { name: '修改密码' }))
+  expect(screen.queryByText('确认修改密码并退出登录？')).toBeNull()
 })

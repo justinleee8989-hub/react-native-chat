@@ -1,0 +1,1393 @@
+{
+  "date": "2026-11-17",
+  "source": "/tmp/im-closure-browser/capture-log.json",
+  "canonicalBaseline": {
+    "pc": "latest valid v2 plus initial auth captures",
+    "h5": "canonical v3 captures",
+    "pagesPerPlatform": 30,
+    "platforms": 2,
+    "expectedPagePairs": 60,
+    "missingPagePairs": 0,
+    "screenshotsPerPagePair": 2,
+    "canonicalScreenshotCount": 120,
+    "pcViewport": "1280x720",
+    "h5Viewport": "390x844"
+  },
+  "pairs": [
+    {
+      "platform": "pc",
+      "page": "chats",
+      "route": "/chats",
+      "coverageType": "conversation list",
+      "actual": {
+        "sourceFile": "pc-chats-actual.jpg",
+        "file": "pc/pc-chats-actual.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "ea9a262b2b14c30668cafdb43b9fd702e524eb5893e3b3114d08b7813f665530"
+      },
+      "reference": {
+        "sourceFile": "pc-chats-reference.jpg",
+        "file": "pc/pc-chats-reference.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "5ee9e6dc5083bb803a88cce553a21e1ae4cbe941e1090f96aa7fb5abcd3ecbc3"
+      }
+    },
+    {
+      "platform": "pc",
+      "page": "new-chat",
+      "route": "/chats/new",
+      "coverageType": "new conversation",
+      "actual": {
+        "sourceFile": "pc-new-chat-actual.jpg",
+        "file": "pc/pc-new-chat-actual.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "70401e08eb180d006b795264421d4c5c2dd59b69dc18c48549857ae95243b9b4"
+      },
+      "reference": {
+        "sourceFile": "pc-new-chat-reference.jpg",
+        "file": "pc/pc-new-chat-reference.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "48d250406868de2eeb165f367c3c9d52b5f6ef07d37de937155c7fae007e7f89"
+      }
+    },
+    {
+      "platform": "pc",
+      "page": "contacts",
+      "route": "/contacts",
+      "coverageType": "contacts",
+      "actual": {
+        "sourceFile": "pc-contacts-actual.jpg",
+        "file": "pc/pc-contacts-actual.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "e0553e9db620a84b0c8e6a9f44783d66a04590c2a043755cd5f94327ee554723"
+      },
+      "reference": {
+        "sourceFile": "pc-contacts-reference.jpg",
+        "file": "pc/pc-contacts-reference.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "1ecdffac561bc13bea0515742a35ca37dfdc7e6319f9664c71b901db519ce128"
+      }
+    },
+    {
+      "platform": "pc",
+      "page": "add-friend",
+      "route": "/contacts/add",
+      "coverageType": "add friend",
+      "actual": {
+        "sourceFile": "pc-add-friend-actual.jpg",
+        "file": "pc/pc-add-friend-actual.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "9e2e701baa029dd37c297764fd88aae00da26ab2302d157e29dafda0ae5c7a30"
+      },
+      "reference": {
+        "sourceFile": "pc-add-friend-reference.jpg",
+        "file": "pc/pc-add-friend-reference.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "dcbd3c1fec602f2c8654d67985ddb7f5bc3367d69e0121f81b5cced1603b16b8"
+      }
+    },
+    {
+      "platform": "pc",
+      "page": "new-friends",
+      "route": "/contacts/new-friends",
+      "coverageType": "friend requests",
+      "actual": {
+        "sourceFile": "pc-new-friends-actual.jpg",
+        "file": "pc/pc-new-friends-actual.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "15f972bebc1ad28961b75213e1acc796024900fbfa7d47780880246c5acddc6f"
+      },
+      "reference": {
+        "sourceFile": "pc-new-friends-reference.jpg",
+        "file": "pc/pc-new-friends-reference.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "51dfd6a10dbd42463f914a585c890d2e3e39e4d956c0b149753e3023385cf848"
+      }
+    },
+    {
+      "platform": "pc",
+      "page": "profile",
+      "route": "/chats/settings?section=profile",
+      "coverageType": "profile settings",
+      "actual": {
+        "sourceFile": "pc-profile-actual.jpg",
+        "file": "pc/pc-profile-actual.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "65291a72f928ae861be9c22cca3bf36017af50555e12356e7915a73acb16e316"
+      },
+      "reference": {
+        "sourceFile": "pc-profile-reference.jpg",
+        "file": "pc/pc-profile-reference.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "2d79a955547807d03012f6832d4c54470cf6e31b996291b60bd45fc0e7d2d11d"
+      }
+    },
+    {
+      "platform": "pc",
+      "page": "profile-more",
+      "route": "/chats/settings/profile-more",
+      "coverageType": "profile actions",
+      "actual": {
+        "sourceFile": "pc-profile-more-actual.jpg",
+        "file": "pc/pc-profile-more-actual.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "09909d8a0301013103a0bd9b0b4f6bd07411d02eb0bcd43366f916b477f454fa"
+      },
+      "reference": {
+        "sourceFile": "pc-profile-more-reference.jpg",
+        "file": "pc/pc-profile-more-reference.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "5a8df205fa2b0b4b37a857745370f7f6c80bef9df3047ca07a729d6b45fe0a7d"
+      }
+    },
+    {
+      "platform": "pc",
+      "page": "groups",
+      "route": "/chats/groups",
+      "coverageType": "group list",
+      "actual": {
+        "sourceFile": "pc-groups-actual.jpg",
+        "file": "pc/pc-groups-actual.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "5c30fc1d31e1090c7d40c72859801d1fb4a10789cc05403a658890a5966c3711"
+      },
+      "reference": {
+        "sourceFile": "pc-groups-reference.jpg",
+        "file": "pc/pc-groups-reference.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "9cb820c0f027926253f7fdb6faaf87f820af1fb5b9003093f41685e744b9c536"
+      }
+    },
+    {
+      "platform": "pc",
+      "page": "group-create",
+      "route": "/chats/groups/create",
+      "coverageType": "group create",
+      "actual": {
+        "sourceFile": "pc-group-create-actual.jpg",
+        "file": "pc/pc-group-create-actual.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "3fa11ef55690aa96103fe64611d107307a78a70b6fe578e64ec680b68c6c51af"
+      },
+      "reference": {
+        "sourceFile": "pc-group-create-reference.jpg",
+        "file": "pc/pc-group-create-reference.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "083d9d774d3153b9b0842ff59c7e12a5fd2cdccf56ae8926ee19b5ce7080dbbf"
+      }
+    },
+    {
+      "platform": "pc",
+      "page": "group-join",
+      "route": "/chats/groups/join",
+      "coverageType": "group join",
+      "actual": {
+        "sourceFile": "pc-group-join-actual.jpg",
+        "file": "pc/pc-group-join-actual.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "5250a47b5892e7513b3586f14b9b16b9b4f5791cb91fb2021d5b4b67818f14ca"
+      },
+      "reference": {
+        "sourceFile": "pc-group-join-reference.jpg",
+        "file": "pc/pc-group-join-reference.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "1ecdffac561bc13bea0515742a35ca37dfdc7e6319f9664c71b901db519ce128"
+      }
+    },
+    {
+      "platform": "pc",
+      "page": "group-requests",
+      "route": "/chats/groups/requests",
+      "coverageType": "group requests",
+      "actual": {
+        "sourceFile": "pc-group-requests-actual.jpg",
+        "file": "pc/pc-group-requests-actual.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "5e414d00403b9ba12d6edd6ac7a37b208e9c842a5dedde3ee31aa43b3bff1b9e"
+      },
+      "reference": {
+        "sourceFile": "pc-group-requests-reference.jpg",
+        "file": "pc/pc-group-requests-reference.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "862e2cabd0758879cd7fe7203d1064ce4275993635050f6f44afa53e0a666546"
+      }
+    },
+    {
+      "platform": "pc",
+      "page": "group-profile",
+      "route": "/chats/groups/{qaGroupID}",
+      "coverageType": "group profile",
+      "actual": {
+        "sourceFile": "pc-group-profile-actual.jpg",
+        "file": "pc/pc-group-profile-actual.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "9eb974211d718df8fb9f4befaf868519a998883b721e106b50ccd53b7b3d7124"
+      },
+      "reference": {
+        "sourceFile": "pc-group-profile-reference.jpg",
+        "file": "pc/pc-group-profile-reference.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "bab48a611169f5bf9c1e3c99a13cf25a434d795d23654557df8c73515a545e24"
+      }
+    },
+    {
+      "platform": "pc",
+      "page": "group-manage",
+      "route": "/chats/groups/manage?id={qaGroupID}",
+      "coverageType": "group management",
+      "actual": {
+        "sourceFile": "pc-group-manage-actual.jpg",
+        "file": "pc/pc-group-manage-actual.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "1d721ddd2d6959e120ea2f90f6c4e505bfcc2a0119a4f0d1baa92b21cfe25d7d"
+      },
+      "reference": {
+        "sourceFile": "pc-group-manage-reference.jpg",
+        "file": "pc/pc-group-manage-reference.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "19529e08f0770bb9edd77cff3bc92bb13377a2f7527912eed5e0e608031e419e"
+      }
+    },
+    {
+      "platform": "pc",
+      "page": "members",
+      "route": "/chats/groups/{qaGroupID}/members",
+      "coverageType": "group members",
+      "actual": {
+        "sourceFile": "pc-members-actual.jpg",
+        "file": "pc/pc-members-actual.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "809ddd758941bb83047b3e41afa1d7b910ca96f6600eb569f31730fd624f0c3e"
+      },
+      "reference": {
+        "sourceFile": "pc-members-reference.jpg",
+        "file": "pc/pc-members-reference.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "96a91fb15c049bf41654eb925c3cef14239a91e026a85a4720f2d0eeb6b1c9a0"
+      }
+    },
+    {
+      "platform": "pc",
+      "page": "group-invite",
+      "route": "/chats/groups/invite?id={qaGroupID}",
+      "coverageType": "group invite",
+      "actual": {
+        "sourceFile": "pc-group-invite-actual.jpg",
+        "file": "pc/pc-group-invite-actual.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "769323ee129916536447bff6ad99204ce0ebc1cf7f37bb72c79ace084fa1adf3"
+      },
+      "reference": {
+        "sourceFile": "pc-group-invite-reference.jpg",
+        "file": "pc/pc-group-invite-reference.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "6ccfcff4aae66944c2fa3a01dc58d7def540b836dfebdfb35aaba89e09539f4e"
+      }
+    },
+    {
+      "platform": "pc",
+      "page": "me",
+      "route": "/me",
+      "coverageType": "account page",
+      "actual": {
+        "sourceFile": "pc-me-actual.jpg",
+        "file": "pc/pc-me-actual.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "6cf977333163e2e3c7416d2136a4e077f00c1733b1e24c69097d0a7fcd4a7d04"
+      },
+      "reference": {
+        "sourceFile": "pc-me-reference.jpg",
+        "file": "pc/pc-me-reference.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "963a73fa8bcbe9b18d831e755596b30e0683dbdf4b316006861e6df52f3522a2"
+      }
+    },
+    {
+      "platform": "pc",
+      "page": "edit-profile",
+      "route": "/chats/settings?section=profile&edit=1",
+      "coverageType": "edit profile",
+      "actual": {
+        "sourceFile": "pc-edit-profile-actual.jpg",
+        "file": "pc/pc-edit-profile-actual.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "6cf977333163e2e3c7416d2136a4e077f00c1733b1e24c69097d0a7fcd4a7d04"
+      },
+      "reference": {
+        "sourceFile": "pc-edit-profile-reference.jpg",
+        "file": "pc/pc-edit-profile-reference.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "963a73fa8bcbe9b18d831e755596b30e0683dbdf4b316006861e6df52f3522a2"
+      }
+    },
+    {
+      "platform": "pc",
+      "page": "notify",
+      "route": "/chats/settings?section=notifications",
+      "coverageType": "notifications",
+      "actual": {
+        "sourceFile": "pc-notify-actual.jpg",
+        "file": "pc/pc-notify-actual.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "0cadd5bea13f012184582883b76598bd65435fe3d44ec5432fb10042907c3081"
+      },
+      "reference": {
+        "sourceFile": "pc-notify-reference.jpg",
+        "file": "pc/pc-notify-reference.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "839bc0d872354700044d05980bbf966ad6d2edf2254f227462e117084977eb5b"
+      }
+    },
+    {
+      "platform": "pc",
+      "page": "blacklist",
+      "route": "/chats/settings?section=privacy",
+      "coverageType": "privacy and blacklist",
+      "actual": {
+        "sourceFile": "pc-blacklist-actual.jpg",
+        "file": "pc/pc-blacklist-actual.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "a2a411a0fcb2f00f36ed6df87bacc9aefe1f47abc423c70d6797cf9971a2745e"
+      },
+      "reference": {
+        "sourceFile": "pc-blacklist-reference.jpg",
+        "file": "pc/pc-blacklist-reference.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "73b45d32643d95468607d2a6d23a404696d70cae31ec7568ce8a035d84bcd800"
+      }
+    },
+    {
+      "platform": "pc",
+      "page": "security",
+      "route": "/chats/settings?section=security",
+      "coverageType": "security",
+      "actual": {
+        "sourceFile": "pc-security-actual.jpg",
+        "file": "pc/pc-security-actual.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "2353930e3a38415dd0ca1304c19f0d2695003f12f4a9b816b65960bd31850aeb"
+      },
+      "reference": {
+        "sourceFile": "pc-security-reference.jpg",
+        "file": "pc/pc-security-reference.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "b43aeff17e2b92f7165a0309ea3c9933d1811cff11bca057904b246fcb5df84d"
+      }
+    },
+    {
+      "platform": "pc",
+      "page": "calls",
+      "route": "/chats/call-history",
+      "coverageType": "call history",
+      "actual": {
+        "sourceFile": "pc-calls-actual.jpg",
+        "file": "pc/pc-calls-actual.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "5b0c695cd43ed7e4fb008d4db45011e17e75f6595dffd1a3423a56265b61ad8f"
+      },
+      "reference": {
+        "sourceFile": "pc-calls-reference.jpg",
+        "file": "pc/pc-calls-reference.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "aa09adc8398b0c5535298187786972691917f0c8512aebce7229d5ee0737658f"
+      }
+    },
+    {
+      "platform": "pc",
+      "page": "chat",
+      "route": "/chats/{qaConversationID}",
+      "coverageType": "conversation",
+      "actual": {
+        "sourceFile": "pc-chat-actual.jpg",
+        "file": "pc/pc-chat-actual.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "ea9a262b2b14c30668cafdb43b9fd702e524eb5893e3b3114d08b7813f665530"
+      },
+      "reference": {
+        "sourceFile": "pc-chat-reference.jpg",
+        "file": "pc/pc-chat-reference.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "5ee9e6dc5083bb803a88cce553a21e1ae4cbe941e1090f96aa7fb5abcd3ecbc3"
+      }
+    },
+    {
+      "platform": "pc",
+      "page": "chat-info",
+      "route": "/chats/conversation/{qaConversationID}",
+      "coverageType": "conversation details",
+      "actual": {
+        "sourceFile": "pc-chat-info-actual.jpg",
+        "file": "pc/pc-chat-info-actual.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "fc981f95c90dceb6322777c762116487a8acb7bc73fdc8287587110e300b74a1"
+      },
+      "reference": {
+        "sourceFile": "pc-chat-info-reference.jpg",
+        "file": "pc/pc-chat-info-reference.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "c0ac2f9c074cd441d7d78f392c42480e1c6f7869f7b8e428b86efc972014100b"
+      }
+    },
+    {
+      "platform": "pc",
+      "page": "search",
+      "route": "/chats/search/{qaConversationID}",
+      "coverageType": "conversation search",
+      "actual": {
+        "sourceFile": "pc-search-actual.jpg",
+        "file": "pc/pc-search-actual.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "e05321417e4ec647ccb41e18f5a1f1aea3a68e77b616bb60f7b8ddafa26eab33"
+      },
+      "reference": {
+        "sourceFile": "pc-search-reference.jpg",
+        "file": "pc/pc-search-reference.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "d57893ee78e8c729cfc71bd6564c7aff267098e353a36cf10d82e70a6ff6ff2e"
+      }
+    },
+    {
+      "platform": "pc",
+      "page": "assets-images",
+      "route": "/chats/assets/{qaConversationID}?type=image",
+      "coverageType": "media assets",
+      "actual": {
+        "sourceFile": "pc-assets-images-actual.jpg",
+        "file": "pc/pc-assets-images-actual.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "f3f9d9c9289a15115552b627eae72c81c150935b5a719ec51348a0b54d63341d"
+      },
+      "reference": {
+        "sourceFile": "pc-assets-images-reference.jpg",
+        "file": "pc/pc-assets-images-reference.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "414d00c53c79fad018c7d1a2baa0050942e44c963826772f5910da1ba60d6cd2"
+      }
+    },
+    {
+      "platform": "pc",
+      "page": "archived",
+      "route": "/chats/archived",
+      "coverageType": "archived conversations",
+      "actual": {
+        "sourceFile": "pc-archived-actual.jpg",
+        "file": "pc/pc-archived-actual.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "075d1867a04d3cdc0bd39f4e65b6cad52ac08b4e343abf07b1344c027d3581f2"
+      },
+      "reference": {
+        "sourceFile": "pc-archived-reference.jpg",
+        "file": "pc/pc-archived-reference.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "b3d6d6cb8e4d2eab2cfbc8bf2dd964b5f81b1df98b4f6e62316eca8432d1bd84"
+      }
+    },
+    {
+      "platform": "pc",
+      "page": "readers",
+      "route": "/chats/readers/{qaConversationID}",
+      "coverageType": "readers",
+      "actual": {
+        "sourceFile": "pc-readers-actual.jpg",
+        "file": "pc/pc-readers-actual.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "622d1e99760b60f6c60503913c62b0a0438904d9f25d8e14a387b869aa906e25"
+      },
+      "reference": {
+        "sourceFile": "pc-readers-reference.jpg",
+        "file": "pc/pc-readers-reference.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "d4f16007062f53800bcc642b1e987b9fa7e16b8bfb60d61c558b7c6d00bacc31"
+      }
+    },
+    {
+      "platform": "pc",
+      "page": "login",
+      "route": "/auth/login",
+      "coverageType": "login",
+      "actual": {
+        "sourceFile": "pc-login-actual.jpg",
+        "file": "pc/pc-login-actual.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "89fabd85f2bbaf72cac12271691e563c59ca30eba6dd49e2678e32062848d1ca"
+      },
+      "reference": {
+        "sourceFile": "pc-login-reference.jpg",
+        "file": "pc/pc-login-reference.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "dcf1f0211dea7eee01c3de6bf15484603d4f0f054ae8ff25ee05242d7e56e0a9"
+      }
+    },
+    {
+      "platform": "pc",
+      "page": "register",
+      "route": "/auth/register",
+      "coverageType": "registration",
+      "actual": {
+        "sourceFile": "pc-register-actual.jpg",
+        "file": "pc/pc-register-actual.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "9d67ba43eaad5b197d334f5b6ccd0d85746b6be7002f642366749787fae69f81"
+      },
+      "reference": {
+        "sourceFile": "pc-register-reference.jpg",
+        "file": "pc/pc-register-reference.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "68aa7d4996204ae51f649683bebed518fb60f9474b6185f5c87e931d7a6368f8"
+      }
+    },
+    {
+      "platform": "pc",
+      "page": "reset",
+      "route": "/auth/reset",
+      "coverageType": "password reset",
+      "actual": {
+        "sourceFile": "pc-reset-actual.jpg",
+        "file": "pc/pc-reset-actual.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "3dda34e6a2ceb0503f485b7aaf29d850965ca16b7cde658b13c07aa74b00e3a1"
+      },
+      "reference": {
+        "sourceFile": "pc-reset-reference.jpg",
+        "file": "pc/pc-reset-reference.jpg",
+        "width": 1280,
+        "height": 720,
+        "sha256": "9db63e51b9e079d813aed79869207c3e56866063e78920d790548b6fcf9799f1"
+      }
+    },
+    {
+      "platform": "h5",
+      "page": "chats",
+      "route": "/chats",
+      "coverageType": "conversation list",
+      "actual": {
+        "sourceFile": "h5-chats-actual.jpg",
+        "file": "h5/h5-chats-actual.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "39bcc4d4c54e8ce76f22c9adef15d1d1a0204f009649981ddeb6bbd4e1fe9d60"
+      },
+      "reference": {
+        "sourceFile": "h5-chats-reference.jpg",
+        "file": "h5/h5-chats-reference.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "2ba2c5922ad8fd2b00a1468000405b84ffbda8a3e5326ba2ed6803d94b43d944"
+      }
+    },
+    {
+      "platform": "h5",
+      "page": "new-chat",
+      "route": "/chats/new",
+      "coverageType": "new conversation",
+      "actual": {
+        "sourceFile": "h5-new-chat-actual.jpg",
+        "file": "h5/h5-new-chat-actual.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "5083b0f93a55e1818b4e6a1306106c621c8c26b853c0eefa8f4c42ee8778986e"
+      },
+      "reference": {
+        "sourceFile": "h5-new-chat-reference.jpg",
+        "file": "h5/h5-new-chat-reference.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "d88c93b466ed998ccd54f7a8dcc792794e62eaeab52a0d1e572e3ec985ec2842"
+      }
+    },
+    {
+      "platform": "h5",
+      "page": "contacts",
+      "route": "/contacts",
+      "coverageType": "contacts",
+      "actual": {
+        "sourceFile": "h5-contacts-actual.jpg",
+        "file": "h5/h5-contacts-actual.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "5dc5b372d5c612a4c585e79eb77662b56410ff0b96d54bbfe8e6ef4c8b16554c"
+      },
+      "reference": {
+        "sourceFile": "h5-contacts-reference.jpg",
+        "file": "h5/h5-contacts-reference.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "3dfe1fc0293937ec696b16535744114cb7fb107474f05bf120716aae16d2cc82"
+      }
+    },
+    {
+      "platform": "h5",
+      "page": "add-friend",
+      "route": "/contacts/add",
+      "coverageType": "add friend",
+      "actual": {
+        "sourceFile": "h5-add-friend-actual.jpg",
+        "file": "h5/h5-add-friend-actual.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "d4e88e14515fc96b870d6a4730259b6335098228bf78b4eb82a79ae05898849a"
+      },
+      "reference": {
+        "sourceFile": "h5-add-friend-reference.jpg",
+        "file": "h5/h5-add-friend-reference.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "bb6f140c2bbc43d232dd82e23ca71f28287928788b80481fa82583b5430d0380"
+      }
+    },
+    {
+      "platform": "h5",
+      "page": "new-friends",
+      "route": "/contacts/new-friends",
+      "coverageType": "friend requests",
+      "actual": {
+        "sourceFile": "h5-new-friends-actual.jpg",
+        "file": "h5/h5-new-friends-actual.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "ad661505eb6cc6d9247c2756297ec61536b5fe770d2785e60fe17f1aec3464b4"
+      },
+      "reference": {
+        "sourceFile": "h5-new-friends-reference.jpg",
+        "file": "h5/h5-new-friends-reference.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "c685233bf5609c2691b6a1fbbb06a06af72e4c6e8f3031b36d2337fadb5a338d"
+      }
+    },
+    {
+      "platform": "h5",
+      "page": "profile",
+      "route": "/chats/settings?section=profile",
+      "coverageType": "profile settings",
+      "actual": {
+        "sourceFile": "h5-profile-actual.jpg",
+        "file": "h5/h5-profile-actual.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "d948ec69691437272a0bc9be0bd886a29a2bfa07411f5ff41ede93a6c848b24f"
+      },
+      "reference": {
+        "sourceFile": "h5-profile-reference.jpg",
+        "file": "h5/h5-profile-reference.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "bd56c612b1454a390ba71d9ae39db87be0ffe761e64f755d3fcf28926c86e6a2"
+      }
+    },
+    {
+      "platform": "h5",
+      "page": "profile-more",
+      "route": "/chats/settings/profile-more",
+      "coverageType": "profile actions",
+      "actual": {
+        "sourceFile": "h5-profile-more-actual.jpg",
+        "file": "h5/h5-profile-more-actual.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "b0d5055ee65fd6550f36e89447ee5cad2021353d61ad7b56f870d8fc7430183f"
+      },
+      "reference": {
+        "sourceFile": "h5-profile-more-reference.jpg",
+        "file": "h5/h5-profile-more-reference.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "a446bcf3446783543974a553008edb11a08dde543df699842f2a07fd0f600403"
+      }
+    },
+    {
+      "platform": "h5",
+      "page": "groups",
+      "route": "/chats/groups",
+      "coverageType": "group list",
+      "actual": {
+        "sourceFile": "h5-groups-actual.jpg",
+        "file": "h5/h5-groups-actual.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "3c362ce6442475ecab0eae97c99b69967a84b3911df7be1a9e6cc092ba067f18"
+      },
+      "reference": {
+        "sourceFile": "h5-groups-reference.jpg",
+        "file": "h5/h5-groups-reference.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "c7b450b119669fa50da26504a92131e16ea16aef201fc1d4b871ef02dc3dc378"
+      }
+    },
+    {
+      "platform": "h5",
+      "page": "group-create",
+      "route": "/chats/groups/create",
+      "coverageType": "group create",
+      "actual": {
+        "sourceFile": "h5-group-create-actual.jpg",
+        "file": "h5/h5-group-create-actual.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "25d2f555e59a7c7446d0557085cc2706e7c61d0de9d97c3b5de804eca6fd212c"
+      },
+      "reference": {
+        "sourceFile": "h5-group-create-reference.jpg",
+        "file": "h5/h5-group-create-reference.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "d34b95ca2189e21e5f3470ac2a2bbc2c0700eff1876e019a1df361cc785bceb9"
+      }
+    },
+    {
+      "platform": "h5",
+      "page": "group-join",
+      "route": "/chats/groups/join",
+      "coverageType": "group join",
+      "actual": {
+        "sourceFile": "h5-group-join-actual.jpg",
+        "file": "h5/h5-group-join-actual.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "d82109898e68b5de1f257ab0047639b86ff33c2dfcf79032cb7d464deebd54cb"
+      },
+      "reference": {
+        "sourceFile": "h5-group-join-reference.jpg",
+        "file": "h5/h5-group-join-reference.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "74f6399605819886eb9ac59f6d07cb89d9a1049750e658d339e68470732c3c85"
+      }
+    },
+    {
+      "platform": "h5",
+      "page": "group-requests",
+      "route": "/chats/groups/requests",
+      "coverageType": "group requests",
+      "actual": {
+        "sourceFile": "h5-group-requests-actual.jpg",
+        "file": "h5/h5-group-requests-actual.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "a30eed347dfae4a4e3f2859136e289439d7fba96e93c07054f73ceb1bbbcd66c"
+      },
+      "reference": {
+        "sourceFile": "h5-group-requests-reference.jpg",
+        "file": "h5/h5-group-requests-reference.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "cf16b8ebd82af4ddc0b61b6d8a665f2266696a00ecb86a2649500d3e50595619"
+      }
+    },
+    {
+      "platform": "h5",
+      "page": "group-profile",
+      "route": "/chats/groups/{qaGroupID}",
+      "coverageType": "group profile",
+      "actual": {
+        "sourceFile": "h5-group-profile-actual.jpg",
+        "file": "h5/h5-group-profile-actual.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "b5161e9da0f22d0554815ff49fb2e142c2bec6dc01c5f0c36b8d2a23fcf0a966"
+      },
+      "reference": {
+        "sourceFile": "h5-group-profile-reference.jpg",
+        "file": "h5/h5-group-profile-reference.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "7d2e4317b83538692d6cd1cad5200f1f8906d8e3b8a2c675b89b25fc95a5080b"
+      }
+    },
+    {
+      "platform": "h5",
+      "page": "group-manage",
+      "route": "/chats/groups/manage?id={qaGroupID}",
+      "coverageType": "group management",
+      "actual": {
+        "sourceFile": "h5-group-manage-actual.jpg",
+        "file": "h5/h5-group-manage-actual.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "bc0a365f9e87e694671ef06c50bcfffcd312d500fbc5f45302988d253b9e3e41"
+      },
+      "reference": {
+        "sourceFile": "h5-group-manage-reference.jpg",
+        "file": "h5/h5-group-manage-reference.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "9150795139fbc7de4fb124547fab428e03ca56da7cdbf6784ff0d4e409463395"
+      }
+    },
+    {
+      "platform": "h5",
+      "page": "members",
+      "route": "/chats/groups/{qaGroupID}/members",
+      "coverageType": "group members",
+      "actual": {
+        "sourceFile": "h5-members-actual.jpg",
+        "file": "h5/h5-members-actual.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "35c0dbff2787b3f5ce9ecae5bea584aecb528afff6019f4728fec96004f3fb8f"
+      },
+      "reference": {
+        "sourceFile": "h5-members-reference.jpg",
+        "file": "h5/h5-members-reference.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "b1e03583238e6b9459c2ff8da48168683c57987123e028a2377d7d1c3c1587cd"
+      }
+    },
+    {
+      "platform": "h5",
+      "page": "group-invite",
+      "route": "/chats/groups/invite?id={qaGroupID}",
+      "coverageType": "group invite",
+      "actual": {
+        "sourceFile": "h5-group-invite-actual.jpg",
+        "file": "h5/h5-group-invite-actual.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "7e38194af5cd88d7a5bcc94931dace21af29b87e456848c2e3468c0b20609340"
+      },
+      "reference": {
+        "sourceFile": "h5-group-invite-reference.jpg",
+        "file": "h5/h5-group-invite-reference.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "d1b57068728ae986af9ee482f2f7929e7115b80cf149f51ea443243de497b420"
+      }
+    },
+    {
+      "platform": "h5",
+      "page": "me",
+      "route": "/me",
+      "coverageType": "account page",
+      "actual": {
+        "sourceFile": "h5-me-actual.jpg",
+        "file": "h5/h5-me-actual.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "d98fe6b985268b3e0c35c61a728840723b9a2068162d257b7b547c2f11286f44"
+      },
+      "reference": {
+        "sourceFile": "h5-me-reference.jpg",
+        "file": "h5/h5-me-reference.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "4c7e8cb47762cc413d8bab51968783c6a6d7d6026a7b92673d224923c8c0a8d8"
+      }
+    },
+    {
+      "platform": "h5",
+      "page": "edit-profile",
+      "route": "/chats/settings?section=profile&edit=1",
+      "coverageType": "edit profile",
+      "actual": {
+        "sourceFile": "h5-edit-profile-actual.jpg",
+        "file": "h5/h5-edit-profile-actual.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "d33ec53a3725e77d1785e9c5d4bf9444a8adadade334d007ebdb521e56ceafec"
+      },
+      "reference": {
+        "sourceFile": "h5-edit-profile-reference.jpg",
+        "file": "h5/h5-edit-profile-reference.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "f223e29009e810dd117cbd04a87fa354e73041e9176d343db798fcb7fa8fa885"
+      }
+    },
+    {
+      "platform": "h5",
+      "page": "notify",
+      "route": "/chats/settings?section=notifications",
+      "coverageType": "notifications",
+      "actual": {
+        "sourceFile": "h5-notify-actual.jpg",
+        "file": "h5/h5-notify-actual.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "329d0430a6ced3e99cc9705ce176e580a20899d0f8e5b5c8a39559d64536a48a"
+      },
+      "reference": {
+        "sourceFile": "h5-notify-reference.jpg",
+        "file": "h5/h5-notify-reference.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "3cf6e2eac007d8e654be50cce9bd44e418cfe80f678830cb32ca5b0d5d213b3f"
+      }
+    },
+    {
+      "platform": "h5",
+      "page": "blacklist",
+      "route": "/chats/settings?section=privacy",
+      "coverageType": "privacy and blacklist",
+      "actual": {
+        "sourceFile": "h5-blacklist-actual.jpg",
+        "file": "h5/h5-blacklist-actual.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "a569fceb196fcaf494e400dc672cf44ccd443e049e9f8f01a66a6df10d115b5e"
+      },
+      "reference": {
+        "sourceFile": "h5-blacklist-reference.jpg",
+        "file": "h5/h5-blacklist-reference.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "a0e25f552ebb13a3230455eff680827620c971f15c86d5147509dc76c714db56"
+      }
+    },
+    {
+      "platform": "h5",
+      "page": "security",
+      "route": "/chats/settings?section=security",
+      "coverageType": "security",
+      "actual": {
+        "sourceFile": "h5-security-actual.jpg",
+        "file": "h5/h5-security-actual.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "ced1371fe37a03aaf5da9d64cec73d943ccffefb4c6cec0cfff8b44edf454a22"
+      },
+      "reference": {
+        "sourceFile": "h5-security-reference.jpg",
+        "file": "h5/h5-security-reference.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "f209aa590458907aa199f6906093816f93cc60a5929836e9f28006fa5e991adf"
+      }
+    },
+    {
+      "platform": "h5",
+      "page": "calls",
+      "route": "/chats/call-history",
+      "coverageType": "call history",
+      "actual": {
+        "sourceFile": "h5-calls-actual.jpg",
+        "file": "h5/h5-calls-actual.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "01541eff096fe1bfc564a7f85756a0fa809236b390345b608b0fa6179765c71d"
+      },
+      "reference": {
+        "sourceFile": "h5-calls-reference.jpg",
+        "file": "h5/h5-calls-reference.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "4d88ef6d9836be92bec1720c682d6af2109b46d9c90cf013f43cca03ebcf57b3"
+      }
+    },
+    {
+      "platform": "h5",
+      "page": "chat",
+      "route": "/chats/{qaConversationID}",
+      "coverageType": "conversation",
+      "actual": {
+        "sourceFile": "h5-chat-sent-actual.jpg",
+        "file": "h5/h5-chat-sent-actual.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "2fa0517429b0942b6a82190bbe789130b2eadeaae2fad5f29b595d1abe64c76e"
+      },
+      "reference": {
+        "sourceFile": "h5-chat-sent-reference.jpg",
+        "file": "h5/h5-chat-sent-reference.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "461b0dca2327ab0a6da8c0673c2c65f1bc41472794fca141835d3bd8e465aff0"
+      }
+    },
+    {
+      "platform": "h5",
+      "page": "chat-info",
+      "route": "/chats/conversation/{qaConversationID}",
+      "coverageType": "conversation details",
+      "actual": {
+        "sourceFile": "h5-chat-info-actual.jpg",
+        "file": "h5/h5-chat-info-actual.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "81fb9f5a6250d52e182d0b1616468333609fa865ec432375307674e0e061c104"
+      },
+      "reference": {
+        "sourceFile": "h5-chat-info-reference.jpg",
+        "file": "h5/h5-chat-info-reference.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "a3c5e08be7970ca2d46a193b3de6fff32740cad751eeb8b32a5c8df4f14b8459"
+      }
+    },
+    {
+      "platform": "h5",
+      "page": "search",
+      "route": "/chats/search/{qaConversationID}",
+      "coverageType": "conversation search",
+      "actual": {
+        "sourceFile": "h5-search-actual.jpg",
+        "file": "h5/h5-search-actual.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "34bf17577c85f77ef5f8747ea3721b4b9745e423a083462488546a8d6567e7d7"
+      },
+      "reference": {
+        "sourceFile": "h5-search-reference.jpg",
+        "file": "h5/h5-search-reference.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "ea5d941759f6c9ebba9603a3c0aabce72b1db2bdd87517aa8e1c485f335d5860"
+      }
+    },
+    {
+      "platform": "h5",
+      "page": "assets-images",
+      "route": "/chats/assets/{qaConversationID}?type=image",
+      "coverageType": "media assets",
+      "actual": {
+        "sourceFile": "h5-assets-images-actual.jpg",
+        "file": "h5/h5-assets-images-actual.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "53027366ee4743f766d39784297de5b311d539fdc073eac33573360c4cf85f11"
+      },
+      "reference": {
+        "sourceFile": "h5-assets-images-reference.jpg",
+        "file": "h5/h5-assets-images-reference.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "c1758ac9779b6a8bf2640c3123944dab2f82b3d5c0dbce3e64144db71498b8d2"
+      }
+    },
+    {
+      "platform": "h5",
+      "page": "archived",
+      "route": "/chats/archived",
+      "coverageType": "archived conversations",
+      "actual": {
+        "sourceFile": "h5-archived-actual.jpg",
+        "file": "h5/h5-archived-actual.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "076aae8b308fd842d841c94e206ac89618656bcddb2dfe64daf50bfaba3531f4"
+      },
+      "reference": {
+        "sourceFile": "h5-archived-reference.jpg",
+        "file": "h5/h5-archived-reference.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "349f1efefcf2654ad4015c353b93baf53520a48b800a85b13d96e4fd401fde06"
+      }
+    },
+    {
+      "platform": "h5",
+      "page": "readers",
+      "route": "/chats/readers/{qaConversationID}",
+      "coverageType": "readers",
+      "actual": {
+        "sourceFile": "h5-readers-actual.jpg",
+        "file": "h5/h5-readers-actual.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "d9f43cb057d684c643bccf62dacb5f73dfb8a66572a0dc1490dd9de9b6776751"
+      },
+      "reference": {
+        "sourceFile": "h5-readers-reference.jpg",
+        "file": "h5/h5-readers-reference.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "f85cdd6f39a5c70c320a2f6eb9961808b954d027b25f53020463eca7d0111f57"
+      }
+    },
+    {
+      "platform": "h5",
+      "page": "login",
+      "route": "/auth/login",
+      "coverageType": "login",
+      "actual": {
+        "sourceFile": "h5-login-actual.jpg",
+        "file": "h5/h5-login-actual.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "6a4fbe060b4ce53e5e17291688be294f5ebdaca92c6c6d6412ea1c8d76c0ca33"
+      },
+      "reference": {
+        "sourceFile": "h5-login-reference.jpg",
+        "file": "h5/h5-login-reference.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "7ee3a379db06a2970b2bcf187d57d97d9a30f4bcb1859af73428918c5ce790a1"
+      }
+    },
+    {
+      "platform": "h5",
+      "page": "register",
+      "route": "/auth/register",
+      "coverageType": "registration",
+      "actual": {
+        "sourceFile": "h5-register-actual.jpg",
+        "file": "h5/h5-register-actual.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "104390b5793c44c6e1c19a77d459801600ca83aec4a5c67417810e46200884cf"
+      },
+      "reference": {
+        "sourceFile": "h5-register-reference.jpg",
+        "file": "h5/h5-register-reference.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "c9816c5ecfb19f2fc6eed05b5a97a290c84092d8c4e98c006bfab56305cc56e3"
+      }
+    },
+    {
+      "platform": "h5",
+      "page": "reset",
+      "route": "/auth/reset",
+      "coverageType": "password reset",
+      "actual": {
+        "sourceFile": "h5-reset-actual.jpg",
+        "file": "h5/h5-reset-actual.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "1cf859012b8519585375a805871285721a36ec7489145be4fb30392494a45bef"
+      },
+      "reference": {
+        "sourceFile": "h5-reset-reference.jpg",
+        "file": "h5/h5-reset-reference.jpg",
+        "width": 390,
+        "height": 844,
+        "sha256": "7b365d95249f50a008073396502fa8fd312b8f9b76031fb4fcc5c2ba54992eb7"
+      }
+    }
+  ],
+  "supplementary": [
+    {
+      "sourceFile": "narrow-assets.jpg",
+      "file": "extras/narrow-assets.jpg",
+      "width": 320,
+      "height": 740,
+      "sha256": "646e2437765b32ec01f4f06a17a241a1b486870f78d4065aa9d99b0c45a47790",
+      "coverageType": "supplementary live or narrow viewport"
+    },
+    {
+      "sourceFile": "narrow-chat-info.jpg",
+      "file": "extras/narrow-chat-info.jpg",
+      "width": 320,
+      "height": 740,
+      "sha256": "c56dcef00b408f72e4fca329a707dd4f51e8f1b2ce8d6caea1481f298a1b0fe1",
+      "coverageType": "supplementary live or narrow viewport"
+    },
+    {
+      "sourceFile": "narrow-chat.jpg",
+      "file": "extras/narrow-chat.jpg",
+      "width": 320,
+      "height": 740,
+      "sha256": "29d7b6346979973894983ecda2e0bd6cc3acc00aac0712f3177b712c929ac144",
+      "coverageType": "supplementary live or narrow viewport"
+    },
+    {
+      "sourceFile": "narrow-profile.jpg",
+      "file": "extras/narrow-profile.jpg",
+      "width": 320,
+      "height": 740,
+      "sha256": "ab25b0f76cda7c9faad923392aaf6c919dd540ecaf2992dd44163d356c5597f1",
+      "coverageType": "supplementary live or narrow viewport"
+    },
+    {
+      "sourceFile": "narrow-security.jpg",
+      "file": "extras/narrow-security.jpg",
+      "width": 320,
+      "height": 740,
+      "sha256": "305ec203d7946e1d30295dbb2db4983c43fdbd23b004ddd746848edd69179beb",
+      "coverageType": "supplementary live or narrow viewport"
+    },
+    {
+      "sourceFile": "pc-email-fixed.jpg",
+      "file": "extras/pc-email-fixed.jpg",
+      "width": 1280,
+      "height": 720,
+      "sha256": "6cf977333163e2e3c7416d2136a4e077f00c1733b1e24c69097d0a7fcd4a7d04",
+      "coverageType": "supplementary live or narrow viewport"
+    },
+    {
+      "sourceFile": "h5-muted-live.jpg",
+      "file": "extras/h5-muted-live.jpg",
+      "width": 390,
+      "height": 844,
+      "sha256": "d6c89d83742b85dcb65c829c06fb8d7f263b0f9544e4d89c502822d275938c9f",
+      "coverageType": "supplementary live or narrow viewport"
+    },
+    {
+      "sourceFile": "h5-microphone-denied.jpg",
+      "file": "extras/h5-microphone-denied.jpg",
+      "width": 390,
+      "height": 844,
+      "sha256": "1314e5b7f57169dda9544aceb7b3f6326cda760c858a93fcd6cd967da85f338b",
+      "coverageType": "supplementary live or narrow viewport"
+    },
+    {
+      "sourceFile": "h5-join-error.jpg",
+      "file": "extras/h5-join-error.jpg",
+      "width": 390,
+      "height": 844,
+      "sha256": "72e9b6c977704de63b7d2fd065ee4f9a9137e53136a038342b5533904b62ad06",
+      "coverageType": "supplementary live or narrow viewport"
+    },
+    {
+      "sourceFile": "h5-transferred-owner.jpg",
+      "file": "extras/h5-transferred-owner.jpg",
+      "width": 390,
+      "height": 844,
+      "sha256": "c2e70134e28cf183e921776dae9b247ba4708b81a5efbcfadda46114ede96160",
+      "route": "/chats/groups/2632300753",
+      "coverageType": "QA group ownership transfer result: A is owner; B is member",
+      "qaGroupID": "2632300753"
+    },
+    {
+      "sourceFile": "h5-group-dismissed.jpg",
+      "file": "extras/h5-group-dismissed.jpg",
+      "width": 390,
+      "height": 844,
+      "sha256": "46ac2c1e5702ed5f2bc17bb06facb47b5b74b9096114d04f84ec69fd7e81283f",
+      "route": "/chats/groups/2632300753",
+      "coverageType": "QA group dissolution result on H5",
+      "qaGroupID": "2632300753"
+    },
+    {
+      "sourceFile": "chrome-dismissed-send-blocked.jpg",
+      "file": "extras/chrome-dismissed-send-blocked.jpg",
+      "width": 2560,
+      "height": 1215,
+      "sha256": "e4bb2035ff3abe6efd7d52c1d5e8b670d51c4837c17d80c6ed959f0f56bab849",
+      "route": "Chrome live session",
+      "coverageType": "C live session reflects dissolved group and blocks send",
+      "qaGroupID": "2632300753"
+    },
+    {
+      "sourceFile": "pc-qa-conversation-deleted.jpg",
+      "file": "extras/pc-qa-conversation-deleted.jpg",
+      "width": 1280,
+      "height": 720,
+      "sha256": "9ede53190da1f5dbe1837ebb77c87f59ed2aa3138f01fedeed46240590723e68",
+      "route": "/chats/archived and /chats",
+      "coverageType": "PC conversation cleared and deleted; group absent from list",
+      "qaGroupID": "2632300753"
+    },
+    {
+      "sourceFile": "h5-qa-conversation-deleted.jpg",
+      "file": "extras/h5-qa-conversation-deleted.jpg",
+      "width": 390,
+      "height": 844,
+      "sha256": "dfbcca9ad5dace993f61e7e5796ef14cd48150c62baa4f25718d1e3c35f6ae09",
+      "route": "/chats/archived and /chats",
+      "coverageType": "H5 conversation cleared and deleted; group absent from list",
+      "qaGroupID": "2632300753"
+    },
+    {
+      "pairID": "h5-dark-me",
+      "kind": "actual",
+      "sourceFile": "h5-dark-me-actual.jpg",
+      "file": "extras/h5-dark-me-actual.jpg",
+      "width": 390,
+      "height": 844,
+      "sha256": "0d611a0e681ed2e38df39075abefd8c6a7506476d386d5a2c4f8b925374bb9ec",
+      "route": "/me",
+      "coverageType": "dark appearance, account page"
+    },
+    {
+      "pairID": "h5-dark-me",
+      "kind": "reference",
+      "sourceFile": "h5-dark-me-reference.jpg",
+      "file": "extras/h5-dark-me-reference.jpg",
+      "width": 390,
+      "height": 844,
+      "sha256": "39c1ba44851493beb34c5c47a6cce9a3d64dd506305c1f2b468e29f93da64573",
+      "route": "/me",
+      "coverageType": "dark appearance, account page"
+    },
+    {
+      "pairID": "h5-appearance-menu",
+      "kind": "actual",
+      "sourceFile": "h5-appearance-menu-actual.jpg",
+      "file": "extras/h5-appearance-menu-actual.jpg",
+      "width": 390,
+      "height": 844,
+      "sha256": "3e7d0c221fda82081527ffc6912f9522d1bff536bd25a1625bd2e04f68095a87",
+      "route": "/chats/settings/appearance",
+      "coverageType": "appearance selection menu; preference restored afterward"
+    },
+    {
+      "pairID": "h5-appearance-menu",
+      "kind": "reference",
+      "sourceFile": "h5-appearance-menu-reference.jpg",
+      "file": "extras/h5-appearance-menu-reference.jpg",
+      "width": 390,
+      "height": 844,
+      "sha256": "e70a2e644fc5d44fbee8ba6ff37a59933b57ba0fe768be8ef7e7e8a5766cf421",
+      "route": "/chats/settings/appearance",
+      "coverageType": "appearance selection menu; preference restored afterward"
+    }
+  ],
+  "notes": [
+    "Conversation page uses pc-chat and h5-chat-sent.",
+    "Media page uses assets-images for both platforms.",
+    "Group profile uses the correctly routed group-profile capture; stale pc-group-chat (390x844) was excluded.",
+    "Dynamic QA content and prototype-only demonstration controls may differ; prototype screenshots are retained only as references paired to canonical actual captures.",
+    "Credential files were excluded."
+  ]
+}

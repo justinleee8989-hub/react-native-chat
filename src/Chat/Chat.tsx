@@ -146,14 +146,16 @@ export function Chat<TMessage extends IMessage = IMessage> (
     actionCallbacksRef,
   })
 
-  // The wallpaper and the composer paint with the chat's first frame; the message list, by far the
-  // heaviest part, mounts in the frame after, so opening a chat never shows an empty screen while
-  // its messages are built.
-  const [isListMounted, setIsListMounted] = useState(false)
+  // By default the heavy list mounts after the composer. Apps that prepare history before
+  // navigation can opt into mounting both together to avoid an empty message-list frame.
+  const deferMessageListMount = props.deferMessageListMount ?? true
+  const [isListMounted, setIsListMounted] = useState(!deferMessageListMount)
   useEffect(() => {
+    if (!deferMessageListMount)
+      return
     const frame = requestAnimationFrame(() => setIsListMounted(true))
     return () => cancelAnimationFrame(frame)
-  }, [])
+  }, [deferMessageListMount])
 
   useOptionalPeerHints(props.audioRecording, props.videoRecording)
 
@@ -218,7 +220,7 @@ export function Chat<TMessage extends IMessage = IMessage> (
                 mediaGallery={mediaGallery}
               >
                 <ChatMessageList<TMessage>
-                  isMounted={isListMounted}
+                  isMounted={isListMounted || !deferMessageListMount}
                   chatProps={props}
                   messages={messages}
                   isInverted={isInverted}

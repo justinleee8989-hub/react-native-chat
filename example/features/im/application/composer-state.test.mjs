@@ -47,8 +47,8 @@ test('queued writes preserve order and stale user writes are skipped', async () 
   const state = createComposerState(storage)
   state.setUser('alice')
   const earlier = state.save('c', 'first')
-  const later = state.save('c', 'second')
   await started
+  const later = state.save('c', 'second')
   state.setUser('bob')
   const stale = state.save('c', 'stale')
   release()
@@ -249,4 +249,25 @@ test('queued draft work is invalidated when scope changes before hook updates', 
   scope = 'two'
   await pending
   assert.deepEqual(writes, [])
+})
+
+test('rapid typing coalesces obsolete queued drafts before delivered cleanup', async () => {
+  let release
+  let started
+  const startedPromise = new Promise(resolve => { started = resolve })
+  const blocked = new Promise(resolve => { release = resolve })
+  const writes = []
+  const state = createComposerState({ read: async () => '', write: async (_u, _c, text) => {
+    writes.push(text)
+    if (text === 'first') { started(); await blocked }
+  } })
+  state.setUser('qa')
+  const first = state.save('chat', 'first')
+  await startedPromise
+  const pending = Array.from({ length: 100 }, (_, index) => state.save('chat', `typed-${index}`))
+  release()
+  await Promise.all([first, ...pending])
+  assert.deepEqual(writes, ['first', 'typed-99'])
+  await state.send('chat', async () => 'sent')
+  assert.equal(writes.at(-1), '')
 })

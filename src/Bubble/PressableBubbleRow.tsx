@@ -1,6 +1,6 @@
 import React from 'react'
-import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native'
-import { GestureDetector, useExclusiveGestures, useLongPressGesture, useTapGesture } from 'react-native-gesture-handler'
+import { Platform, StyleProp, StyleSheet, View, ViewStyle } from 'react-native'
+import { GestureDetector, MouseButton, useExclusiveGestures, useLongPressGesture, useTapGesture } from 'react-native-gesture-handler'
 import Animated, { AnimatedRef, runOnJS } from 'react-native-reanimated'
 
 import { PRESS_HOLD_MS } from '../components/messagePress'
@@ -10,6 +10,7 @@ import { IMessage } from '../Models'
 export const hiddenStyle: ViewStyle = { opacity: 0 }
 
 export type PressableBubbleRowProps<TMessage extends IMessage> = {
+  isContextMenuEnabled?: boolean
   isGestureEnabled: boolean
   /** The overlay is showing a lifted copy, so the original is hidden. */
   isLifted?: boolean
@@ -36,6 +37,7 @@ export type PressableBubbleRowProps<TMessage extends IMessage> = {
  * most of them could never play.
  */
 export const PressableBubbleRow = <TMessage extends IMessage>({
+  isContextMenuEnabled = false,
   isGestureEnabled,
   isLifted = false,
   onPressMessage,
@@ -75,15 +77,18 @@ export const PressableBubbleRow = <TMessage extends IMessage>({
     },
   })
 
-  // Exclusive composition: a long-press wins over the tap when held long
-  // enough; a quick lift lets the tap through. Both share the onBegin/onFinalize
-  // scale animation because onBegin always fires before either gesture wins.
   const gesture = useExclusiveGestures(longPressGesture, tapGesture)
 
   // `rowSurface` spans the whole message row, so a long-press in the empty
   // space beside the bubble opens the picker too.
+  const web = Platform.OS === 'web' && isContextMenuEnabled ? { onContextMenu: (event: { preventDefault: () => void, stopPropagation: () => void, nativeEvent: { pageX?: number, pageY?: number } }) => {
+    event.preventDefault()
+    event.stopPropagation()
+    measureBubble()
+    onLongPressStart(event.nativeEvent.pageX, event.nativeEvent.pageY)
+  } } : {}
   const bubbleRow = (
-    <View style={rowSurfaceStyle}>
+    <View {...web} style={rowSurfaceStyle}>
       <View style={isLifted ? hiddenStyle : undefined}>
         <Animated.View style={wrapperStyleList} ref={bubbleContainerRef}>
           {children}
@@ -91,6 +96,13 @@ export const PressableBubbleRow = <TMessage extends IMessage>({
       </View>
     </View>
   )
+
+  if (Platform.OS === 'web' && isContextMenuEnabled)
+    return (
+      isGestureEnabled
+        ? <WebContextMenuDetector gesture={gesture} measureBubble={measureBubble} onLongPressStart={onLongPressStart}>{bubbleRow}</WebContextMenuDetector>
+        : <><WebContextMenuDetector gesture={gesture} measureBubble={measureBubble} onLongPressStart={onLongPressStart}><View style={StyleSheet.absoluteFill} /></WebContextMenuDetector>{bubbleRow}</>
+    )
 
   if (isGestureEnabled)
     return (
@@ -111,4 +123,26 @@ export const PressableBubbleRow = <TMessage extends IMessage>({
       {bubbleRow}
     </>
   )
+}
+
+/** Mount the extra recognizer only for the opt-in web surface. */
+function WebContextMenuDetector ({ gesture, measureBubble, onLongPressStart, children }: {
+  gesture: ReturnType<typeof useExclusiveGestures>
+  measureBubble: () => void
+  onLongPressStart: (x?: number, y?: number) => void
+  children: React.ReactElement
+}) {
+  const rightClickGesture = useTapGesture({
+    enabled: true,
+    mouseButton: MouseButton.RIGHT,
+    runOnJS: true,
+    onDeactivate: event => {
+      if (!event.canceled) {
+        measureBubble()
+        onLongPressStart(event.absoluteX, event.absoluteY)
+      }
+    },
+  })
+  const combinedGesture = useExclusiveGestures(rightClickGesture, gesture)
+  return <GestureDetector gesture={combinedGesture}>{children}</GestureDetector>
 }

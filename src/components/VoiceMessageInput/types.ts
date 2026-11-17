@@ -1,3 +1,5 @@
+import { ReactNode } from 'react'
+
 import { SharedValue } from 'react-native-reanimated'
 
 import { AudioRecordingProps, IMessage } from '../../Models'
@@ -38,7 +40,18 @@ export interface VoiceMessageInputHandle {
   trim: (start: number, end: number) => void
 }
 
+/** Controls for a custom voice recorder UI; elapsed is in milliseconds. */
+export interface VoiceRecordingControlProps {
+  isRecording: boolean
+  elapsed: number
+  onStart: () => Promise<void>
+  onCancel: () => void | Promise<void>
+  onSend: () => void | Promise<void>
+}
+
 export interface VoiceMessageInputProps {
+  /** Replaces the default hold/slide button while retaining the SDK recorder. */
+  renderControl?: (props: VoiceRecordingControlProps) => ReactNode
   config?: AudioRecordingProps
   onSend?: (
     message: Partial<IMessage>,

@@ -1362,6 +1362,8 @@ import { Copy, Trash2 } from 'lucide-react-native' // optional icons
 />
 ```
 
+`BubbleProps.renderContextMenu` optionally replaces the actions overlay: pass it from `renderBubble`, for example `<Bubble {...props} renderContextMenu={MyMenu} />`. It receives exported `ContextMenuProps` including actions, reactions, anchor, dismissal and optional `messagePreview`. Call `onDismiss` after selecting an action/reaction or closing. If you omit `messagePreview`, the original bubble stays visible. The default menu is unchanged when this prop is omitted.
+
 `ContextMenu` is exported for custom pickers and menus. Beyond `visible`, `items`, `onDismiss` (called once its exit has played), `position` and the bubble's box (`pageX`, `pageY`, `bubbleWidth`, `bubbleHeight`), it takes these optional props:
 
 - **`reactions`** _(Object)_ - `{ emojis, onSelect, selected?, containerStyle?, emojiStyle?, renderAccessory?, renderExpandedPicker? }`. `selected` lists the reactions the user already picked (drawn smaller, in a circle); `renderAccessory` adds content at the end of the bar; `renderExpandedPicker` adds the expand button and the panel it opens (see `reactions.renderExpandedPicker` above)
@@ -1827,3 +1829,27 @@ I also build **[cryptoc](https://cryptoc-app.web.app/)** - a crypto portfolio ap
 <p align="center">
   <sub>Built with ❤️ by the React Native community</sub>
 </p>
+
+`InputToolbar` accepts `actionsPosition="leading"` to place attachments outside the field and emoji at its trailing edge. Use `renderInputToolbar={props => <InputToolbar {...props} actionsPosition="leading" />}` on `Chat`; recording, replies and built-in pickers remain managed by the toolbar. The default is `inside`.
+
+Optional `theme.voice.idleBackground` and `idleIcon` customize only the idle recording control appearance. Use `labels.recordAudioMessage` and `labels.recordVideoMessage` for its accessibility labels. These resolve through the normal labels prop > locale translation > English defaults (`record voice message` / `record video message`) chain. For backward compatibility, deprecated `theme.voice.recordAudioLabel` / `recordVideoLabel`, when non-nullish, take precedence over the corresponding resolved label. Omitted overrides preserve the default appearance and English fallback labels.
+
+Custom audio controls: `MessageAudio.renderPlayer` receives `{ isPlaying, isDisabled, duration, currentTime, onToggle }` when `expo-audio` is installed. Use it from `renderMessageAudio` to change appearance while retaining SDK playback coordination, recording interruption, read callbacks and playlist behavior. Without this prop the default waveform UI is unchanged; without Expo audio the existing fallback is used.
+
+`VoiceMessageInput.renderControl` optionally replaces hold controls with an app UI. It receives `isRecording`, `elapsed` (milliseconds), `onStart`, `onCancel`, and `onSend`; the SDK continues to own permissions, capture, cancellation during startup, duration limits and unmount cleanup. Default controls remain unchanged. `theme.composer.insetButtonWidth` optionally adjusts the inset controls width (default 44).
+
+`Bubble.isContextMenuEnabled` opts into browser right-click opening the same message actions/reactions menu; the default remains false. Native long-press is unchanged.
+
+`MessageImage.onPressImage(message)` overrides opening a successfully loaded photo, allowing app-scoped previews. Download, cancel and retry behavior is retained; without this callback the SDK gallery opens as before.
+
+
+### Window-aligned outgoing gradients
+
+Set `theme.bubble.outgoingGradient` to two color stops and
+`theme.bubble.outgoingGradientMode` to `'window'` for a uniform vertical ramp
+across the application window, including navigation and composer space. Each
+outgoing bubble shows its slice and follows scrolling through shared animation
+values. Existing `'screen'` (message-list bounds), `'bubble'` (per bubble), and
+`null` (solid) defaults remain unchanged. No backend integration is required.
+
+For apps that prepare history before navigation, `<Chat deferMessageListMount={false} />` mounts the message list with the composer instead of deferring it by one frame. The default remains `true`. This does not fetch/cache messages or bypass keyboard/layout measurement.

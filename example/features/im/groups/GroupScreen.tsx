@@ -1,49 +1,39 @@
 import React, { useCallback, useEffect, useState } from 'react'
+import { Pressable, Text, View } from 'react-native'
 import { Href, useLocalSearchParams, useRouter } from 'expo-router'
-import { directory , groupDirectoryEvents } from '@/features/im/application/directory'
+import { directory, groupDirectoryEvents } from '@/features/im/application/directory'
 import { openConversation, useOpenIM } from '@/features/im/application/store'
 import LoginScreen from '@/features/im/auth/LoginScreen'
-import {
-  canRemoveMember,
-  groupPermissions,
-  mergeDirectory,
-  type Group,
-  type Person,
-} from '@/features/im/domain/directory'
+import { type Group, type Person } from '@/features/im/domain/directory'
 import { useTask } from '@/features/im/shared/useTask'
-import { FriendPicker } from '../shared/FriendPicker'
-import { Action, Confirm, Field, Label, Page, PersonRow } from '../shared/shared'
+import { startConversationCall } from '../calls/CallControls'
 import { useDirectoryEvents } from '../shared/useDirectoryEvents'
+import { ProductCard, ProductRow } from '../ui/primitives'
+import { ProductIcon } from '../ui/ProductIcon'
+import { ProductPage, ProductIconButton, ProductInset, ProductSection } from '../ui/ProductPage'
+import { useProductTheme } from '../ui/theme'
+import { GroupAvatar, MemberRow } from './group-ui'
 
-export default function GroupScreen() {
+export default function GroupScreen () {
   const { session } = useOpenIM()
   const { id } = useLocalSearchParams<{ id: string }>()
   return session ? (
-    <GroupDetails key={`${session.userID}:${id}`} groupID={id} userID={session.userID} />
+    <GroupDetails
+      key={`${session.userID}:${session.imToken}:${id}`}
+      groupID={id}
+      userID={session.userID}
+    />
   ) : (
     <LoginScreen />
   )
 }
-function GroupDetails({ groupID, userID }: { groupID: string, userID: string }) {
+function GroupDetails ({ groupID, userID }: { groupID: string, userID: string }) {
   const router = useRouter()
   const task = useTask()
   const { run } = task
   const [group, setGroup] = useState<Group>()
   const [self, setSelf] = useState<Person>()
   const [members, setMembers] = useState<Person[]>([])
-  const [offset, setOffset] = useState(0)
-  const [more, setMore] = useState(false)
-  const [name, setName] = useState('')
-  const [notification, setNotification] = useState('')
-  const [invite, setInvite] = useState(false)
-  const [selected, setSelected] = useState<string[]>([])
-  const [notice, setNotice] = useState('')
-  const [confirm, setConfirm] = useState<{
-    message: string
-    action: () => Promise<unknown>
-    exit?: boolean
-  }>()
-  const permissions = groupPermissions(self, group?.needVerification)
   const reload = useCallback(
     async (current: () => boolean) => {
       const [info, people, member] = await Promise.all([
@@ -51,17 +41,13 @@ function GroupDetails({ groupID, userID }: { groupID: string, userID: string }) 
         directory.members(groupID),
         directory.member(groupID, userID),
       ])
-      if (!current()) 
+      if (!current())
         return
-      if (!info) 
+      if (!info)
         throw new Error('群组不存在或无法访问')
       setGroup(info)
       setMembers(people)
       setSelf(member)
-      setOffset(people.length)
-      setMore(people.length === 30)
-      setName(info.groupName)
-      setNotification(info.notification || '')
     },
     [groupID, userID]
   )
@@ -70,200 +56,166 @@ function GroupDetails({ groupID, userID }: { groupID: string, userID: string }) 
   useEffect(() => {
     void run(reload)
   }, [run, reload])
+  const t = useProductTheme()
   return (
-    <Page title={group?.groupName || '群详情'} {...task}>
-      <Action
-        title='刷新群资料'
-        disabled={task.busy}
-        onPress={() => {
-          void run(reload)
-        }}
-      />
-      {!!notice && <Label>{notice}</Label>}
+    <ProductPage
+      title=''
+      {...task}
+      initialLoading={!task.hasSucceeded}
+      skeleton='profile'
+      onRetry={() => {
+        void refresh()
+      }}
+      right={
+        self ? (
+          <ProductIconButton
+            name='more'
+            label='群管理'
+            onPress={() =>
+              router.push(`/chats/groups/manage?id=${encodeURIComponent(groupID)}` as Href)
+            }
+          />
+        ) : undefined
+      }
+    >
       {group && (
         <>
-          <Label>群 ID：{groupID}</Label>
-          <Label>
-            成员：{group.memberCount || members.length} 人 ·{' '}
-            {self?.roleLevel === 100
-              ? '群主'
-              : self?.roleLevel === 60
-                ? '管理员'
-                : self
-                  ? '群成员'
-                  : '未加入'}
-          </Label>
-          {self && (
-            <Action
-              title='进入群聊'
-              disabled={task.busy}
-              onPress={() => {
-                void run(async current => {
-                  const id = await openConversation(groupID, 3)
-                  if (current()) 
-                    router.push(`/chats/${encodeURIComponent(id)}` as Href)
-                })
+          <View
+            style={{
+              alignItems: 'center',
+              paddingTop: 20,
+              paddingBottom: 4,
+              paddingHorizontal: 24,
+              gap: 4,
+            }}
+          >
+            <GroupAvatar group={group} size={96} />
+            <Text
+              style={{
+                color: t.text,
+                fontSize: 24,
+                lineHeight: 30,
+                letterSpacing: -0.3,
+                fontWeight: '700',
+                marginTop: 12,
+                textAlign: 'center',
               }}
-            />
-          )}
-          <Label>群公告</Label>
-          <Label>{group.notification || '暂无群公告'}</Label>
-          {permissions.manage && (
-            <>
-              <Field value={name} onChangeText={setName} placeholder='群名称' />
-              <Field value={notification} onChangeText={setNotification} placeholder='群公告' />
-              <Action
-                title='保存群资料'
-                disabled={task.busy || !name.trim()}
-                onPress={() => {
-                  void run(async current => {
-                    await directory.update(groupID, name.trim(), notification)
-                    if (current()) {
-                      setGroup(info =>
-                        info ? { ...info, groupName: name.trim(), notification } : info
-                      )
-                      setNotice('群资料已更新')
-                    }
-                  })
-                }}
-              />
-            </>
-          )}
-          {permissions.invite && (
-            <Action
-              title={
-                invite
-                  ? '收起邀请'
-                  : permissions.inviteNeedsApproval
-                    ? '申请邀请好友入群'
-                    : '邀请好友入群'
-              }
-              disabled={task.busy}
-              onPress={() => setInvite(!invite)}
-            />
-          )}
-          {invite && permissions.invite && (
-            <>
-              <FriendPicker
-                excluded={members.map(member => member.userID)}
-                selected={selected}
-                onChange={setSelected}
-                disabled={task.busy}
-              />
-              <Action
-                title={permissions.inviteNeedsApproval ? '提交邀请申请' : '邀请所选好友'}
-                disabled={task.busy || !selected.length}
-                onPress={() => {
-                  void run(async current => {
-                    await directory.invite(groupID, selected)
-                    if (current()) {
-                      setInvite(false)
-                      setSelected([])
-                      setNotice(
-                        permissions.inviteNeedsApproval
-                          ? '邀请申请已提交，等待群主或管理员审核'
-                          : '邀请已提交，成员列表将在同步后更新'
-                      )
-                    }
-                  })
-                }}
-              />
-            </>
-          )}
-          {permissions.manage && (
-            <Action
-              title='群权限与禁言'
-              onPress={() =>
-                router.push(`/chats/groups/manage?id=${encodeURIComponent(groupID)}` as Href)
-              }
-            />
-          )}
-          <Label>群成员</Label>
-          {members.map(member => (
-            <PersonRow key={member.userID} person={member}>
-              <Label>
-                {member.roleLevel === 100 ? '群主' : member.roleLevel === 60 ? '管理员' : '成员'}
-              </Label>
-              {canRemoveMember(self, member) && (
-                <Action
-                  title='移出群组'
-                  danger
+            >
+              {group.groupName}
+            </Text>
+            <Text style={{ color: t.text2, fontSize: 14, lineHeight: 20, textAlign: 'center' }}>
+              {group.memberCount || members.length} 位成员 ·{' '}
+              {self
+                ? `我是${self.roleLevel === 100 ? '群主' : self.roleLevel === 60 ? '管理员' : '群成员'}`
+                : '未加入'}
+            </Text>
+          </View>
+          {self && (
+            <View
+              style={{
+                flexDirection: 'row',
+                gap: 12,
+                marginHorizontal: 16,
+                marginTop: 22,
+                justifyContent: 'center',
+              }}
+            >
+              {[
+                { title: '发消息', icon: 'chat' as const },
+                { title: '音视频通话', icon: 'video' as const },
+              ].map(action => (
+                <Pressable
+                  key={action.title}
+                  accessibilityRole='button'
                   disabled={task.busy}
-                  onPress={() =>
-                    setConfirm({
-                      message: `将 ${member.nickname || member.userID} 移出群组？`,
-                      action: () => directory.kick(groupID, member.userID),
+                  onPress={() => {
+                    void run(async current => {
+                      const id = await openConversation(groupID, 3)
+                      if (!current())
+                        return
+                      if (action.icon === 'video')
+                        await startConversationCall({ groupID, showName: group.groupName }, id)
+                      if (current())
+                        router.push(`/chats/${encodeURIComponent(id)}` as Href)
                     })
+                  }}
+                  style={{
+                    flex: 1,
+                    maxWidth: 168,
+                    height: 64,
+                    borderRadius: 16,
+                    backgroundColor: t.surface,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 5,
+                    opacity: task.busy ? 0.4 : 1,
+                  }}
+                >
+                  <ProductIcon name={action.icon} size={24} color={t.accent} />
+                  <Text style={{ color: t.accent, fontSize: 12.5, fontWeight: '500' }}>
+                    {action.title}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          )}
+
+          <ProductSection>群公告</ProductSection>
+          <ProductInset>
+            <ProductCard>
+              <Text
+                style={{
+                  padding: 16,
+                  fontSize: 15,
+                  lineHeight: 24,
+                  color: group.notification ? t.text : t.text3,
+                }}
+              >
+                {group.notification || '暂无群公告'}
+              </Text>
+            </ProductCard>
+          </ProductInset>
+          <ProductSection>基本信息</ProductSection>
+          <ProductInset>
+            <ProductCard>
+              <ProductRow
+                title='群 ID'
+                trailing={
+                  <Text
+                    selectable
+                    numberOfLines={1}
+                    style={{ color: t.text2, fontSize: 15, maxWidth: '58%' }}
+                  >
+                    {groupID}
+                  </Text>
+                }
+              />
+            </ProductCard>
+          </ProductInset>
+          <ProductSection>群成员 · {group.memberCount || members.length}</ProductSection>
+          <ProductInset>
+            <ProductCard>
+              {members.slice(0, 5).map(member => (
+                <MemberRow
+                  key={member.userID}
+                  member={member}
+                  onPress={() =>
+                    router.push(`/chats/people/${encodeURIComponent(member.userID)}` as Href)
+                  }
+                />
+              ))}
+              {(group.memberCount || members.length) > 5 && (
+                <ProductRow
+                  title='查看全部成员'
+                  onPress={() =>
+                    router.push(`/chats/groups/members?id=${encodeURIComponent(groupID)}` as Href)
                   }
                 />
               )}
-            </PersonRow>
-          ))}
-          {more && (
-            <Action
-              title='加载更多成员'
-              disabled={task.busy}
-              onPress={() => {
-                void run(async current => {
-                  const page = await directory.members(groupID, offset)
-                  if (current()) {
-                    setMembers(items => mergeDirectory(items, page, item => item.userID))
-                    setOffset(offset + page.length)
-                    setMore(page.length === 30)
-                  }
-                })
-              }}
-            />
-          )}
-          {permissions.leave && (
-            <Action
-              title='退出群组'
-              danger
-              disabled={task.busy}
-              onPress={() =>
-                setConfirm({
-                  message: '确认退出该群组？',
-                  action: () => directory.leave(groupID),
-                  exit: true,
-                })
-              }
-            />
-          )}
-          {permissions.dismiss && (
-            <Action
-              title='解散群组'
-              danger
-              disabled={task.busy}
-              onPress={() =>
-                setConfirm({
-                  message: '解散后所有成员将失去此群组，确认解散？',
-                  action: () => directory.dismiss(groupID),
-                  exit: true,
-                })
-              }
-            />
-          )}
+            </ProductCard>
+          </ProductInset>
         </>
       )}
-      {confirm && (
-        <Confirm error={task.error}
-          message={confirm.message}
-          busy={task.busy}
-          onCancel={() => setConfirm(undefined)}
-          onConfirm={() => {
-            void run(async current => {
-              await confirm.action()
-              if (!current()) 
-                return
-              setConfirm(undefined)
-              if (confirm.exit) 
-                router.replace('/chats/groups' as Href)
-              else 
-                setNotice('操作已提交，成员列表将在同步后更新')
-            })
-          }}
-        />
-      )}
-    </Page>
+    </ProductPage>
   )
 }

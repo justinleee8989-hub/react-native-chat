@@ -118,7 +118,7 @@ export const createStyles = (theme: ChatTheme) => StyleSheet.create({
   },
   // The emoji button's 44 cell.
   insetCell: {
-    width: 44,
+    width: theme.composer.insetButtonWidth ?? 44,
     height: theme.composer.minHeight,
     alignItems: 'center',
     justifyContent: 'center',

@@ -12,7 +12,7 @@ runInNewContext(ts.transpileModule(readFileSync(new URL('./attachment-batch.ts',
 runInNewContext(ts.transpileModule(readFileSync(new URL('../application/messaging.ts', import.meta.url), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText, { exports, Set, Map, Error, require: path => path.includes('attachment-batch') ? batchExports : path.includes('composer') ? composerExports : projectionExports })
 function setup () {
   const original = { clientMsgID: 'one', status: 2, sendID: 'me', contentType: 101 }
-  const runtime = { generation: 1, historyRevision: {}, state: { config: { api: 'https://api', ws: 'wss://ws' }, session: { userID: 'me' }, conversations: [{ conversationID: 'chat' }], messages: { chat: [original] } }, addMessages: (_id, list) => { const map = new Map(runtime.state.messages.chat.map(item => [item.clientMsgID, item])); list.forEach(item => map.set(item.clientMsgID, item)); runtime.state.messages.chat = [...map.values()] }, mergeConversations: list => { runtime.state.conversations = list }, update: patch => { runtime.state = { ...runtime.state, ...patch } }, reportError: () => {} }
+  const runtime = { touchMessageCache: () => {}, pruneMessageCache: () => {}, generation: 1, historyRevision: {}, state: { config: { api: 'https://api', ws: 'wss://ws' }, session: { userID: 'me' }, conversations: [{ conversationID: 'chat' }], messages: { chat: [original] } }, addMessages: (_id, list) => { const map = new Map(runtime.state.messages.chat.map(item => [item.clientMsgID, item])); list.forEach(item => map.set(item.clientMsgID, item)); runtime.state.messages.chat = [...map.values()] }, mergeConversations: list => { runtime.state.conversations = list }, update: patch => { runtime.state = { ...runtime.state, ...patch } }, reportError: () => {} }
   const calls = []
   const client = { createMedia: async () => ({ clientMsgID: 'media', contentType: 102 }), createText: async text => ({ clientMsgID: 'caption', text, contentType: 101 }), createQuote: async (text, message) => { calls.push(['quote', text, message]); return { ...message, clientMsgID: 'new' } }, createForward: async message => ({ ...message, clientMsgID: 'forward' }), send: async message => ({ ...message, status: 2 }), revoke: async (...args) => calls.push(args), history: async (_id, cursor) => { calls.push(['history', cursor]); return { messageList: [original], isEnd: true } } }
   const projection = { load: async (_id, ids) => { calls.push(['projection', ids]); return {} } }
@@ -421,4 +421,50 @@ test('replying with attachments and caption preserves the original source for bo
   assert.equal(media.contentType, 102)
   assert.equal(composerExports.readReply(media).clientMsgID, 'one')
   assert.equal(h.calls.find(call => call[0] === 'quote')[2].clientMsgID, 'one')
+})
+
+test('history loading follows the shared request and clears after failure', async () => {
+  const h = setup()
+  let reject
+  h.client.history = () => new Promise((_resolve, fail) => { reject = fail })
+  const first = h.loadHistory('chat', true)
+  const second = h.loadHistory('chat', true)
+  const settled = Promise.allSettled([first, second])
+  assert.equal(h.runtime.state.historyLoading?.chat, true)
+  reject(new Error('offline'))
+  await settled
+  assert.equal(h.runtime.state.historyLoading.chat, false)
+  assert.equal(h.runtime.state.historyPaging.chat, false)
+  assert.equal(h.runtime.state.messages.chat.length, 1)
+})
+
+test('stale history completion does not clear a new sessions loading state', async () => {
+  const h = setup()
+  let resolve
+  h.client.history = () => new Promise(done => { resolve = done })
+  const pending = h.loadHistory('chat', true)
+  assert.equal(h.runtime.state.historyLoading?.chat, true)
+  h.runtime.generation++
+  h.runtime.state.historyLoading = { chat: true }
+  h.runtime.state.historyPaging = { chat: true }
+  resolve({ messageList: [], isEnd: true })
+  await pending
+  assert.equal(h.runtime.state.historyLoading.chat, true)
+  assert.equal(h.runtime.state.historyPaging.chat, true)
+})
+
+test('conversation refresh stays silent while earlier history reports paging', async () => {
+  const h = setup()
+  let finish
+  h.client.history = () => new Promise(resolve => { finish = resolve })
+  const refresh = h.loadHistory('chat')
+  assert.equal(h.runtime.state.historyLoading.chat, true)
+  assert.equal(h.runtime.state.historyPaging?.chat, false)
+  finish({ messageList: [], isEnd: false })
+  await refresh
+  const page = h.loadHistory('chat', true)
+  assert.equal(h.runtime.state.historyPaging.chat, true)
+  finish({ messageList: [], isEnd: true })
+  await page
+  assert.equal(h.runtime.state.historyPaging.chat, false)
 })

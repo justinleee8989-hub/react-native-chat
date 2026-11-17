@@ -4,32 +4,51 @@ import test from 'node:test'
 import { runInNewContext } from 'node:vm'
 import ts from 'typescript'
 import * as model from '../domain/model.ts'
+import { groupReadCount } from '../messages/presentation.ts'
 
-const conversation = { conversationID: 'chat-bob', userID: 'bob', showName: 'Bob', unreadCount: 0 }
+const conversation = { conversationType: 1, conversationID: 'chat-bob', userID: 'bob', showName: 'Bob', unreadCount: 0 }
 const message = { clientMsgID: 'offline-1', sendID: 'bob', recvID: 'me', sendTime: 123, status: 2, contentType: 101, textElem: { content: 'While offline' } }
 const settle = () => new Promise(resolve => setImmediate(resolve))
 function harness (loginResponse = async () => ({ data: { userID: 'me', imToken: 'test-only', chatToken: 'chat-only' } }), options = {}) {
   const effects = []
-  let savedSession = null
+  let savedSession = options.savedSession || null
   let removeCount = 0
+  const otherStorage = new Map(options.snapshotEntries || [])
   const storage = {
-    getItem: async () => savedSession,
-    setItem: async (_key, value) => { savedSession = value },
-    removeItem: async () => { savedSession = null; removeCount++ },
+    getItem: async key => key === 'openim-example-session-v1' ? savedSession : otherStorage.get(key) ?? null,
+    setItem: async (key, value) => { if (key === 'openim-example-session-v1') savedSession = value; else otherStorage.set(key, value) },
+    removeItem: async key => { if (key === 'openim-example-session-v1') { savedSession = null; removeCount++ } else otherStorage.delete(key) },
   }
   const events = new Map()
+  const eventSubscriptions = new Map()
   let history = []
   let historyCalls = 0
   const client = {
     login: async () => {}, logout: async () => {}, read: async () => {},
-    on: (event, handler) => { events.set(event, handler); return () => events.delete(event) },
+    on: (event, handler) => {
+      events.set(event, handler)
+      const subscriptions = eventSubscriptions.get(event) || new Set()
+      subscriptions.add(handler)
+      eventSubscriptions.set(event, subscriptions)
+      return () => {
+        subscriptions.delete(handler)
+        if (events.get(event) === handler) events.delete(event)
+      }
+    },
     conversations: async () => options.conversations || [conversation],
     history: async () => { historyCalls++; return { messageList: history, isEnd: true } },
   }
   const modules = new Map()
+  const moduleDisposers = new Map()
+  const hotModules = new Map()
   function load (url) {
     if (modules.has(url.href)) return modules.get(url.href)
-    const module = { exports: {} }
+    const disposeCallbacks = []
+    const hot = hotModules.get(url.href) || { data: {} }
+    hot.dispose = callback => disposeCallbacks.push(callback)
+    hotModules.set(url.href, hot)
+    const module = { exports: {}, hot }
+    moduleDisposers.set(url.href, disposeCallbacks)
     modules.set(url.href, module.exports)
     const { outputText } = ts.transpileModule(readFileSync(url, 'utf8'), {
       compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true },
@@ -45,7 +64,7 @@ function harness (loginResponse = async () => ({ data: { userID: 'me', imToken: 
         if (name === 'react') return { useEffect: effect => effects.push(effect), useSyncExternalStore: (_subscribe, snapshot) => snapshot() }
         if (name === 'md5') return () => 'test-only'
         if (name.endsWith('/openim/client')) return { client }
-        if (name.endsWith('/openim/conversation-client')) return { conversationService: {} }
+        if (name.endsWith('/openim/conversation-client')) return { conversationService: options.conversationService || {} }
         if (name === '../config') return { defaultConfig: { chat: 'http://test' }, platformID: 5 }
         if (name === '../domain/model') return model
         if (name.endsWith('/storage/attachment-outbox')) return { attachmentOutbox: { load: async () => [], save: async () => {}, remove: async () => {}, retain: async (_scope, _id, media) => media } }
@@ -57,9 +76,17 @@ function harness (loginResponse = async () => ({ data: { userID: 'me', imToken: 
     })
     return module.exports
   }
-  const store = load(new URL('./store.ts', import.meta.url))
-  return { store, client, events, storage, savedSession: () => savedSession, removeCount: () => removeCount,
-    mount: () => { store.useOpenIM(); effects.shift()() }, setHistory: value => { history = value }, historyCalls: () => historyCalls }
+  const storeUrl = new URL('./store.ts', import.meta.url)
+  const store = load(storeUrl)
+  return { store, client, events, storage, snapshotEntries: () => [...otherStorage], savedSession: () => savedSession, removeCount: () => removeCount,
+    mount: (target = store) => { target.useOpenIM(); effects.pop()() },
+    reloadStore: () => {
+      for (const dispose of moduleDisposers.get(storeUrl.href) || []) dispose()
+      modules.delete(storeUrl.href)
+      return load(storeUrl)
+    },
+    subscriptionCount: () => [...eventSubscriptions.values()].reduce((count, subscriptions) => count + subscriptions.size, 0),
+    setHistory: value => { history = value }, historyCalls: () => historyCalls }
 }
 
 test('offline SDK messages update the current chat without leaving it and remain deduplicated', async () => {
@@ -84,6 +111,61 @@ test('sync completion reloads the active conversation history after reconnect', 
   await settle()
   assert.equal(historyCalls(), 2)
   assert.equal(store.useOpenIM().messages['chat-bob'][0].clientMsgID, 'offline-1')
+})
+
+test('foreground recovery coalesces refreshes and reloads history only while the same chat remains active', async () => {
+  const h = harness()
+  await h.store.login('me', 'password', { chat: 'http://test' })
+  const session = h.store.useOpenIM().session
+  const stop = h.store.focusConversation('chat-bob')
+  await settle()
+  const initialHistoryCalls = h.historyCalls()
+  let finishRefresh
+  let refreshCalls = 0
+  h.client.conversations = () => {
+    refreshCalls++
+    return new Promise(resolve => { finishRefresh = resolve })
+  }
+
+  const first = h.store.resumeConversation('chat-bob', session)
+  const second = h.store.resumeConversation('chat-bob', session)
+  await Promise.resolve()
+  assert.equal(refreshCalls, 1)
+  finishRefresh([conversation])
+  await Promise.all([first, second])
+  assert.equal(h.historyCalls(), initialHistoryCalls + 1)
+
+  let finishStaleRefresh
+  h.client.conversations = () => new Promise(resolve => { finishStaleRefresh = resolve })
+  const stale = h.store.resumeConversation('chat-bob', session)
+  await Promise.resolve()
+  stop()
+  finishStaleRefresh([conversation])
+  await stale
+  assert.equal(h.historyCalls(), initialHistoryCalls + 1)
+})
+
+test('foreground recovery does not load history into a replacement session', async () => {
+  let loginCount = 0
+  const h = harness(async () => ({ data: { userID: `account-${++loginCount}`, imToken: 'test-only', chatToken: 'chat-only' } }))
+  await h.store.login('first', 'password', { chat: 'http://test' })
+  const oldSession = h.store.useOpenIM().session
+  h.store.focusConversation('chat-bob')
+  await settle()
+  let finishOldRefresh
+  h.client.conversations = () => new Promise(resolve => { finishOldRefresh = resolve })
+  const stale = h.store.resumeConversation('chat-bob', oldSession)
+  await Promise.resolve()
+  await h.store.logout()
+  h.client.conversations = async () => [conversation]
+  await h.store.login('second', 'password', { chat: 'http://test' })
+  h.store.focusConversation('chat-bob')
+  await settle()
+  const replacementHistoryCalls = h.historyCalls()
+  finishOldRefresh([conversation])
+  await stale
+  assert.equal(h.store.useOpenIM().session.userID, 'account-2')
+  assert.equal(h.historyCalls(), replacementHistoryCalls)
 })
 
 test('initial login retains a non-blocking message projection warning', async () => {
@@ -225,6 +307,62 @@ test('storage removal failure does not skip SDK logout', async () => {
   await h.store.logout()
   assert.equal(calls, 1)
   assert.equal(h.store.useOpenIM().session, undefined)
+})
+
+test('store module reload restores the session without duplicating SDK event subscriptions', async () => {
+  const h = harness()
+  await h.store.login('me', 'password', { chat: 'http://test' })
+  let releaseStaleRefresh
+  const conversations = h.client.conversations
+  h.client.conversations = () => new Promise(resolve => { releaseStaleRefresh = resolve })
+  const staleRetry = h.store.retryRestore()
+  await settle()
+  assert.equal(h.store.useOpenIM().busy, true)
+  const beforeReload = h.store.useOpenIM()
+  const subscriptionsBeforeReload = h.subscriptionCount()
+  assert.ok(subscriptionsBeforeReload > 0)
+
+  const reloadedStore = h.reloadStore()
+  const beforeRestoreMount = reloadedStore.useOpenIM()
+  assert.equal(beforeRestoreMount.session?.userID, beforeReload.session?.userID,
+    'the replacement store must expose the previous session before restore runs')
+  assert.equal(beforeRestoreMount.status, beforeReload.status)
+  assert.equal(beforeRestoreMount.busy, false, 'a disposed busy operation must not block the new restore')
+  assert.deepEqual(beforeRestoreMount.conversations, beforeReload.conversations)
+  assert.deepEqual(beforeRestoreMount.messages, beforeReload.messages)
+
+  h.client.conversations = conversations
+  h.mount(reloadedStore)
+  await settle()
+  await settle()
+  assert.equal(reloadedStore.useOpenIM().session?.userID, 'me')
+  assert.equal(reloadedStore.useOpenIM().busy, false, 'restore must finish without waiting for the stale request')
+  releaseStaleRefresh([conversation])
+  await staleRetry
+  assert.equal(reloadedStore.useOpenIM().busy, false, 'the stale retry must not change the new store busy state')
+  assert.equal(h.subscriptionCount(), subscriptionsBeforeReload,
+    'the previous module must release its subscriptions before the reloaded store subscribes')
+})
+
+test('store module disposal clears subscriptions and fences an in-flight SDK login', async () => {
+  const h = harness()
+  let loginStarted
+  let finishSDKLogin
+  const started = new Promise(resolve => { loginStarted = resolve })
+  h.client.login = () => {
+    loginStarted()
+    return new Promise(resolve => { finishSDKLogin = resolve })
+  }
+  const oldStore = h.store
+  const pendingLogin = oldStore.login('me', 'password', { chat: 'http://test' })
+  await started
+  assert.ok(h.subscriptionCount() > 0)
+
+  h.reloadStore()
+  assert.equal(h.subscriptionCount(), 0, 'dispose must release the old store event subscriptions')
+  finishSDKLogin()
+  await pendingLogin
+  assert.equal(oldStore.useOpenIM().session, undefined, 'a login from a disposed module must not revive its old session')
 })
 
 test('opening an empty new conversation does not mark nonexistent server history read', async () => {
@@ -369,6 +507,48 @@ test('read receipts update only the matching outgoing message and never mark par
   assert.equal(h.store.useOpenIM().messages['group-chat'].find(item => item.clientMsgID === 'sent-group').isRead, true)
 })
 
+test('authoritative group reader details synchronize the matching cached message count', async () => {
+  const h = harness()
+  await h.store.login('me', 'password', { chat: 'http://test' })
+  const group = { conversationID: 'group-chat', groupID: 'group-1', showName: 'Group', unreadCount: 0 }
+  h.events.get('onConversationChanged')([group])
+  const sent = { ...message, clientMsgID: 'sent-group', sendID: 'me', recvID: '', groupID: 'group-1', status: 2 }
+  h.events.get('onRecvNewMessages')([sent])
+
+  h.store.syncMessageReaders('group-chat', 'sent-group', 1, 0)
+
+  const cached = h.store.useOpenIM().messages['group-chat'].find(item => item.clientMsgID === 'sent-group')
+  assert.equal(groupReadCount(cached, h.store.useOpenIM().messageReadInfo['group-chat']['sent-group'].readCount), 1)
+  h.setHistory([{ ...sent, attachedInfoElem: { groupHasReadInfo: { hasReadCount: 0, unreadCount: 3 } }, isRead: false }])
+  await h.store.loadHistory('group-chat')
+  const restored = h.store.useOpenIM().messages['group-chat'].find(item => item.clientMsgID === 'sent-group')
+  const authoritative = h.store.useOpenIM().messageReadInfo['group-chat']['sent-group'].readCount
+  assert.equal(groupReadCount(restored), 0)
+  assert.equal(groupReadCount(restored, authoritative), 1)
+  assert.equal(restored.isRead, false)
+  assert.equal((h.store.useOpenIM().messages['chat-bob'] || []).some(item => item.clientMsgID === 'sent-group'), false)
+})
+
+test('a stale reader request cannot overwrite a newer SDK receipt for the same message', async () => {
+  const h = harness()
+  await h.store.login('me', 'password', { chat: 'http://test' })
+  h.events.get('onConversationChanged')([{ conversationID: 'group-chat', groupID: 'group-1', showName: 'Group', unreadCount: 0 }])
+  h.events.get('onRecvNewMessages')([{ ...message, clientMsgID: 'sent-group', sendID: 'me', recvID: '', groupID: 'group-1', status: 2 }])
+  h.store.syncMessageReaders('group-chat', 'sent-group', 2, 0)
+  const receiptState = h.store.useOpenIM().messageReadInfo['group-chat']['sent-group']
+
+  h.store.syncMessageReaders('group-chat', 'sent-group', 1, 2, {
+    readInfo: undefined,
+    userID: 'me',
+    imToken: 'test-only',
+    chatToken: 'chat-only',
+  })
+
+  assert.equal(h.store.useOpenIM().messageReadInfo['group-chat']['sent-group'], receiptState)
+  assert.equal(h.store.useOpenIM().messageReadInfo['group-chat']['sent-group'].readCount, 2)
+  assert.equal(h.store.useOpenIM().messageReadInfo['group-chat']['sent-group'].unreadCount, 0)
+})
+
 
 test('session initialization waits for storage before allowing an unauthenticated redirect', async () => {
   const h = harness()
@@ -393,4 +573,35 @@ test('session initialization completes after storage failure so recovery is acce
   assert.equal(h.store.useOpenIM().initialized, true)
   assert.equal(h.store.useOpenIM().busy, false)
   assert.equal(h.store.useOpenIM().recoveryAvailable, true)
+})
+
+
+test('cold restore displays an account snapshot without treating it as authenticated', async () => {
+  const first = harness()
+  await first.store.login('me', 'password', { chat: 'http://test' })
+  await new Promise(resolve => setTimeout(resolve, 300))
+  const second = harness(undefined, { savedSession: first.savedSession(), snapshotEntries: first.snapshotEntries() })
+  let completeLogin
+  second.client.login = () => new Promise(resolve => { completeLogin = resolve })
+  second.mount()
+  await settle()
+  const pending = second.store.useOpenIM()
+  assert.equal(pending.session, undefined)
+  assert.equal(pending.startupSnapshot.conversations[0].conversationID, 'chat-bob')
+  completeLogin()
+  await settle()
+  assert.equal(second.store.useOpenIM().session.userID, 'me')
+  assert.equal(second.store.useOpenIM().startupSnapshot, undefined)
+  await second.store.logout()
+  assert.equal(second.snapshotEntries().length, 0)
+})
+
+test('store deletion returns only after the persisted home snapshot excludes the conversation', async () => {
+  const qa = harness(undefined, { conversationService: { remove: async () => {} } })
+  await qa.store.login('me', 'password', { chat: 'http://test' })
+  await new Promise(resolve => setTimeout(resolve, 300))
+  assert.equal(JSON.parse(qa.snapshotEntries()[0][1]).conversations.length, 1)
+  await qa.store.removeConversations(['chat-bob'])
+  assert.equal(qa.store.useOpenIM().conversations.length, 0)
+  assert.equal(JSON.parse(qa.snapshotEntries()[0][1]).conversations.length, 0)
 })

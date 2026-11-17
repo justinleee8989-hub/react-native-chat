@@ -20,3 +20,13 @@ test('login rejects incomplete success response instead of creating an invalid S
 test('login surfaces backend rejection without storing credentials', async () => {
   await assert.rejects(authenticate('alice', 'wrong', 'http://local', 5, async () => ({ ok: true, json: async () => ({ errCode: 1001, errMsg: '账号或密码错误' }) })), /账号或密码错误/)
 })
+
+test('login maps the backend PasswordError code to safe account credentials copy', async () => {
+  await assert.rejects(
+    authenticate('alice', 'wrong', 'http://local', 5, async () => ({
+      ok: true,
+      json: async () => ({ errCode: 20001, errMsg: 'PasswordError' }),
+    })),
+    /账号或密码错误/
+  )
+})

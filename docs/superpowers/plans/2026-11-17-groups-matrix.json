@@ -1,0 +1,252 @@
+{
+  "task": "read-only reference versus actual group-flow comparison",
+  "date": "2026-11-17",
+  "repo": "/Users/czzz/work/kson/code/github/IM/react-native-chat",
+  "repo_guidance": "/Users/czzz/work/kson/code/github/IM/react-native-chat/AGENTS.md",
+  "reference": "http://127.0.0.1:36993/ (openim-redesign-demo.html)",
+  "actual": "http://127.0.0.1:35881/",
+  "account": "QA A; owner group 646751305; no persistent group mutations performed",
+  "comparison_rules": [
+    "A rendered/open status means visibly opened in the named UI; source-only means inferred from inspected reference HTML or actual TypeScript and was not presented as rendered QA evidence.",
+    "Dataset count differences are noted as fixture differences. No create, join, invite, accept/reject, role, mute, kick, transfer, exit, dismiss, call, or media actions were committed.",
+    "Only form validation, opening screens/overlays, and cancel actions were used."
+  ],
+  "rendered_evidence": {
+    "reference_pc": [
+      "group list",
+      "group creation",
+      "new-group action sheet opened; create action selected"
+    ],
+    "reference_phone_preview": [
+      "group list"
+    ],
+    "actual_pc": [
+      "group list",
+      "group creation blank/disabled state",
+      "group details",
+      "group management",
+      "group-name prompt opened/cancelled",
+      "group-notice prompt opened/cancelled",
+      "invite empty state",
+      "member management and owner action sheet opened/cancelled",
+      "group-request received and sent empty states",
+      "join form blank/disabled state",
+      "join form entered-ID state with confirmation opened/cancelled"
+    ],
+    "actual_phone_preview": [
+      "group creation blank/disabled state"
+    ],
+    "actual_pc_visual_observation": "Reference and actual use a centered right/content pane in the three-column desktop shell. Create page field/list/card structure and manage page sections align closely. The actual QA account has one friend and one visible group; reference seed has seven friends and three groups, so list length/content is not a layout defect.",
+    "actual_phone_visual_observation": "Actual create form remains within a narrow centered handset preview; its heading, name field, selection count, and friend row fit. Reference phone group list displayed in a framed handset with the reference demo description beside it."
+  },
+  "pages": [
+    {
+      "id": "groups",
+      "reference_source": "openim-redesign-demo.html:1251-1255; CSS .screen/.nav/.rowi/.empty/.sheet at 57-59, 71-79, 105-129, 288-298, desktop rules 400-439",
+      "actual_source": "example/features/im/groups/GroupsScreen.tsx",
+      "reference": {
+        "pc": "rendered: group list; plus sheet opened, create action followed",
+        "phone": "rendered: group list; plus button visible but could not open reliably in the phone preview"
+      },
+      "actual": {
+        "pc": "rendered: one joined group, pending entry and new action",
+        "phone": "source-only after auth session expired; group list not recaptured in phone mode"
+      },
+      "overlays": [
+        "new group action sheet offers create and join; cancel option exists in source; desktop sheet and create option opened in reference and actual",
+        "actual action sheet opened; create route navigated; join route navigated"
+      ]
+    },
+    {
+      "id": "groupCreate",
+      "reference_source": "openim-redesign-demo.html:1257-1261; CSS .field/.card/.rowi at 105-110, 135-168; desktop content width rule 410",
+      "actual_source": "example/features/im/groups/CreateGroupScreen.tsx; example/features/im/shared/FriendPicker.tsx",
+      "reference": {
+        "pc": "rendered: blank name, zero selected, disabled Create; friends visible",
+        "phone": "source-only"
+      },
+      "actual": {
+        "pc": "rendered: blank name, zero selected, disabled Create; one available contact visible",
+        "phone": "rendered: same blank/disabled state in narrow handset preview"
+      },
+      "overlays": [],
+      "validation": "Create remains disabled until a non-empty name and at least one friend are selected in both implementations (reference condition at line 1258; actual handler disabled predicate in CreateGroupScreen). Selection/create were not submitted."
+    },
+    {
+      "id": "groupJoin",
+      "reference_source": "openim-redesign-demo.html:1263-1267; confirmDlg source 581 and rendering 596-600",
+      "actual_source": "example/features/im/groups/JoinGroupScreen.tsx",
+      "reference": {
+        "pc": "source-only; route not rendered",
+        "phone": "source-only"
+      },
+      "actual": {
+        "pc": "rendered blank/disabled form; entered QA-GROUP-ID, opened confirmation, cancelled",
+        "phone": "source-only after auth session expired"
+      },
+      "overlays": [
+        "ID required to enable Apply; reason optional",
+        "with ID, confirmation shows requested group ID and Apply/Cancel; actual cancel verified",
+        "reference opens a confirmation before writing an application; no application submitted"
+      ],
+      "validation": "Reference disables Apply when trimmed ID is empty; actual disabled state observed empty and enabled after ID entry. No request was submitted."
+    },
+    {
+      "id": "groupReqs",
+      "reference_source": "openim-redesign-demo.html:1269-1276; .seg and .reqa CSS at 178-182, 371",
+      "actual_source": "example/features/im/groups/GroupRequestsScreen.tsx",
+      "reference": {
+        "pc": "source-only; incoming and outgoing states in source",
+        "phone": "source-only"
+      },
+      "actual": {
+        "pc": "rendered received and sent tabs; both showed empty state",
+        "phone": "source-only after auth session expired"
+      },
+      "overlays": [
+        "reference incoming pending requests expose Reject/Agree inline; no confirmation",
+        "actual conditionally shows Reject/Agree only when received, pending, and manage permission allowed",
+        "reference and actual outgoing/history rows render status text",
+        "source-only: no actual request rows existed to compare or interact with"
+      ],
+      "validation": "Actual request list empty; reference has one seeded pending incoming and one sent pending request. Data-dependent row/action comparisons are source-only."
+    },
+    {
+      "id": "group",
+      "reference_source": "openim-redesign-demo.html:1278-1287; CSS .hero/.acts at 185-188",
+      "actual_source": "example/features/im/groups/GroupScreen.tsx",
+      "reference": {
+        "pc": "source-only; seeded member group and no-member alternative in source",
+        "phone": "source-only"
+      },
+      "actual": {
+        "pc": "rendered owner group details: 646751305, 2 members, no notice, owner role",
+        "phone": "source-only after auth session expired"
+      },
+      "overlays": [
+        "owner sees group management entry; actual click opened group management",
+        "member group offers Send message and audio/video actions; deliberately not pressed",
+        "source-only: non-member alternative omits member actions"
+      ],
+      "validation": "Call/media controls were not activated. Actual group details and member count observed."
+    },
+    {
+      "id": "groupManage",
+      "reference_source": "openim-redesign-demo.html:1289-1297; confirmDlg/promptDlg source 581-584 and overlays 596-600",
+      "actual_source": "example/features/im/groups/GroupManagementScreen.tsx",
+      "reference": {
+        "pc": "source-only; owner/admin and non-manager variants in source",
+        "phone": "source-only"
+      },
+      "actual": {
+        "pc": "rendered owner controls: group name, notice, invite, member management, all-member mute switch, dissolve group",
+        "phone": "source-only after auth session expired"
+      },
+      "overlays": [
+        "rename prompt opened and cancelled",
+        "notice prompt opened and cancelled",
+        "leave/dissolve confirmation is source-only; not opened after sign-out",
+        "mute switch not toggled",
+        "invite link opens invite screen"
+      ],
+      "validation": "No changes saved; no mute, exit, or dissolve action performed."
+    },
+    {
+      "id": "members_view",
+      "reference_source": "openim-redesign-demo.html:1299-1314; memberCell 1277",
+      "actual_source": "example/features/im/groups/GroupManagementScreen.tsx (membersPage with manage absent)",
+      "reference": {
+        "pc": "source-only",
+        "phone": "source-only"
+      },
+      "actual": {
+        "pc": "source-only; actual group has only two members so details page does not expose View all members",
+        "phone": "source-only after auth session expired"
+      },
+      "overlays": [
+        "view-only rows route to profiles; no menu is defined for view mode"
+      ],
+      "validation": "Actual data did not expose the view-all route naturally; not claimed as rendered."
+    },
+    {
+      "id": "members_manage",
+      "reference_source": "openim-redesign-demo.html:1299-1314; action sheet and danger confirmation logic 1301-1310",
+      "actual_source": "example/features/im/groups/GroupManagementScreen.tsx (membersPage with manage=1); group-ui.tsx MemberRow",
+      "reference": {
+        "pc": "source-only",
+        "phone": "source-only"
+      },
+      "actual": {
+        "pc": "rendered 2 members; owner row and regular member row; clicked regular member to open action sheet, then cancelled",
+        "phone": "source-only after auth session expired"
+      },
+      "overlays": [
+        "actual owner menu displayed View profile, Set admin, Transfer owner, Mute 1 hour, Remove; cancel verified",
+        "reference source includes profile, admin toggle, owner transfer, mute/unmute, remove",
+        "transfer and remove confirmations are source-only; no mutation action chosen"
+      ],
+      "validation": "No role/mute/transfer/remove operations performed."
+    },
+    {
+      "id": "groupInvite",
+      "reference_source": "openim-redesign-demo.html:1316-1321",
+      "actual_source": "example/features/im/groups/InviteGroupScreen.tsx; example/features/im/shared/FriendPicker.tsx",
+      "reference": {
+        "pc": "source-only; candidate selection and invitation CTA in source",
+        "phone": "source-only"
+      },
+      "actual": {
+        "pc": "rendered empty state: no inviteable friends because the only QA friend already belongs to group",
+        "phone": "source-only after auth session expired"
+      },
+      "overlays": [
+        "reference uses selection and an Invite header action; no confirm step in reference source",
+        "actual uses friend picker and disabled Invite until selection; backend submit path not triggered"
+      ],
+      "validation": "Actual empty state is consistent with fixture membership and is not evidence of a product gap."
+    }
+  ],
+  "modal_coverage": {
+    "actually_opened_and_cancelled": [
+      "groups new-action sheet",
+      "groupJoin confirmation",
+      "groupManage rename prompt",
+      "groupManage notice prompt",
+      "members_manage action sheet"
+    ],
+    "source_only": [
+      "groupManage exit/dissolve confirm",
+      "members_manage transfer confirm",
+      "members_manage remove-member confirm",
+      "groupReqs incoming accept/reject result state",
+      "non-manager groupManage/member visibility states"
+    ],
+    "not_activated": [
+      "mute switches/actions",
+      "create group submit",
+      "join request submit",
+      "invite submit",
+      "accept/reject request",
+      "transfer, kick, exit, dissolve, voice/video calls, media"
+    ]
+  },
+  "confirmed_p2_gaps": [],
+  "limitations": [
+    "After opening the owner flows, the actual QA app navigated to /auth/login and showed a service reconnect message. Re-authentication was intentionally avoided to avoid taking over the shared QA A token; actual phone coverage for remaining pages is consequently source-only.",
+    "A transient Expo overlay reported this.event.setServer is not a function with stack frames from chrome-extension injected.js after direct route navigation; it cleared from the visible app. This is treated as browser injection/tooling noise, not as a confirmed product defect.",
+    "Reference phone preview visibly opened the group list, but the + control did not respond through the available UI automation; phone create/action sheets and other routes remain source-only."
+  ],
+  "overlay_source_comparison": {
+    "reference": {
+      "action_sheet": "CSS .sheet desktop centers at 340px; phone aligns to bottom with safe-area padding; options have 56px minimum height; Cancel is separate.",
+      "prompt_confirm": "CSS .dlg/.dlg-f and overlaysHTML provide centered prompt/confirm surfaces. Required rename prevents blank submit; join confirmation has Cancel/Apply.",
+      "source": "openim-redesign-demo.html:288-312, 581-600"
+    },
+    "actual": {
+      "action_sheet": "ProductSheet centers at desktop maxWidth 340, docks at phone bottom, and uses 56px minimum rows plus a separate cancel control.",
+      "prompt_confirm": "Confirm uses ProductModal with Cancel/confirm rows; ProductPromptField supports multiline notices and keyboard handling.",
+      "source": "example/features/im/ui/ProductSheet.tsx; example/features/im/shared/shared.tsx:121-170; example/features/im/shared/ProductPromptField.tsx"
+    },
+    "visual_result": "Inspected desktop create, management, rename/notice prompts, and owner member sheet show no confirmed P2 geometry or control gap against the reference."
+  }
+}

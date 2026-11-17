@@ -117,6 +117,9 @@ export function subscribeEvents (
     }
     if (!receipt?.conversationID || !Array.isArray(receipt.groupMessageReadInfo))
       return
+    for (const item of receipt.groupMessageReadInfo)
+      if (item.clientMsgID && Number.isSafeInteger(item.hasReadCount) && Number.isSafeInteger(item.unreadCount) && (item.hasReadCount || 0) >= 0 && (item.unreadCount || 0) >= 0)
+        runtime.syncMessageReaders(receipt.conversationID, item.clientMsgID, item.hasReadCount!, item.unreadCount!)
     const conversation = runtime.state.conversations.find(item => item.conversationID === receipt.conversationID && !!item.groupID)
     if (!conversation)
       return

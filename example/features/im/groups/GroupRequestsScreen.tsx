@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react'
+import { Text, View } from 'react-native'
 import { directory } from '../application/directory'
 import {
   checkGroupManagement,
@@ -9,11 +10,16 @@ import { useOpenIM } from '../application/store'
 import LoginScreen from '../auth/LoginScreen'
 import { mergeDirectory } from '../domain/directory'
 import { groupManagementPermissions, type GroupApplication } from '../domain/group-management'
-import { Action, Confirm, Field, Label, Page, PersonRow } from '../shared/shared'
+import { showProductToast } from '../shared/ProductToast'
+import { Action } from '../shared/shared'
 import { useDirectoryEvents } from '../shared/useDirectoryEvents'
 import { useTask } from '../shared/useTask'
+import { ProductAvatar, ProductListRow, ProductButton, ProductSegment } from '../ui/primitives'
+import { ProductPage, ProductEmpty } from '../ui/ProductPage'
+import { useProductTheme } from '../ui/theme'
+import { GroupAvatar } from './group-ui'
 
-export default function GroupRequestsScreen() {
+export default function GroupRequestsScreen () {
   const { session } = useOpenIM()
   return session ? (
     <Requests key={`${session.userID}:${session.imToken}`} userID={session.userID} />
@@ -21,39 +27,38 @@ export default function GroupRequestsScreen() {
     <LoginScreen />
   )
 }
-function Requests({ userID }: { userID: string }) {
+function Requests ({ userID }: { userID: string }) {
   const [received, setReceived] = useState(true)
   return (
     <RequestList
       key={String(received)}
       received={received}
       userID={userID}
-      switchList={() => setReceived(!received)}
+      switchList={setReceived}
     />
   )
 }
-function RequestList({
+function RequestList ({
   received,
   userID,
   switchList,
 }: {
   received: boolean
   userID: string
-  switchList: () => void
+  switchList: (received: boolean) => void
 }) {
+  const t = useProductTheme()
   const task = useTask()
   const { run } = task
   const [items, setItems] = useState<GroupApplication[]>([])
   const [allowed, setAllowed] = useState<string[]>([])
   const [offset, setOffset] = useState(0)
   const [more, setMore] = useState(false)
-  const [message, setMessage] = useState('')
-  const [notice, setNotice] = useState('')
-  const [confirm, setConfirm] = useState<{ item: GroupApplication, accept: boolean }>()
+  const setNotice = showProductToast
   const load = useCallback(
     async (current: () => boolean, offset = 0) => {
       const page = await groupManagement.requests(received, offset)
-      if (!current()) 
+      if (!current())
         return
       const groups = [...new Set(page.map(item => item.groupID))]
       const permissions = received
@@ -80,55 +85,89 @@ function RequestList({
     void refresh()
   }, [refresh])
   useDirectoryEvents(groupApplicationEvents, refresh, task.busy)
+  const respond = (item: GroupApplication, accept: boolean) => {
+    void run(async current => {
+      await checkGroupManagement(item.groupID, userID, current, 'manage')
+      if (!current())
+        return
+      await groupManagement.respond(item.groupID, item.userID, accept, '')
+      if (!current())
+        return
+      setNotice('申请已处理')
+      await load(current)
+    })
+  }
   return (
-    <Page title={received ? '收到的入群申请' : '发出的入群申请'} {...task}>
-      <Action
-        title={received ? '查看我发出的申请' : '查看收到的申请'}
-        disabled={task.busy}
-        onPress={switchList}
-      />
-      <Action
-        title='刷新申请'
-        disabled={task.busy}
-        onPress={() => {
-          void refresh()
-        }}
-      />
-      {!!notice && <Label>{notice}</Label>}
-      {!items.length && !task.busy && <Label>暂无入群申请</Label>}
-      {items.map(item => (
-        <PersonRow
+    <ProductPage
+      white
+      title='入群申请'
+      {...task}
+      initialLoading={!task.hasSucceeded}
+      skeleton='list'
+      onRetry={() => {
+        void refresh()
+      }}
+      headerContent={
+        <ProductSegment
+          options={[
+            { value: 'in', label: '收到的申请' },
+            { value: 'out', label: '发出的申请' },
+          ]}
+          value={received ? 'in' : 'out'}
+          onChange={value => {
+            if (!task.busy)
+              switchList(value === 'in')
+          }}
+        />
+      }
+    >
+      {!items.length && !task.busy && <ProductEmpty title='暂无入群申请' />}
+      {items.map((item, index) => (
+        <ProductListRow
+          small
+          last={index === items.length - 1}
           key={`${item.groupID}:${item.userID}`}
-          person={{ userID: item.userID, nickname: item.nickname, faceURL: item.userFaceURL }}
-        >
-          <Label>
-            {item.groupName || item.groupID} ·{' '}
-            {item.handleResult === 0 ? '待审核' : item.handleResult === 1 ? '已同意' : '已拒绝'}
-          </Label>
-          <Label>{item.reqMsg || '未填写申请理由'}</Label>
-          {!!item.handledMsg && <Label>处理说明：{item.handledMsg}</Label>}
-          {received && item.handleResult === 0 && allowed.includes(item.groupID) && (
-            <>
-              <Action
-                title='同意'
-                disabled={task.busy}
-                onPress={() => {
-                  setMessage('')
-                  setConfirm({ item, accept: true })
-                }}
+          title={received ? item.nickname || item.userID : item.groupName || item.groupID}
+          subtitle={`${received ? `申请加入 ${item.groupName || item.groupID} · ` : ''}${item.reqMsg || '未填写申请理由'}${item.handledMsg ? ` · 处理说明：${item.handledMsg}` : ''}`}
+          leading={
+            received ? (
+              <ProductAvatar
+                id={item.userID}
+                title={item.nickname || item.userID}
+                uri={item.userFaceURL}
+                size={44}
               />
-              <Action
-                title='拒绝'
-                danger
-                disabled={task.busy}
-                onPress={() => {
-                  setMessage('')
-                  setConfirm({ item, accept: false })
-                }}
+            ) : (
+              <GroupAvatar
+                group={{ groupID: item.groupID, groupName: item.groupName || item.groupID }}
+                size={44}
               />
-            </>
-          )}
-        </PersonRow>
+            )
+          }
+          trailing={
+            received && item.handleResult === 0 && allowed.includes(item.groupID) ? (
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                <ProductButton
+                  compact
+                  variant='gray'
+                  title='拒绝'
+                  disabled={task.busy}
+                  onPress={() => respond(item, false)}
+                />
+                <ProductButton
+                  compact
+                  title='同意'
+                  disabled={task.busy}
+                  onPress={() => respond(item, true)}
+                />
+              </View>
+            ) : (
+              <Text style={{ fontSize: 13, color: t.text3 }}>
+                {item.handleResult === 0 ? '待处理' : item.handleResult === 1 ? '已通过' : '已拒绝'}
+              </Text>
+            )
+          }
+        />
       ))}
       {more && (
         <Action
@@ -139,34 +178,6 @@ function RequestList({
           }}
         />
       )}
-      {confirm && (
-        <>
-          <Field value={message} onChangeText={setMessage} placeholder='处理说明（选填）' />
-          <Confirm error={task.error}
-            busy={task.busy}
-            message={`${confirm.accept ? '同意' : '拒绝'} ${confirm.item.nickname || confirm.item.userID} 加入 ${confirm.item.groupName || confirm.item.groupID}？`}
-            onCancel={() => setConfirm(undefined)}
-            onConfirm={() => {
-              void run(async current => {
-                await checkGroupManagement(confirm.item.groupID, userID, current, 'manage')
-                if (!current()) 
-                  return
-                await groupManagement.respond(
-                  confirm.item.groupID,
-                  confirm.item.userID,
-                  confirm.accept,
-                  message
-                )
-                if (!current()) 
-                  return
-                setConfirm(undefined)
-                setNotice('申请已处理')
-                await load(current)
-              })
-            }}
-          />
-        </>
-      )}
-    </Page>
+    </ProductPage>
   )
 }

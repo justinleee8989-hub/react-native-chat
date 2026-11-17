@@ -1,0 +1,242 @@
+{
+  "reference": "/Users/czzz/Downloads/openim-redesign-demo.html served at http://127.0.0.1:36993",
+  "actual": "/Users/czzz/work/kson/code/github/IM/react-native-chat/example/features/im served at http://127.0.0.1:35881",
+  "readOnly": true,
+  "viewports": {
+    "desktop": {
+      "browserViewport": "full Chrome window; exact dimensions unavailable from CUA screenshot metadata",
+      "referenceFrameApprox": "1360×880 frame, centered; apparent y-origin differs between captures, so no page-specific offset claimed"
+    },
+    "phonePreview": {
+      "actualFrameApprox": "x=1084..1476, y=157..1002 (392x845)",
+      "note": "Actual Contacts phone preview was observed. Other phone routes were not visually checked in this pass."
+    }
+  },
+  "session": "Actual QA account B authenticated; service briefly redirected to login during inspection, then restored the existing session and security page rendered. No mutations were submitted.",
+  "matrix": [
+    {
+      "page": "login",
+      "reference": {
+        "desktop": "rendered; default demo@openim.io and masked password visible",
+        "phone": "not visually checked"
+      },
+      "actual": {
+        "desktop": "rendered; login and eye button visible; later service-unavailable/retry state rendered",
+        "phone": "not visually checked"
+      },
+      "source": "LoginScreen.tsx + AuthForm.tsx",
+      "differences": [
+        "Actual submit is truly disabled until email/password populated; reference login button appears active at default page."
+      ],
+      "modalsSheets": "none; eye reveal inline button; advanced server endpoint disclosure inline"
+    },
+    {
+      "page": "register",
+      "reference": {
+        "desktop": "rendered; 6 fields (email, nickname, email code, password, confirm, invite); submit visually saturated"
+      },
+      "actual": {
+        "desktop": "rendered; same field sequence; email is prefilled from navigation query; submit visibly disabled/pale"
+      },
+      "phone": "not visually checked",
+      "source": "AccountScreen.tsx + AuthForm.tsx",
+      "differences": [
+        "Actual EXPO_PUBLIC_OPENIM_EMAIL_VERIFICATION_ENABLED build flag is unset/false: verification notice and disabled controls are expected live-service capability state; reference mock keeps its controls visually active."
+      ],
+      "modalsSheets": "none; inline validation and toast notice"
+    },
+    {
+      "page": "reset",
+      "reference": {
+        "desktop": "rendered; email, code, new password, confirm, reset button, return link"
+      },
+      "actual": {
+        "desktop": "rendered; same field structure; email prefilled; reset button disabled"
+      },
+      "phone": "not visually checked",
+      "source": "AccountScreen.tsx + AuthForm.tsx",
+      "differences": [
+        "Actual EXPO_PUBLIC_OPENIM_EMAIL_VERIFICATION_ENABLED build flag is unset/false: verification notice and disabled controls are expected live-service capability state; reference mock keeps its controls visually active."
+      ],
+      "modalsSheets": "none; inline validation and toast notice"
+    },
+    {
+      "page": "contacts",
+      "reference": {
+        "desktop": "rendered; 7 friends, 1 pending friend badge, 1 group badge; empty right panel"
+      },
+      "actual": {
+        "desktop": "rendered; 1 friend, no friend-pending badge, group count 1; empty right panel"
+      },
+      "phonePreview": {
+        "actual": "rendered; contacts list fitted 392×845 frame, same one friend + group count",
+        "reference": "not visually checked"
+      },
+      "source": "ContactsScreen.tsx + ContactLayout.tsx",
+      "differences": [
+        "Data differs: reference mock has 7 friends and one incoming application; actual QA account has 1 friend and one already-approved request. Do not interpret this as row geometry mismatch.",
+        "Visible desktop shell and list row geometry are close; same search, new friends and groups entries."
+      ],
+      "modalsSheets": "Long-press friend opens ContactActions sheet per source; not opened because no long-press test was included in scope."
+    },
+    {
+      "page": "addFriend",
+      "reference": {
+        "desktop": "rendered empty query; ID input, disabled find, helper names u_qian/u_zhao/u_he"
+      },
+      "actual": {
+        "desktop": "rendered empty query; ID input, disabled find"
+      },
+      "phone": "not visually checked",
+      "source": "AddFriendScreen.tsx + ContactLayout.tsx",
+      "differences": [
+        "Reference includes demo-only searchable IDs u_qian/u_zhao/u_he; actual omits this mock helper, an expected demo-content difference."
+      ],
+      "modalsSheets": "Search result can show request explanation and disabled/already-sent states; not executed because lookup would query service."
+    },
+    {
+      "page": "newFriends",
+      "reference": {
+        "desktop": "rendered; received/sent segmented tabs; no action buttons for current approved state"
+      },
+      "actual": {
+        "desktop": "rendered; received/sent segmented tabs; one approved outgoing request in received view"
+      },
+      "phone": "not visually checked",
+      "source": "FriendRequestsScreen.tsx + ContactLayout.tsx",
+      "differences": [
+        "Different seeded rows and tab counts: actual has approved outgoing QA request; reference has 1 pending incoming request. No accept/reject clicked."
+      ],
+      "modalsSheets": "No modal; accept/reject actions inline and intentionally not used."
+    },
+    {
+      "page": "profile",
+      "reference": {
+        "desktop": "rendered on first friend; action buttons + nickname/remark/user ID rows"
+      },
+      "actual": {
+        "desktop": "rendered on the QA friend; same hierarchy and actions"
+      },
+      "phone": "not visually checked",
+      "source": "PersonScreen.tsx + ContactLayout.tsx",
+      "differences": [
+        "Text and IDs vary with data. Profile panel hierarchy/geometry closely matches visually."
+      ],
+      "modalsSheets": "More opens profileMore route; add-to-contacts navigates addFriend. Message/call not activated."
+    },
+    {
+      "page": "profileMore",
+      "reference": {
+        "desktop": "rendered; set remark, block switch, delete friend"
+      },
+      "actual": {
+        "desktop": "rendered; same three controls; row positions align within a few px"
+      },
+      "phone": "not visually checked",
+      "source": "PersonScreen.tsx, ContactActions.tsx",
+      "differences": [],
+      "modalsSheets": "Actual source defines remark Confirm, block Confirm, delete Confirm. None opened/submitted because that would enter mutation flow."
+    },
+    {
+      "page": "me",
+      "reference": {
+        "desktop": "rendered; profile card, notify/privacy/security, calls/appearance, logout/reset demo"
+      },
+      "actual": {
+        "desktop": "rendered; profile card and same setting rows; logout"
+      },
+      "phone": "not visually checked",
+      "source": "navigation/MyScreen.tsx",
+      "differences": [
+        "No page-specific vertical offset confirmed. The captures show different overall frame y-origins; do not treat that as an in-page difference. Source spacing is closely aligned: actual MyScreen uses marginTop 12 and gap 24; reference first card margin-top 12 and card stack margin 24."
+      ],
+      "modalsSheets": "Actual appearance sheet and logout confirmation are source-audited; reference appearance sheet/logout and reset-demo confirmation are source-audited. None was opened in this pass."
+    },
+    {
+      "page": "editProfile",
+      "reference": {
+        "desktop": "rendered with avatar picker, name, immutable ID/email"
+      },
+      "actual": {
+        "desktop": "rendered with avatar picker, nickname, immutable ID/email"
+      },
+      "phone": "not visually checked",
+      "source": "profile/SettingsScreen.tsx",
+      "differences": [
+        "No page-specific vertical offset confirmed; apparent 25–28px shift tracks the overall frame y-origin and is not reported as an in-page mismatch. Source top spacing is closely aligned: actual avatar wrapper paddingTop/paddingBottom 20 and action marginTop 8; reference .hero padding 20px 24px 4px plus inline padding-bottom 20 and action margin-top 8. QA account has no email, so actual shows em dash while reference demo shows demo@openim.io."
+      ],
+      "modalsSheets": "Actual avatar menu sheet (photo library/camera) and reference sheet are source-audited; neither was opened in this pass. Save stays disabled until change."
+    },
+    {
+      "page": "notify",
+      "reference": {
+        "desktop": "rendered; global do-not-disturb switch off + helper copy"
+      },
+      "actual": {
+        "desktop": "rendered; same off state and helper copy"
+      },
+      "phone": "not visually checked",
+      "source": "profile/SettingsScreen.tsx",
+      "differences": [
+        "Rendered layout and copy appear aligned; switch was not toggled."
+      ],
+      "modalsSheets": "No modal; preference switch intentionally not changed."
+    },
+    {
+      "page": "blacklist",
+      "reference": {
+        "desktop": "rendered; empty card and helper copy"
+      },
+      "actual": {
+        "desktop": "rendered; empty card and helper copy"
+      },
+      "phone": "not visually checked",
+      "source": "profile/SettingsScreen.tsx",
+      "differences": [
+        "Empty state actual text uses t.text (fontSize 16); reference empty() uses a muted empty-state style, visibly grayer. Other empty-card structure is similar."
+      ],
+      "modalsSheets": "Each populated row includes recoverable remove action inline; no rows were present."
+    },
+    {
+      "page": "security",
+      "reference": {
+        "desktop": "rendered visually after navigating from reference me settings; fields/help and disabled submit observed"
+      },
+      "actual": {
+        "desktop": "rendered visually after restoring QA B session; fields/help and disabled submit observed"
+      },
+      "phone": "not visually checked",
+      "source": "profile/PasswordForm.tsx",
+      "differences": [
+        "No material visual difference observed in the desktop form. Actual and reference both show current/new/confirm fields, helper copy, disabled submit, and require confirmation before password mutation."
+      ],
+      "modalsSheets": "Confirmation dialog is source-audited but was not opened; no password change was attempted."
+    }
+  ],
+  "commonModalInventoryFromReferenceSource": [
+    "profileMore block confirmation",
+    "profileMore delete friend confirmation",
+    "remark prompt",
+    "editProfile avatar photo source sheet",
+    "me appearance sheet",
+    "logout confirmation",
+    "reset demo confirmation",
+    "security password-change confirmation"
+  ],
+  "commonModalInventoryFromActualSource": [
+    "ContactActions long-press friend action sheet",
+    "profile remark confirmation",
+    "profile block confirmation",
+    "profile delete confirmation",
+    "editProfile avatar source sheet",
+    "me appearance sheet",
+    "logout confirmation",
+    "security password-change confirmation"
+  ],
+  "unverified": [
+    "Phone preview for every route besides Contacts",
+    "Actual security rendered pixels",
+    "Actual server-backed email availability/verification flows",
+    "Any mutated state and resulting confirmation/success view"
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "status": "passed",
+  "baseURL": "http://127.0.0.1:10008",
+  "startedAt": "2026-11-16T17:31:02.622Z",
+  "accounts": {
+    "A": "authenticated",
+    "B": "authenticated"
+  },
+  "initialActiveCalls": 0,
+  "cases": [
+    {
+      "name": "caller_cancel",
+      "room": "imcall-ec8bee4f-d136-48ad-b634-d7d8cc6ea779",
+      "createStatus": "ringing",
+      "serverRecordDelivery": true,
+      "conversationID": "si_1494717211_6629292356",
+      "callerHistoryReadable": true,
+      "calleeHistoryReadable": true,
+      "status": "canceled",
+      "kind": "cancel",
+      "durationSeconds": 0,
+      "eventIDMatchesRoom": true
+    },
+    {
+      "name": "callee_reject",
+      "room": "imcall-ef59afdc-189e-434d-b7db-8e2ec8c6d99c",
+      "createStatus": "ringing",
+      "serverRecordDelivery": true,
+      "conversationID": "si_1494717211_6629292356",
+      "callerHistoryReadable": true,
+      "calleeHistoryReadable": true,
+      "status": "rejected",
+      "kind": "reject",
+      "durationSeconds": 0,
+      "eventIDMatchesRoom": true
+    },
+    {
+      "name": "ring_timeout",
+      "room": "imcall-cc11df3d-13f5-4f6f-a79d-2700ed00cddc",
+      "createStatus": "ringing",
+      "serverRecordDelivery": true,
+      "waitedForExpiryMs": 46498,
+      "conversationID": "si_1494717211_6629292356",
+      "callerHistoryReadable": true,
+      "calleeHistoryReadable": true,
+      "status": "missed",
+      "kind": "missed",
+      "durationSeconds": 0,
+      "eventIDMatchesRoom": true
+    }
+  ],
+  "failure": null,
+  "finishedAt": "2026-11-16T17:31:59.507Z"
+}

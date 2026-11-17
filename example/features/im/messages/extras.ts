@@ -40,3 +40,29 @@ export async function messageExtras (session: Session, url: string, request: Rec
     clearTimeout(timer)
   }
 }
+
+/** Resolve freshly sent SDK messages against authenticated history, never guess a sequence. */
+export async function resolveExtraSequence (
+  message: { clientMsgID: string, seq?: number },
+  loadPage: (cursor: string) => Promise<{ messages: { clientMsgID: string, seq?: number }[], hasMore: boolean, cursor: string }>
+) {
+  if (Number.isSafeInteger(message.seq) && (message.seq || 0) > 0)
+    return message.seq!
+  let cursor = ''
+  const visited = new Set<string>([''])
+  while (true) {
+    const page = await loadPage(cursor)
+    const found = page.messages.find(item => item.clientMsgID === message.clientMsgID)
+    if (found) {
+      if (Number.isSafeInteger(found.seq) && (found.seq || 0) > 0)
+        return found.seq!
+      throw new Error('消息尚未同步，请稍后重试')
+    }
+    if (!page.hasMore)
+      throw new Error('消息尚未同步或已不可访问，请稍后重试')
+    if (!page.cursor || visited.has(page.cursor))
+      throw new Error('历史分页未前进，请重试')
+    visited.add(page.cursor)
+    cursor = page.cursor
+  }
+}

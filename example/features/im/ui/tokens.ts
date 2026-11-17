@@ -1,0 +1,5 @@
+export const productMetrics = { desktop: 900, rail: 72, master: 340, frameWidth: 1360, frameHeight: 880, cardRadius: 16, fieldRadius: 12, rowHeight: 72, headerHeight: 52 }
+export const productPalette = {
+  light: { bg: '#F4F4F6', page: '#FFFFFF', surface: '#FFFFFF', surface2: '#EEEEF1', switchTrack: '#EEEEF1', text: '#111113', text2: '#6B6B76', text3: '#A3A3AD', line: 'rgba(17,17,19,.08)', accent: '#3366FF', accentWeak: 'rgba(51,102,255,.10)', onAccent: '#FFFFFF', danger: '#E5484D', dangerWeak: 'rgba(229,72,77,.10)', ok: '#2FB67C', bubble: '#FFFFFF', bar: 'rgba(255,255,255,.82)', scrim: 'rgba(0,0,0,.38)', stage: '#E9E9EE', shadow: '0 12px 40px rgba(17,17,19,.14)' },
+  dark: { bg: '#0B0B0D', page: '#0B0B0D', surface: '#17171A', surface2: '#232327', switchTrack: '#3A3A40', text: '#F3F3F5', text2: '#9C9CA8', text3: '#62626C', line: 'rgba(255,255,255,.09)', accent: '#5C85FF', accentWeak: 'rgba(92,133,255,.18)', onAccent: '#FFFFFF', danger: '#FF6369', dangerWeak: 'rgba(255,99,105,.16)', ok: '#3DD68C', bubble: '#1E1E22', bar: 'rgba(11,11,13,.80)', scrim: 'rgba(0,0,0,.6)', stage: '#050506', shadow: '0 12px 40px rgba(0,0,0,.5)' },
+}

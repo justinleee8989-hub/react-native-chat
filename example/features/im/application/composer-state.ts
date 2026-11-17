@@ -47,6 +47,7 @@ export function createComposerState (storage: DraftStorage) {
   }
   const queues = new Map<string, Promise<unknown>>()
   const revisions = new Map<string, number>()
+  const textVersions = new Map<string, number>()
   // A delivered draft must not reappear when persistent cleanup is unavailable.
   const clearedText = new Set<string>()
   const clearedMentions = new Set<string>()
@@ -71,7 +72,15 @@ export function createComposerState (storage: DraftStorage) {
   function saveFor (account: string, version: number, conversationID: string, text: string) {
     if (!account)
       return Promise.resolve()
-    return enqueue(account, version, conversationID, () => storage.write(account, conversationID, text))
+    const draftKey = key(account, conversationID)
+    const textVersion = (textVersions.get(draftKey) || 0) + 1
+    textVersions.set(draftKey, textVersion)
+    // Native SDK writes cross the bridge. Persist the newest pending value rather than
+    // every intermediate keystroke, so successful-send cleanup cannot sit behind a backlog.
+    return enqueue(account, version, conversationID, async () => {
+      if (textVersions.get(draftKey) === textVersion)
+        await storage.write(account, conversationID, text)
+    })
   }
 
   return {
@@ -151,6 +160,7 @@ export function createComposerState (storage: DraftStorage) {
       syncScope()
       if (account === userID && version === generation && revision === (revisions.get(revisionKey) || 0)) {
         revisions.set(revisionKey, revision + 1)
+        textVersions.set(revisionKey, (textVersions.get(revisionKey) || 0) + 1)
         clearedText.add(revisionKey)
         clearedMentions.add(revisionKey)
         await enqueue(account, version, conversationID, async () => {

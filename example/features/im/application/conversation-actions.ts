@@ -2,7 +2,7 @@ import type { Conversation } from '../domain/types'
 import type { ConversationService } from '../infrastructure/openim/conversation-service'
 import type { Runtime } from './runtime'
 
-export function createConversationActions (runtime: Runtime, service: ConversationService) {
+export function createConversationActions (runtime: Runtime, service: ConversationService, flushSnapshot: () => Promise<void> = async () => {}) {
   const pending = new Set<string>()
   async function apply<T> (ids: string[], operation: string, remote: (id: string) => Promise<T>, local: (id: string, result: T) => void) {
     if (!runtime.state.session)
@@ -34,14 +34,30 @@ export function createConversationActions (runtime: Runtime, service: Conversati
     runtime.historyRevision[id] = (runtime.historyRevision[id] || 0) + 1
     const messages = { ...runtime.state.messages }
     const historyEnd = { ...runtime.state.historyEnd }
+    const historyLoading = { ...runtime.state.historyLoading }
+    const historyPaging = { ...runtime.state.historyPaging }
     delete messages[id]
     delete historyEnd[id]
+    delete historyLoading[id]
+    delete historyPaging[id]
+    runtime.clearMessageReadInfo(id)
     const conversations = remove
       ? runtime.state.conversations.filter(item => item.conversationID !== id)
       : runtime.state.conversations.map(item => item.conversationID === id ? { ...item, latestMsg: '', unreadCount: 0 } : item)
     if (remove && runtime.activeID === id)
       runtime.activeID = ''
-    runtime.update({ messages, historyEnd, conversations })
+    runtime.update({ messages, historyEnd, historyLoading, historyPaging, conversations })
+  }
+  async function changeHistory (ids: string[], remove: boolean) {
+    const epoch = runtime.generation
+    try {
+      await apply(ids, remove ? 'remove' : 'clear', remove ? service.remove : service.clear, id => clearLocal(id, remove))
+    } finally {
+      // Also flush partial batches and retries whose IDs have already left memory.
+      // The bound writer captures this account before any asynchronous storage work.
+      if (epoch === runtime.generation && runtime.state.session)
+        await flushSnapshot()
+    }
   }
   return {
     setPinned: (ids: string[], pinned: boolean) => apply(ids, 'pin', id => service.pin(id, pinned), id => patch(id, { isPinned: pinned })),
@@ -57,7 +73,7 @@ export function createConversationActions (runtime: Runtime, service: Conversati
         return service.archive(id, conversation.ex, userID, archived, conversation.conversationType, conversation.groupID || conversation.userID || id)
       }, (id, ex) => patch(id, { ex, ...(archived ? { isPinned: false } : {}) }))
     },
-    clearConversation: (id: string) => apply([id], 'clear', service.clear, value => clearLocal(value, false)),
-    removeConversations: (ids: string[]) => apply(ids, 'remove', service.remove, id => clearLocal(id, true)),
+    clearConversation: (id: string) => changeHistory([id], false),
+    removeConversations: (ids: string[]) => changeHistory(ids, true),
   }
 }

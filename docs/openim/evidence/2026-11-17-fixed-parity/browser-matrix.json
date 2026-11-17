@@ -1,0 +1,208 @@
+{
+  "date": "2026-11-17",
+  "pcViewport": "1280x720",
+  "h5Viewport": "390x844",
+  "pages": {
+    "chats": {
+      "pc": "paired screenshots observed",
+      "h5": "paired screenshots observed"
+    },
+    "newChat": {
+      "pc": "paired screenshots observed",
+      "h5": "paired screenshots observed"
+    },
+    "contacts": {
+      "pc": "paired screenshots observed",
+      "h5": "paired screenshots observed"
+    },
+    "addFriend": {
+      "pc": "paired screenshots observed",
+      "h5": "paired screenshots observed"
+    },
+    "newFriends": {
+      "pc": "paired screenshots observed",
+      "h5": "paired screenshots observed"
+    },
+    "profile": {
+      "pc": "paired screenshots observed",
+      "h5": "paired screenshots observed"
+    },
+    "profileMore": {
+      "pc": "paired screenshots observed",
+      "h5": "paired screenshots observed"
+    },
+    "groups": {
+      "pc": "paired screenshots observed",
+      "h5": "paired screenshots observed"
+    },
+    "groupCreate": {
+      "pc": "paired screenshots observed",
+      "h5": "paired screenshots observed"
+    },
+    "groupJoin": {
+      "pc": "paired screenshots observed",
+      "h5": "paired screenshots observed"
+    },
+    "groupReqs": {
+      "pc": "paired screenshots observed",
+      "h5": "paired screenshots observed"
+    },
+    "group": {
+      "pc": "paired screenshots observed",
+      "h5": "paired screenshots observed"
+    },
+    "groupManage": {
+      "pc": "paired screenshots observed",
+      "h5": "paired screenshots observed"
+    },
+    "members": {
+      "pc": "paired screenshots observed",
+      "h5": "paired screenshots observed"
+    },
+    "groupInvite": {
+      "pc": "paired screenshots observed",
+      "h5": "paired screenshots observed"
+    },
+    "me": {
+      "pc": "paired screenshots observed",
+      "h5": "paired screenshots observed"
+    },
+    "editProfile": {
+      "pc": "paired screenshots observed",
+      "h5": "paired screenshots observed"
+    },
+    "notify": {
+      "pc": "paired screenshots observed",
+      "h5": "paired screenshots observed"
+    },
+    "blacklist": {
+      "pc": "paired screenshots observed",
+      "h5": "paired screenshots observed"
+    },
+    "security": {
+      "pc": "paired screenshots observed",
+      "h5": "paired screenshots observed"
+    },
+    "calls": {
+      "pc": "paired screenshots observed",
+      "h5": "paired screenshots observed"
+    },
+    "chat": {
+      "pc": "paired screenshots observed",
+      "h5": "paired screenshots observed"
+    },
+    "chatInfo": {
+      "pc": "paired screenshots observed",
+      "h5": "paired screenshots observed"
+    },
+    "search": {
+      "pc": "paired screenshots observed",
+      "h5": "paired screenshots observed"
+    },
+    "media": {
+      "pc": "paired screenshots observed",
+      "h5": "paired screenshots observed"
+    },
+    "archived": {
+      "pc": "paired screenshots observed",
+      "h5": "paired screenshots observed"
+    },
+    "readers": {
+      "pc": "paired screenshots observed",
+      "h5": "paired screenshots observed"
+    },
+    "login": {
+      "pc": "paired screenshots observed",
+      "h5": "paired screenshots observed"
+    },
+    "register": {
+      "pc": "paired screenshots observed",
+      "h5": "paired screenshots observed"
+    },
+    "reset": {
+      "pc": "paired screenshots observed",
+      "h5": "paired screenshots observed"
+    }
+  },
+  "overlaysPC": [
+    "new menu",
+    "group new menu",
+    "remark prompt + cancel",
+    "delete friend confirm + cancel",
+    "group rename prompt + cancel",
+    "group notice multiline prompt + cancel",
+    "member action sheet",
+    "transfer ownership confirm + cancel",
+    "appearance sheet + cancel",
+    "clear conversation confirm + cancel",
+    "delete conversation confirm + cancel",
+    "attachment panel",
+    "card picker",
+    "emoji panel",
+    "outgoing call + cancel (real A to B)",
+    "incoming call observed on B",
+    "message context menu",
+    "reply compose cancel",
+    "edit compose cancel",
+    "forward picker cancel",
+    "archive populated/empty & unarchive QA restored",
+    "readers read/unread toggle",
+    "real incoming A to B timeout",
+    "dark mode new chat form + light restore",
+    "newChat helper fix rechecked",
+    "three-line composer expand + shrink/clear passed"
+  ],
+  "differences": [
+    "归档入口图标、64px行高、总数与桌面680px最大内容宽度：修复并在PC/H5复测",
+    "发起聊天及添加好友提示间距、通用行/Action Sheet分隔线：修复并复测",
+    "名片与转发选择页透明行底色、顶部形状、分隔线：PC/H5复测通过",
+    "注册页滚动条占位导致水平偏移：修复后PC与附件截图对照通过",
+    "发送按钮40px对齐；多行输入展开、缩回与清空：1280px、390px、320px复测通过",
+    "已编辑标签窄屏拆字：320px复测通过",
+    "已读人数被SDK旧历史覆盖：独立overlay、冷启动查询、竞态保护；刷新/返回仍显示1人已读"
+  ],
+  "notes": [
+    "QA data differs intentionally from prototype seeds",
+    "No destructive action performed in this round",
+    "Pending vs accepted states not equivalent; record state coverage separately",
+    "Real call A→B canceled successfully; B overlay closed and A bubble changed 已取消. Prototype auto-answers, intentionally not copied.",
+    "H5 reference phone inner390 width; app actual viewport390x844. Reference status bar excluded in position comparison.",
+    "2026-11-17 13:09 B→A rejected, A shows 已拒接/B 对方已拒接. A→B expires naturally after45sec; both bubbles 未接通话 and overlays dismissed. No media connected.",
+    "测试草稿已清空、QA群恢复未归档、外观恢复跟随系统。",
+    "仅本轮独立QA账号与群1699132536；没有执行破坏性操作。",
+    "页面基线是30页×2布局；状态覆盖仅限明列项目，不把原生设备和视频媒体计为通过。",
+    "手机媒体图片/文件/链接tab切换、返回链实际操作通过；本群图片/链接为空、文件2条。"
+  ],
+  "overlaysH5": [
+    "new/group menus",
+    "remark prompt",
+    "member action sheet",
+    "transfer confirm cancel",
+    "group notice",
+    "dissolve confirm cancel",
+    "avatar choices",
+    "appearance sheet cancel",
+    "logout confirm cancel",
+    "message long press context menu",
+    "reply composer + cancel",
+    "edit composer + cancel",
+    "attachment panel",
+    "contact card picker + cancel",
+    "forward picker + target confirmation",
+    "real incoming call B to A rejected",
+    "outgoing A to B natural timeout, both overlays close",
+    "call history canceled/rejected/missed",
+    "320px narrow chat and composer checks",
+    "emoji insert draft then clear",
+    "390px/320px multiline expand, shrink and clear",
+    "image/file/link tabs and return navigation"
+  ],
+  "verification": {
+    "ui": "44 suites / 187 tests passed",
+    "openimNode": "256 tests passed",
+    "types": "root and example passed",
+    "lint": "passed",
+    "diffCheck": "passed",
+    "webExport": "/tmp/im-parity-final-web"
+  }
+}

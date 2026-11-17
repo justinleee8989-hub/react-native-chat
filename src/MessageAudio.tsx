@@ -32,7 +32,7 @@ import {
 } from './components/voiceWaveform'
 import { WaveformPlayer, isWaveformAvailable } from './components/WaveformPlayer'
 import { useThemedStyles } from './hooks/useTheme'
-import { IMessage, MessageAudioProps } from './Models'
+import { AudioPlayerRenderProps, IMessage, MessageAudioProps } from './Models'
 import { getExpoAudio } from './optional'
 import { ChatTheme } from './Theme'
 
@@ -56,6 +56,7 @@ const ExpoAudioPlayer = ({
   message,
   isViewOnce = false,
   transcription,
+  renderPlayer,
 }: {
   uri: string
   position: 'left' | 'right'
@@ -66,6 +67,7 @@ const ExpoAudioPlayer = ({
   message?: IMessage
   isViewOnce?: boolean
   transcription?: string
+  renderPlayer?: (props: AudioPlayerRenderProps) => React.ReactNode
 }) => {
   const player = expoAudio.useAudioPlayer(uri)
   const status = expoAudio.useAudioPlayerStatus(player)
@@ -195,6 +197,9 @@ const ExpoAudioPlayer = ({
       : progress
   const isPlayDisabled = viewOnce.isSpent
 
+  if (renderPlayer)
+    return <CustomAudioControls renderPlayer={renderPlayer} isPlaying={isPlaying} isDisabled={isPlayDisabled} duration={duration} currentTime={currentTime} onToggle={togglePlayback} />
+
   return (
     <View style={[styles.container, { width: voiceContentWidth(duration, position === 'right') }]}>
       <View style={styles.audioRow}>
@@ -263,11 +268,19 @@ const ExpoAudioPlayer = ({
   )
 }
 
+function CustomAudioControls ({ renderPlayer, ...props }: AudioPlayerRenderProps & { renderPlayer: (props: AudioPlayerRenderProps) => React.ReactNode }) {
+  return renderPlayer({ ...props, onToggle: () => {
+    if (!props.isDisabled)
+      props.onToggle()
+  } })
+}
+
 export function MessageAudio<TMessage extends IMessage = IMessage> ({
   currentMessage,
   position = 'left',
   containerStyle,
   audioStyle,
+  renderPlayer,
 }: Partial<MessageAudioProps<TMessage>>) {
   const uri = currentMessage?.audio
 
@@ -276,7 +289,7 @@ export function MessageAudio<TMessage extends IMessage = IMessage> ({
 
   return (
     <View style={[styles.container, containerStyle]}>
-      {isWaveformAvailable
+      {isWaveformAvailable && !(renderPlayer && isExpoAudioAvailable)
         ? (
           <WaveformPlayer
             uri={uri}
@@ -293,6 +306,7 @@ export function MessageAudio<TMessage extends IMessage = IMessage> ({
         : isExpoAudioAvailable
           ? (
             <ExpoAudioPlayer
+              renderPlayer={renderPlayer}
               uri={uri}
               position={position}
               messageId={currentMessage?._id}

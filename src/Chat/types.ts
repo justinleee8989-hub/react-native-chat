@@ -180,6 +180,8 @@ export interface ChatProps<TMessage extends IMessage> extends Partial<Omit<Messa
   onSend?: (messages: TMessage[]) => void
   /*  Render a loading view when initializing */
   renderLoading?: () => React.ReactNode
+  /** Mount the heavy message list one frame later. Set false for an immediate cached-history view. Default true. */
+  deferMessageListMount?: boolean
   /**
    * The big greeting on the empty-chat card, sent as a message when tapped. `null` leaves it
    * out, keeping just the "No messages here yet..." card.

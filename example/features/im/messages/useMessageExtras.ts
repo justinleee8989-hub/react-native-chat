@@ -1,13 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { IMessage } from '@kesha-antonov/react-native-chat'
-import { refresh, reportError, useOpenIM } from '../application/store'
+import { refresh, reportError, useOpenIM, loadServerHistory } from '../application/store'
 import { parseCallInvitation } from '../calls/invitation'
 import type { IMMessage } from '../domain/types'
-import { applyExtras, batchMessageIDs, mergeMessageExtras, messageExtras } from './extras'
+import { applyExtras, batchMessageIDs, mergeMessageExtras, messageExtras, resolveExtraSequence } from './extras'
 import type { MessageExtra } from './extras'
 export function useMessageExtras (conversationID: string, messages: IMMessage[]) {
   const { session, config } = useOpenIM()
   const [records, setRecords] = useState<Record<string, MessageExtra>>({})
+  const activeContext = useRef({ session, conversationID })
+  activeContext.current = { session, conversationID }
   const mounted = useRef(true)
   const pending = useRef(new Set<string>())
   const ids = messages.filter(m => m.status === 2 && m.contentType < 1000).flatMap(m => [m.clientMsgID, ...(m.quoteElem?.quoteMessage?.clientMsgID ? [m.quoteElem.quoteMessage.clientMsgID] : [])]).join(',')
@@ -20,7 +22,7 @@ export function useMessageExtras (conversationID: string, messages: IMMessage[])
   useEffect(() => {
     let active = true; let loading = false
     const refresh = async () => {
-      if (!session || !ids || loading) 
+      if (!session || !ids || loading)
         return
       loading = true
       try {
@@ -32,7 +34,7 @@ export function useMessageExtras (conversationID: string, messages: IMMessage[])
             setRecords(previous => mergeMessageExtras(previous, found))
         }
       } catch { /* Mutations surface errors; background polls retry after a transient outage. */ } finally {
-        loading = false 
+        loading = false
       }
     }
     void refresh()
@@ -50,9 +52,19 @@ export function useMessageExtras (conversationID: string, messages: IMMessage[])
     const id = raw.clientMsgID
     pending.current.add(id)
     try {
-      const changed = await messageExtras(session, config.chat, { action, conversationID, messageID: id, seq: raw.seq,
+      const assertCurrent = () => {
+        if (!mounted.current || activeContext.current.session !== session || activeContext.current.conversationID !== conversationID)
+          throw new Error('页面或登录已改变，请重新打开消息')
+      }
+      const seq = await resolveExtraSequence(raw, async cursor => {
+        assertCurrent()
+        return loadServerHistory({ conversationID, cursor })
+      })
+      assertCurrent()
+      const changed = await messageExtras(session, config.chat, { action, conversationID, messageID: id, seq,
         text: action === 'edit' ? value : undefined, emoji: action === 'react' ? value : undefined,
         enabled: !records[id]?.reactions?.[value]?.[session.userID], revision: records[id]?.revision || 0 })
+      assertCurrent()
       if (mounted.current) {
         setRecords(previous => mergeMessageExtras(previous, changed))
         void refresh().catch(reportError)
@@ -62,7 +74,7 @@ export function useMessageExtras (conversationID: string, messages: IMMessage[])
         reportError(error)
       throw error
     } finally {
-      pending.current.delete(id) 
+      pending.current.delete(id)
     }
   }, [session, config.chat, conversationID, messages, records])
   return { map: (message: IMessage) => {
@@ -71,6 +83,6 @@ export function useMessageExtras (conversationID: string, messages: IMMessage[])
   },
   edit: (message: IMessage, text: string) => mutate(message, 'edit', text),
   react: (message: IMessage, emoji: string) => {
-    void mutate(message, 'react', emoji).catch(() => {}) 
+    void mutate(message, 'react', emoji).catch(() => {})
   } }
 }

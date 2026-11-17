@@ -1,0 +1,46 @@
+import { StyleSheet } from 'react-native'
+
+export const styles = StyleSheet.create({
+  header: { minHeight: 52, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 6 },
+  largeHeader: { paddingLeft: 20, paddingTop: 10, paddingBottom: 8, minHeight: 66 },
+  centeredHeading: { position: 'absolute', left: 92, right: 92 },
+  heading: { flex: 1, minWidth: 0 },
+  icon: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  card: { borderRadius: 16, overflow: 'hidden' },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    minHeight: 56,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  search: {
+    marginHorizontal: 16,
+    marginTop: 4,
+    marginBottom: 10,
+    height: 38,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 12,
+  },
+  searchInput: { flex: 1, minWidth: 0, fontSize: 15, height: '100%' },
+  segment: {
+    flexDirection: 'row',
+    marginHorizontal: 16,
+    marginTop: 8,
+    marginBottom: 4,
+    padding: 3,
+    borderRadius: 12,
+  },
+  segmentItem: {
+    flex: 1,
+    height: 32,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+})

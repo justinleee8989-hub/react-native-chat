@@ -1,0 +1,735 @@
+{
+  "unchangedSourceFiles": [
+    {
+      "path": "example/app/modal.tsx",
+      "sha256": "9192980d8e074a7cf3e206b9f51506056bb71dba5dda726725cf50bc13d4444d"
+    },
+    {
+      "path": "example/app/chat/customized-rendering.tsx",
+      "sha256": "80a3ca894aa7c6d8885f4cf5206dabaeec6416f9dbb0ce05ac92b5dc7e022c8a"
+    },
+    {
+      "path": "example/app/chat/day-animated.tsx",
+      "sha256": "55f6cddd66b53bdfaa4cc3c713060e1f57b35236aa4c78fcf2a5acaaecd0c6c2"
+    },
+    {
+      "path": "example/app/chat/reply.tsx",
+      "sha256": "2db0f321717956293c44d58710e630da3f13cdf9434f4c2c268b6e1c07943948"
+    },
+    {
+      "path": "example/app/chat/keyboard-provider.tsx",
+      "sha256": "97fa07cb51773d111e49bbe0f8ecf9fb9ce4219d405005fff9c4f6b70c930b38"
+    },
+    {
+      "path": "example/app/chat/theming.tsx",
+      "sha256": "8245e94d6aa2e41ad6eddd2bb719cc3c8dae00a055bbd6c7b285e4f5de8c9b77"
+    },
+    {
+      "path": "example/app/chat/slack.tsx",
+      "sha256": "5a9c2bb7d8f87b19e9321bd2ade4ab8417c6ead9eeac746e0e09d3a040a77c20"
+    },
+    {
+      "path": "example/app/chat/reactions.tsx",
+      "sha256": "bedd9aaa10f92b97af1c1ca59bf7e09e59af186e20c812ea901406dc4b31be0d"
+    },
+    {
+      "path": "example/app/chat/localization.tsx",
+      "sha256": "ac703a9448f59493f2c8a184ad0a9c69861ff08357382a319e05fef406eeccd4"
+    },
+    {
+      "path": "example/app/chat/aligned-top.tsx",
+      "sha256": "7ccdf88d16c835593e8798c91be7b3013e2ba1aa00d78745ac181394c7fd7ab5"
+    },
+    {
+      "path": "example/app/chat/_layout.tsx",
+      "sha256": "90baafacd74ad39c1ed8df65258ec8578bd04830507d876320d2601aebebc32d"
+    },
+    {
+      "path": "example/app/chat/loading.tsx",
+      "sha256": "cb6cd6cca131b0d68b0b85d01691eb81e86901c898bb7505cc146c8c74217d0d"
+    },
+    {
+      "path": "example/app/chat/basic.tsx",
+      "sha256": "7686b99300efd2566a903c55ca094c37e12985edfa372e18698e1ab92f4115bc"
+    },
+    {
+      "path": "example/app/chat/links.tsx",
+      "sha256": "8857d725f0244d6513bc1d88228e7e52b9585cc5f2180939324a1cf509c5233f"
+    },
+    {
+      "path": "example/app/chat/media.tsx",
+      "sha256": "8ebf3257bd2d23b3704853358ee2bd335f8fb81e0028ee0ff90c036680550292"
+    },
+    {
+      "path": "example/app/chat/ai-bot.tsx",
+      "sha256": "c92afe745d85e02ddbe238d2ab525ca72a3455bff218a90e22467915aed8bf95"
+    },
+    {
+      "path": "example/app/chat/context-menu.tsx",
+      "sha256": "450b31197c5ef79d183cfdd5c04d0fd8b2d659c6a0c3fa77d1e259d2ae2010b7"
+    },
+    {
+      "path": "example/app/auth/login.tsx",
+      "sha256": "30d98590380bc1c1a6536da2ebcad80394356ed7e7c84ef98a3adacb13bc6f76"
+    },
+    {
+      "path": "example/app/auth/reset.tsx",
+      "sha256": "0f38dac06833d18f59e318067de6ed63f514b025defebb073134d43a839cb5e6"
+    },
+    {
+      "path": "example/app/auth/register.tsx",
+      "sha256": "fc904c22f4bbb411f4cfe5a6f64f5c3fd07d6ab31f856c657e4f6ab80723141a"
+    },
+    {
+      "path": "example/app/auth/_layout.tsx",
+      "sha256": "0a8776a85dd6357f6eb62ad18d63a48c2ada9dc0845fd1bbd3e357889da58d00"
+    },
+    {
+      "path": "example/app/(tabs)/index.tsx",
+      "sha256": "c79fdd6f3a1f0337dbae354a0f8a8dcc3fb8555fc7602a022f637614e3d8fee2"
+    },
+    {
+      "path": "example/app/(tabs)/me.tsx",
+      "sha256": "4f424f7867912390c1b28f876b4a2800f457afda5db4e06e011653251182ab99"
+    },
+    {
+      "path": "example/app/(tabs)/chats.tsx",
+      "sha256": "a100a6c200fc37cb1e4dd32771159c99265493c2ebf6984c29acf29cafd8b70d"
+    },
+    {
+      "path": "example/app/(tabs)/_layout.tsx",
+      "sha256": "384805d79e470385e8a976fc5d34d04ab25195da2968fef6f8c7def880f7db3d"
+    },
+    {
+      "path": "example/app/(tabs)/groups.tsx",
+      "sha256": "30db467a15dd2bb85d0cec43b12c05ac393d8309ff50d44a6ebb1b6f86e775a4"
+    },
+    {
+      "path": "example/app/(tabs)/contacts.tsx",
+      "sha256": "f4b74b3cb80396da4b89ffb7464e39071ea2e3c3df6e704360ef6c96c59d4837"
+    },
+    {
+      "path": "example/app/chats/settings.tsx",
+      "sha256": "a547ced67959b8ff6df4c36e3cf8198dcb5b847014322bf80b762a96b759043c"
+    },
+    {
+      "path": "example/app/chats/archived.tsx",
+      "sha256": "ecfbe0e78948f407ea47b2e9ac9f48939a2ce94cc1834166835d9cabbc4aa2d8"
+    },
+    {
+      "path": "example/app/chats/account.tsx",
+      "sha256": "077497264708138950908bf19ee78a07bc5e5fedcfab1d8ad4affcf2f503cc93"
+    },
+    {
+      "path": "example/app/chats/call-history.tsx",
+      "sha256": "a1943ec8e92d07da27db68764047b261d01eb3ff74012c3e58b1241b91c4f07a"
+    },
+    {
+      "path": "example/app/chats/call.tsx",
+      "sha256": "dc479a4ad71803283e805e92845bb10cd1e719640d6915e96e596688aec0e194"
+    },
+    {
+      "path": "example/app/chats/new.tsx",
+      "sha256": "38131e6e477f89e18f0e2d5b3327516ce815a77d987ffd51d5e9692464f69911"
+    },
+    {
+      "path": "example/app/chats/_layout.tsx",
+      "sha256": "2452230ce6e5d574fe3a9d5963340da25a1d8570b627fc35af4f1031eeb7b8ff"
+    },
+    {
+      "path": "example/app/chats/[id].tsx",
+      "sha256": "0b40e72c24f8a8ece9ba1ff2c1efa3a4dfa6c20a7d03b9481c7a4a3701da349e"
+    },
+    {
+      "path": "example/app/chats/contacts.tsx",
+      "sha256": "cd27c6d98596e822ef146c59604405659d0cf97bd2b09e3452744367b3044a6e"
+    },
+    {
+      "path": "example/app/chats/groups/index.tsx",
+      "sha256": "dfeae8671169f2d0d9c5e6556b48f5d891aee7648bd4a1fad9c12819ab5bc09c"
+    },
+    {
+      "path": "example/app/chats/groups/requests.tsx",
+      "sha256": "78bacc83becad52461abbab7bce490a066ee62cd489fb9126c1ecf233843d9a8"
+    },
+    {
+      "path": "example/app/chats/groups/join.tsx",
+      "sha256": "3545a050aba0289f4a5325c049cd97dc6765b0258d47273ed2b21ec3ea850225"
+    },
+    {
+      "path": "example/app/chats/groups/manage.tsx",
+      "sha256": "4e2364a8197da75044d675b06f8b1695990a810bf4b8f458dfc035189c6bff33"
+    },
+    {
+      "path": "example/app/chats/groups/[id].tsx",
+      "sha256": "cdc4743511ab30135397f4a18ba8af32938621e4c9b69c84d02e75d2156bf521"
+    },
+    {
+      "path": "example/app/chats/search/[id].tsx",
+      "sha256": "2c3ab273bf7cf1e69403e9718f7e178e726540490b20e1f43d3428e7f16887be"
+    },
+    {
+      "path": "example/app/chats/profile/[id].tsx",
+      "sha256": "bb640704baf363001d02cec7aa24dfac356f60a89970d8720b58311c43c7c3ec"
+    },
+    {
+      "path": "example/app/chats/people/[id].tsx",
+      "sha256": "c218df9f8191028018958c6744a9d64705c27b20567956b67b47c672233542a5"
+    },
+    {
+      "path": "example/app/chats/readers/[id].tsx",
+      "sha256": "190df9a37bb5d43bc3aaf6a3bb3fb7c208db14ef73e8b3e9a6c4b39cb25a66c2"
+    },
+    {
+      "path": "example/app/chats/assets/[id].tsx",
+      "sha256": "ae3c0d75b29e203b9e4f74af8ad78969e57297fb914d81a2465957221b659228"
+    },
+    {
+      "path": "example/app/chats/conversation/[id].tsx",
+      "sha256": "4d788ab4844c02b77f5fccec0c1c1d6f3210251c25da6ee1222f4c1a74759258"
+    },
+    {
+      "path": "example/features/im/config.ts",
+      "sha256": "b76db61495f0f40619a541ab8622afce097cb78e3c3bdadcd6fbf12b958398f1"
+    },
+    {
+      "path": "example/features/im/calls/CallOverlay.tsx",
+      "sha256": "5b05de34a90a27805c52f8f3faedd14ff98b1a2c6f52f5b718467c4d2e05597e"
+    },
+    {
+      "path": "example/features/im/calls/useRingtone.ts",
+      "sha256": "cd8e0237a52a38e16604ec53046ec2dd231b9bb2696e123d16befbcb7ce84073"
+    },
+    {
+      "path": "example/features/im/calls/invitation.ts",
+      "sha256": "167831f4218fff5740c4cf5ee7fe757c0264ebed0e8dd616a78f92769a5846af"
+    },
+    {
+      "path": "example/features/im/calls/errors.ts",
+      "sha256": "61abcf1122d0dc83e14e03a7659d14a2cdfddd53715c50222a4e811536166952"
+    },
+    {
+      "path": "example/features/im/calls/platform.tsx",
+      "sha256": "4aa3f2ba4af2b74653f88b14783509432ec4dda1f69927dd56192ef67d0d6f6f"
+    },
+    {
+      "path": "example/features/im/calls/platform.web.tsx",
+      "sha256": "504fafeb763d37e4f4aff49d5efdeda62d1d723a1906d9e60a09a3afb232719d"
+    },
+    {
+      "path": "example/features/im/calls/token-api.ts",
+      "sha256": "d25cd91fb91f8473fd2ff6dbc6b79363a8fbc4fcbcb06c597f70b9086d8e40b1"
+    },
+    {
+      "path": "example/features/im/calls/server-controller.ts",
+      "sha256": "3e21e191c82eaf1666e80a450380c0602cb43224e3bdc8408a599240486e801a"
+    },
+    {
+      "path": "example/features/im/calls/CallScreen.tsx",
+      "sha256": "700021a423ba9cfe5c394593c7b2c3abe7127742c55ec04c27c5efa5256cfbdf"
+    },
+    {
+      "path": "example/features/im/calls/authority-api.ts",
+      "sha256": "351d07dce4d906e166c62edc28be2d5989b8984334affa76367f06689942f3fa"
+    },
+    {
+      "path": "example/features/im/calls/CallControls.tsx",
+      "sha256": "d7c51aa1dfa16b801f073c9596056be646cb25821f29b4a460540cffae7d183c"
+    },
+    {
+      "path": "example/features/im/calls/CallHistoryScreen.tsx",
+      "sha256": "e985beb07fb8b34bd88f57751c55c98a6096502e4f73e639be585d44091c7d49"
+    },
+    {
+      "path": "example/features/im/calls/signaling.ts",
+      "sha256": "0431563857819feb045c45735dfac216dd10aa0f9547b62b8178e45260b250ac"
+    },
+    {
+      "path": "example/features/im/messages/projection.ts",
+      "sha256": "e76bd355c0ab2dd9c1d6b46cc277ebbdaae8a17681f1b74c69153f11a12d546f"
+    },
+    {
+      "path": "example/features/im/messages/ForwardPicker.tsx",
+      "sha256": "8ae6469d98777d9121407cb996c311b6d61787087599068742419124224420c2"
+    },
+    {
+      "path": "example/features/im/messages/assets.ts",
+      "sha256": "86121539fe6225272546a27bcdb9be606e6dd61a6090cefb3609ef1d524f4976"
+    },
+    {
+      "path": "example/features/im/messages/useAttachmentBatches.ts",
+      "sha256": "b73e6c84ffeae53f003e35a7c2b246a5bf64e1beff7c23c331cb810e11757d45"
+    },
+    {
+      "path": "example/features/im/messages/useMessageLocation.ts",
+      "sha256": "ea639cf430f1b06ac192f62c634ae6cef05d48f6643e55265c556bb1e0637d35"
+    },
+    {
+      "path": "example/features/im/messages/ChatScreen.tsx",
+      "sha256": "8cfdf4e7f2f78debc666e0d10ae1cb36f38a0ab5912c2c7168b6d712576e22b5"
+    },
+    {
+      "path": "example/features/im/messages/server-history.ts",
+      "sha256": "91b270f253a79d6bf954a82ec2e99657dadc178cec03b977996e3db04abd9bd8"
+    },
+    {
+      "path": "example/features/im/messages/attachment-batch.ts",
+      "sha256": "061a6bef0dcfadb1c80e6ebd5f0c6da291222962c4585471d2b897cbba1eca79"
+    },
+    {
+      "path": "example/features/im/messages/ConversationAssetsScreen.tsx",
+      "sha256": "460260fa183eeb453c389e4cca4a406752b6c2358dc92047f324d655fca9cce1"
+    },
+    {
+      "path": "example/features/im/messages/composer.ts",
+      "sha256": "062c794ae78be0ac6ff93536fa01932ecdcff9e614b3e411f8c69caa42619ae4"
+    },
+    {
+      "path": "example/features/im/messages/assets-service.ts",
+      "sha256": "262fea9e4994cc82aed3ab5afe29dfef6bd444dda0d5300afd4a11f8219c89d4"
+    },
+    {
+      "path": "example/features/im/messages/RichMessages.tsx",
+      "sha256": "62ce9173d630fc6c99b75f2d462e672b3a6a94d92eb9e2bc9ec933166b95a9de"
+    },
+    {
+      "path": "example/features/im/messages/HistorySearchScreen.tsx",
+      "sha256": "2c40113ffd135fcf04cf2603be9971cbec776b21d9b4a3c407fdeade83c69edb"
+    },
+    {
+      "path": "example/features/im/messages/readers.ts",
+      "sha256": "7ed14a80774b3dc9e88468395c7224682903d59cb6f12a80f742bdba1566f7d7"
+    },
+    {
+      "path": "example/features/im/messages/useMessageExtras.ts",
+      "sha256": "0fb732c78cff4e67ffc3715101bc3f6da2de2c90443d13bb9b502d2153f70ad6"
+    },
+    {
+      "path": "example/features/im/messages/ComposerEnhancements.tsx",
+      "sha256": "b0f2cdaede9ac146944e203fdff93e679c0c66fb84c29a9329088a786d14bf14"
+    },
+    {
+      "path": "example/features/im/messages/AttachmentBatchTray.tsx",
+      "sha256": "eb4a24d799e45f99c3d5987e3d168bf1b4f762e838d3cba55ba176b065c9ea3f"
+    },
+    {
+      "path": "example/features/im/messages/extras.ts",
+      "sha256": "aa9a628cc56f67ed7eee57e320decf040d4ec85decede2e14a033e1edbd2c5c7"
+    },
+    {
+      "path": "example/features/im/messages/MessageReadersScreen.tsx",
+      "sha256": "48aada4c2fbc6ad1f2e8224fd375d448b1d4b63d9d47a53adfcaadf28e93d0ab"
+    },
+    {
+      "path": "example/features/im/auth/AccountScreen.tsx",
+      "sha256": "c80a4c27cdc05259adf1fccb6d5b53402ef87903d9538251326649369f2a6c4a"
+    },
+    {
+      "path": "example/features/im/auth/api.ts",
+      "sha256": "64ac947687a6f1149d2bf8da5df72e964e2d6d4f86b38b5e2b4b5c6e18e2d824"
+    },
+    {
+      "path": "example/features/im/auth/AuthForm.tsx",
+      "sha256": "e526b4fe8c0e2cfe8677a1e9de931d35c5d2df409be48baaa0ca3505b8468662"
+    },
+    {
+      "path": "example/features/im/auth/password-api.ts",
+      "sha256": "ef5b0366dbce2f1cf8d797bddc8f8f44dc77c7c8a7747d5551eab35637724a04"
+    },
+    {
+      "path": "example/features/im/auth/sdk-login-error.ts",
+      "sha256": "8e049f73f1f0ba9411e5924421723859f4ef9e3f025231ab55d7b0b0a15c03af"
+    },
+    {
+      "path": "example/features/im/auth/AccountScreen.ui.test.tsx",
+      "sha256": "e26aa71c03cd7693cf5b692872c1a730c43c7cc6e5840722245ee6f52295f7c5"
+    },
+    {
+      "path": "example/features/im/auth/account-api.ts",
+      "sha256": "92a285c577dc0b9b7ba7e84aa1ac6d07138a6a7c47290d798b7e4cf0abf6d0e6"
+    },
+    {
+      "path": "example/features/im/auth/LoginScreen.tsx",
+      "sha256": "db840460b7195a48f2d9ab3f6e76ac222a04d289b05abe4f0d8f34841aa5be16"
+    },
+    {
+      "path": "example/features/im/contacts/ContactsScreen.tsx",
+      "sha256": "cfffa44e90bb3cdfc9c21ff786f98b7d715f3b06c5fd070fd69c72fd3da7bfad"
+    },
+    {
+      "path": "example/features/im/contacts/PersonScreen.tsx",
+      "sha256": "a646bc2f33137a41e8f896d1b613ea950c4970ef4e5b247937aa0a8e4b0e16b5"
+    },
+    {
+      "path": "example/features/im/navigation/ProductTabs.tsx",
+      "sha256": "5981232ec7b7465d05f04f422157668614c7e17907be8addca8db3bbfa580967"
+    },
+    {
+      "path": "example/features/im/navigation/MyScreen.tsx",
+      "sha256": "c93d901615cbf5f67ef5e9537982fef3dba37a058d9b32c9f28f1615da0f9c0b"
+    },
+    {
+      "path": "example/features/im/navigation/SessionGuard.tsx",
+      "sha256": "c9ed53be783fbc615f03dbb5bfa8fc525574b24f924cacf2c41c2a629fcaacbe"
+    },
+    {
+      "path": "example/features/im/shared/useDirectoryEvents.ts",
+      "sha256": "0e7e5aa75b0dbd1495016ea86136d5a781685aa25556bbf43a3c8452a88e9690"
+    },
+    {
+      "path": "example/features/im/shared/shared.tsx",
+      "sha256": "d717c73c276a4995209908c5008d9bafb168101e3055306570a42b608544742b"
+    },
+    {
+      "path": "example/features/im/shared/error-message.ts",
+      "sha256": "458681c3dcaa4d07e2b5edf6275fdcf2e181109abcdd7395ba52df18b1b29be6"
+    },
+    {
+      "path": "example/features/im/shared/useTask.ts",
+      "sha256": "3bea261125fd6e08514400209e234712f40f092c79e55c80cd818a433a96a42b"
+    },
+    {
+      "path": "example/features/im/shared/Confirm.ui.test.tsx",
+      "sha256": "f75e30ead2cad5d052806792dcd568e30c16a0f6194ad83f2f7a1a28c06f2d16"
+    },
+    {
+      "path": "example/features/im/shared/FriendPicker.tsx",
+      "sha256": "ba087bcaa065106fbcabc91f5dabde218d0749ff610955e24bfa7f488f5e4ca2"
+    },
+    {
+      "path": "example/features/im/groups/GroupsScreen.tsx",
+      "sha256": "afa32bdd29ea18255ed7f17fb3698b1c69552c6c381295de0812892958cfef4a"
+    },
+    {
+      "path": "example/features/im/groups/GroupRequestsScreen.tsx",
+      "sha256": "8c31e27d5c094ec2cf9943bf8c60ead19f50c4e9cf078377dfaa14f8cfb92696"
+    },
+    {
+      "path": "example/features/im/groups/GroupScreen.tsx",
+      "sha256": "5690af3ec7c02a35d5ebfff0f45b5ec554179eb8f86ed80009ac714b76e09ada"
+    },
+    {
+      "path": "example/features/im/groups/GroupManagementScreen.tsx",
+      "sha256": "2b338821d9128204a0f5034728de7d37fd46b0b20c3b9167c03163540665407d"
+    },
+    {
+      "path": "example/features/im/groups/JoinGroupScreen.tsx",
+      "sha256": "a25108f2d48ecbf0f9272842e1a636a21234556b13b45d9805ff468a697e178f"
+    },
+    {
+      "path": "example/features/im/profile/PasswordForm.tsx",
+      "sha256": "f3188a36b7185172263eb9125c73dcea3a87386608e94da33839d21fd436756b"
+    },
+    {
+      "path": "example/features/im/profile/PasswordForm.ui.test.tsx",
+      "sha256": "c94dea642227838362657532c985835fa52021a16fffc2c5baba551aec5cd33e"
+    },
+    {
+      "path": "example/features/im/profile/SettingsScreen.tsx",
+      "sha256": "5253ca7f4ad9422aa82cb8183ffa938c14c898a0e4116d99e7e56ad39eb0b6d0"
+    },
+    {
+      "path": "example/features/im/conversations/NewMessageScreen.tsx",
+      "sha256": "02516dd658b08b41338dda44c593e8b4fe3aa9562d54e95c3065b358632c87f4"
+    },
+    {
+      "path": "example/features/im/conversations/ConversationSettingsScreen.tsx",
+      "sha256": "fba09f90fa203846a0b01a60bc39390da5bee54fc69eac7c2e8c6b7a0d657348"
+    },
+    {
+      "path": "example/features/im/conversations/ChatListScreen.tsx",
+      "sha256": "502456b84503aacbeaf7b838f0c5709b9fb54584a50cc1b988e7646f86c0822c"
+    },
+    {
+      "path": "example/features/im/application/messaging.ts",
+      "sha256": "19cd826f9dd8aa7ffa6d7fd8314199afc77cddda3c2263c763a2115d69f8d50a"
+    },
+    {
+      "path": "example/features/im/application/composer-state.ts",
+      "sha256": "8f035ec4ee814cff62847c694d2f60e848d5170021266583475f810ef3c0d215"
+    },
+    {
+      "path": "example/features/im/application/directory.ts",
+      "sha256": "411fa46da143430d28c887afd2394dc8a65dff8c4ca8205ff7a307d18d0fc164"
+    },
+    {
+      "path": "example/features/im/application/group-management.ts",
+      "sha256": "65fe15b95bad3ff1baa442b75bbc6e382292efec50d9b2fbe4bbe38bfc992ca1"
+    },
+    {
+      "path": "example/features/im/application/profile-avatar.ts",
+      "sha256": "715c69f08acf9a9b4c94f0f3541c4fca8f5a44882543bbcb8c89c7b6c65ea8dd"
+    },
+    {
+      "path": "example/features/im/application/runtime.ts",
+      "sha256": "a3726a8d4e5d92299237e0c7f9b84cde90898f937d8e60bb59099e0c9db16859"
+    },
+    {
+      "path": "example/features/im/application/conversation-actions.ts",
+      "sha256": "a4473cd287ac9f864cfe4bc3afa3c744bf1291dc584350dab35523fdb54ab462"
+    },
+    {
+      "path": "example/features/im/application/profile.ts",
+      "sha256": "88710c2ecb5c11c6e99e742c576ef0753a37968cea5de0589fffae51e3328958"
+    },
+    {
+      "path": "example/features/im/application/events.ts",
+      "sha256": "5a0961f47ac832097a6aac683efe4a08efa7ab1a1eca916cd940c0699e2044d4"
+    },
+    {
+      "path": "example/features/im/application/store.ts",
+      "sha256": "f34dd72876f0ef75e4896760a968715f9f963f832294187e3e013632c7896f24"
+    },
+    {
+      "path": "example/features/im/infrastructure/storage/draft-storage.ts",
+      "sha256": "930e005043aff230101527d969c7475e27b555fc7be3b29d7f306de2047820f8"
+    },
+    {
+      "path": "example/features/im/infrastructure/storage/storage.ts",
+      "sha256": "7a8f24dfbdc108d2ecfeb9da0418ac11e2c0daf7878fcb4e0f14d75b848bb3d0"
+    },
+    {
+      "path": "example/features/im/infrastructure/storage/attachment-outbox.ts",
+      "sha256": "9f8bcc945a465dc164ac841bafee6c99a128a3d1c74ebfaa43696d9e2143462b"
+    },
+    {
+      "path": "example/features/im/infrastructure/storage/draft-storage.web.ts",
+      "sha256": "b389709c94bba2d31b93b18f22f76ea991178d6952bd2f56c0458a9ef46a0c2d"
+    },
+    {
+      "path": "example/features/im/infrastructure/openim/media.web.ts",
+      "sha256": "2c2f308e0128faa2cac96c023692a4f8d29d7f63205c0d845b280f6284d3580b"
+    },
+    {
+      "path": "example/features/im/infrastructure/openim/group-management-client.web.ts",
+      "sha256": "bd4ebb132c75fec51f6a1ca13c140453e3210410f258e4d99363ada007285c82"
+    },
+    {
+      "path": "example/features/im/infrastructure/openim/directory-client.web.ts",
+      "sha256": "b39eaa1ea05b3a252bc1fdafc2dbb55571489282fff57672b6bdd72f5e156e19"
+    },
+    {
+      "path": "example/features/im/infrastructure/openim/profile-avatar-service.ts",
+      "sha256": "30d81df500bfefb74ae6adab820d79a1d29d0491e582688954dc6b25c3da9280"
+    },
+    {
+      "path": "example/features/im/infrastructure/openim/conversation-client.ts",
+      "sha256": "94f448f865add5e1622c21dab8a9e6bceba1fd6108c837c65b8ee635044e8702"
+    },
+    {
+      "path": "example/features/im/infrastructure/openim/profile-client.ts",
+      "sha256": "c8db82fcb08e09fc4d55c6ea493c41cce4c35b1f16f2f450a9bf41e5967a1b95"
+    },
+    {
+      "path": "example/features/im/infrastructure/openim/profile-client.web.ts",
+      "sha256": "38dbc6484a9d1a40f73450804f1f7a86e9b66fefc6bdfc5ea80ddec33b88f5b9"
+    },
+    {
+      "path": "example/features/im/infrastructure/openim/profile-avatar.ts",
+      "sha256": "ad1ce26be0de4fc61d2f324f6b1ed6bbcd752f704d4e2d0191c7f27d0bb5116e"
+    },
+    {
+      "path": "example/features/im/infrastructure/openim/group-management-client.ts",
+      "sha256": "21f01f469eab3358cc9bbda0d1f1b18c931b1db50e2684daa00f8608d524f17b"
+    },
+    {
+      "path": "example/features/im/infrastructure/openim/web-session.ts",
+      "sha256": "1f07de864ea4d55bb61892a39e1d22609fb1f5641e5f47f27874f3703c435d93"
+    },
+    {
+      "path": "example/features/im/infrastructure/openim/directory-client.ts",
+      "sha256": "49d09f8b3ab86c46e059c095c180bad09fd8bb1da920c6d206773bcd05ba6ab1"
+    },
+    {
+      "path": "example/features/im/infrastructure/openim/composer-client.web.ts",
+      "sha256": "ae9b0f6d72d1a2f3d673cd8dc539faf56a0a38ac5a055f71e19ef57256aa8f8c"
+    },
+    {
+      "path": "example/features/im/infrastructure/openim/client.ts",
+      "sha256": "4edded89a54be9a62cfc1f16b81889085fce64545e16e67b82febc5cf5aaf115"
+    },
+    {
+      "path": "example/features/im/infrastructure/openim/directory-service.ts",
+      "sha256": "5335943f79cb3c2363f0c2df1f6246fc5d85507f7add66fc89bb8b462dbf3693"
+    },
+    {
+      "path": "example/features/im/infrastructure/openim/composer-client.ts",
+      "sha256": "5669891043643f218b5f582704b30ee27bc8c4257420bc61708dfa383089eb82"
+    },
+    {
+      "path": "example/features/im/infrastructure/openim/conversation-service.ts",
+      "sha256": "af7c39f36af727508ab43263c7451ed9ad1f373407fdd6702a4edd66d2707ec4"
+    },
+    {
+      "path": "example/features/im/infrastructure/openim/group-management-service.ts",
+      "sha256": "bb1994b4d7bd8e3c7680a3eb6472254576f6719b9cb82f85e5bef3042d9e19bd"
+    },
+    {
+      "path": "example/features/im/infrastructure/openim/media.ts",
+      "sha256": "23ed748f356143de65f74a134460705dc02131dc6fb7655dcfe594b7f2c358e6"
+    },
+    {
+      "path": "example/features/im/domain/directory.ts",
+      "sha256": "bc585571bfb7deaec3730ac10aebe5f981f306584376ef6279350a800c7e588c"
+    },
+    {
+      "path": "example/features/im/domain/group-management.ts",
+      "sha256": "8fba0f7885983e96db8456351bcf14c5d7cbc97450fc91771ac72d6138e16393"
+    },
+    {
+      "path": "example/features/im/domain/conversation-archive.ts",
+      "sha256": "7f753d48d31436469408100700d9f755ead4a6b665cac0c57f6ba29fe14cca14"
+    },
+    {
+      "path": "example/features/im/domain/model.ts",
+      "sha256": "c32ed3fa9d8cfebf5f0b9d801d240ee5817b8433c2835ebef6c3e12364c1b8f5"
+    },
+    {
+      "path": "example/features/im/domain/directory-events.ts",
+      "sha256": "81310b54ce2b9d06976ab54a23157e0822823b376677c922d059354a96198188"
+    },
+    {
+      "path": "example/features/im/domain/types.ts",
+      "sha256": "897564b4a490850ce11eb39524c04f7572a4db4d9911fb3b04dc0584092846c1"
+    },
+    {
+      "path": "example/features/im/domain/profile.ts",
+      "sha256": "f26dd0ad95cabe068a7eabacd513cfebed4956243e28e0f097437ac2e69c007a"
+    },
+    {
+      "path": "example/components/themed-text.tsx",
+      "sha256": "1ee1601a069037c017333f4f1f61a2f1c6e5a3b1b758556573a3d59b4bf1ce5c"
+    },
+    {
+      "path": "example/components/hello-wave.tsx",
+      "sha256": "66c3b8ad7f2070b633128fc1ed4c7189736f6da81b1c8b2049a9909e1e56fbe6"
+    },
+    {
+      "path": "example/components/parallax-scroll-view.tsx",
+      "sha256": "d7b263fc88af3f5f345d6270c7aeb5e86b66e0d9af4d50477260b2923ff9f4ea"
+    },
+    {
+      "path": "example/components/themed-view.tsx",
+      "sha256": "6b49c4f64820dd0645e18de957c87293375db81e12147a639314f586537de180"
+    },
+    {
+      "path": "example/components/external-link.tsx",
+      "sha256": "b683fcc4b8c0428b3bbdb228c269e64ebda77294c87e184fc1e1cea9f5d83b19"
+    },
+    {
+      "path": "example/components/ui/icon-symbol.ios.tsx",
+      "sha256": "ef6c852ee387471d4182c072dc35aec9ae621dd58ff81b46e84aabe9a77c0166"
+    },
+    {
+      "path": "example/components/ui/icon-symbol.tsx",
+      "sha256": "5ad20881304b53074915c25179bb864ba0e42e9934b591af8b6505377964d338"
+    },
+    {
+      "path": "example/components/ui/collapsible.tsx",
+      "sha256": "57d0d227d57b7554c9824e9fb27dc8ff12d3bb47313f5711aa6b904c1a348c2b"
+    },
+    {
+      "path": "example/components/chat-list/data.ts",
+      "sha256": "bce8dd02ecb83a98f38cb5ea9652ee804bf9d21d6f8c7a8469fbad18f314c806"
+    },
+    {
+      "path": "example/components/chat-list/ProfileScreen.tsx",
+      "sha256": "d307cfd22e4e1ea720f4d01908ebfa34b4a8abea4e8d22f94d05fe968ed35adf"
+    },
+    {
+      "path": "example/components/chat-list/format.ts",
+      "sha256": "58600a2ad1d88a29b228fbcb579c7d1cf77dc3465ee20027474c491cdd770b10"
+    },
+    {
+      "path": "example/components/chat-list/theme.ts",
+      "sha256": "0dc44df5b0b0b4ef85f1c073bbe15e55c36856016f5019d30b0883b183c29999"
+    },
+    {
+      "path": "example/components/chat-list/store.ts",
+      "sha256": "90ba52bda475c6476279fb5b32800e83038e67d0f9a19eb98ee699d265ec41fc"
+    },
+    {
+      "path": "example/components/chat-examples/ReplyExample.tsx",
+      "sha256": "add9d409877f9dea216ce46d2df2ca8b935e9d092e91703b6f7367273da5f71c"
+    },
+    {
+      "path": "example/components/chat-examples/MediaExample.tsx",
+      "sha256": "f8dd6065804aadba67448a6a53325f32b372fa91721697e1bd692f2bd7b70583"
+    },
+    {
+      "path": "example/components/chat-examples/OptionChips.tsx",
+      "sha256": "e7e71470a905c8dd9ffe4041ee0dc41deeb0f21b2ebfa8df4660d16e61d967dc"
+    },
+    {
+      "path": "example/components/chat-examples/SlackExample.tsx",
+      "sha256": "c168b769bb7a4c1fcebb9d258ce9d716269ea8e20e98b2bc29e2dfff49378a9a"
+    },
+    {
+      "path": "example/components/chat-examples/CustomizedRenderingExample.tsx",
+      "sha256": "cb23ad3338da5d86d2d054a30e2b8254305a81d12b2fa557d824f991dbacccbc"
+    },
+    {
+      "path": "example/components/chat-examples/ReactionsExample.tsx",
+      "sha256": "4b4110737bbb86902fa94476727ed9ed8e90c7a612995a338aecf3e141ed8b87"
+    },
+    {
+      "path": "example/components/chat-examples/ThemingExample.tsx",
+      "sha256": "1df43765b86314f0f4d32bc249cec7efe6e8c87f21d2f225fc21687c3965cae0"
+    },
+    {
+      "path": "example/components/chat-examples/AIBotExample.tsx",
+      "sha256": "dd5206a157cf32d4be314fa924e7ff43e1f608b366197e764adaf3b74323691e"
+    },
+    {
+      "path": "example/components/chat-examples/ContextMenuExample.tsx",
+      "sha256": "261e7e14098bbc1c115de1d94bd0873f034066c91b53d3084ee85f2f6b5e4cd5"
+    },
+    {
+      "path": "example/components/chat-examples/LinksExample.tsx",
+      "sha256": "bf16c129cdb81aa9aa25d90f8544b59353336757fc9985a938a48d5030ae029c"
+    },
+    {
+      "path": "example/components/chat-examples/useDemoSend.ts",
+      "sha256": "af3b342fa445a7b43c185ab44adee345176061dab5d0bc0de93fadbed831d28e"
+    },
+    {
+      "path": "example/components/chat-examples/LoadingExample.tsx",
+      "sha256": "35fd0c06eb530cdb6e0b417333961dc73e4a458835170c2b59113ded4fa6405d"
+    },
+    {
+      "path": "example/components/chat-examples/DayAnimatedExample.tsx",
+      "sha256": "145bf8d176acc0715eeb3d6c2c89bb1005b2d7ed9b67c1f950af90c3c59d9af3"
+    },
+    {
+      "path": "example/components/chat-examples/KeyboardProviderExample.tsx",
+      "sha256": "8ba0a0af36546cf2c41a602de150e0a33bbe64acc20bfd4a58b83093e32a80b2"
+    },
+    {
+      "path": "example/components/chat-examples/BasicExample.tsx",
+      "sha256": "62270f24ee94e91a0263413334ada219765fa229ad79a463a8b83b0c7dd780c2"
+    },
+    {
+      "path": "example/components/chat-examples/AlignedTopExample.tsx",
+      "sha256": "3465f97c786cb57ab7a0d807003027931afb61e1c4cd28df086c9f75b71e7ba0"
+    },
+    {
+      "path": "example/components/chat-examples/LocalizationExample.tsx",
+      "sha256": "0ce28aee4306013e09ebcf35358fdc46ff2bfb9d0a719095f8ce17b558e024a3"
+    }
+  ],
+  "modifiedFiles": [
+    "example/metro.config.js",
+    "example/babel.config.js",
+    "example/app/_layout.tsx",
+    "example/features/im/infrastructure/storage/storage.web.ts",
+    "example/features/im/infrastructure/storage/attachment-outbox.web.ts",
+    "example/features/im/infrastructure/openim/profile-service.ts",
+    "example/features/im/infrastructure/openim/composer-storage.ts",
+    "example/features/im/infrastructure/openim/client.web.ts",
+    "example/features/im/infrastructure/openim/profile-avatar.web.ts"
+  ],
+  "removedFiles": [
+    "example/app/explore.tsx"
+  ],
+  "note": "Screen/AuthForm/ProductTabs和产品UI组件来自现有源码，未重写。改动仅离线数据/构建/移除Explore导航。"
+}

@@ -1,7 +1,8 @@
 import React from 'react'
 import {
   ActivityIndicator,
-  Modal,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -11,8 +12,11 @@ import {
 } from 'react-native'
 import { ChatListAvatar } from '@kesha-antonov/react-native-chat'
 import { useRouter } from 'expo-router'
-import { useChatListColors } from '@/components/chat-list/theme'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import type { Person } from '@/features/im/domain/directory'
+import { ProductHeader } from '../ui/primitives'
+import { ProductModal } from '../ui/ProductModal'
+import { useProductColors as useChatListColors, useProductTheme } from '../ui/theme'
 
 export function Action ({
   title,
@@ -58,7 +62,14 @@ export function Field ({
       value={value}
       onChangeText={onChangeText}
       autoCapitalize='none'
-      style={[styles.input, { color: colors.name, borderColor: colors.divider }]}
+      style={[
+        styles.input,
+        {
+          color: colors.name,
+          borderColor: colors.divider,
+          backgroundColor: colors.headerBackground,
+        },
+      ]}
     />
   )
 }
@@ -98,38 +109,52 @@ export function Page ({
   const router = useRouter()
   const colors = useChatListColors()
   return (
-    <ScrollView
-      style={{ flex: 1, backgroundColor: colors.background }}
-      contentContainerStyle={styles.page}
-      keyboardShouldPersistTaps='handled'
-    >
-      <View style={styles.actions}>
-        {!root && <Action title='返回' onPress={() => {
-          if (router.canGoBack())
-            router.back()
-          else
-            router.replace('/(tabs)/chats')
-        }}
-        />}
-        <Text style={[styles.title, { color: colors.name }]}>{title}</Text>
-      </View>
-      {busy && <ActivityIndicator accessibilityLabel='正在处理' color={colors.attachment} />}
-      {!!error && (
-        <Text accessibilityRole='alert' style={{ color: colors.draft }}>
-          {error}
-        </Text>
-      )}
-      {children}
-    </ScrollView>
+    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.background }}>
+      <ProductHeader
+        title={title}
+        large={root}
+        onBack={
+          root
+            ? undefined
+            : () => {
+              if (router.canGoBack())
+                router.back()
+              else
+                router.replace('/(tabs)/chats')
+            }
+        }
+      />
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={styles.page}
+        keyboardShouldPersistTaps='handled'
+      >
+        {busy && <ActivityIndicator accessibilityLabel='正在处理' color={colors.attachment} />}
+        {!!error && (
+          <Text accessibilityRole='alert' style={{ color: colors.draft }}>
+            {error}
+          </Text>
+        )}
+        {children}
+      </ScrollView>
+    </SafeAreaView>
   )
 }
 export function Confirm ({
+  title,
+  confirmLabel = '确认',
+  danger = true,
   message,
   onConfirm,
   onCancel,
   busy,
   error,
+  children,
 }: {
+  children?: React.ReactNode
+  title?: string
+  confirmLabel?: string
+  danger?: boolean
   message: string
   onConfirm: () => void
   onCancel: () => void
@@ -137,49 +162,131 @@ export function Confirm ({
   error?: string
 }) {
   const colors = useChatListColors()
+  const t = useProductTheme()
   const cancel = () => {
     if (!busy)
       onCancel()
   }
   return (
-    <Modal
+    <ProductModal
       testID='confirmation-modal'
       visible
       transparent
       animationType='fade'
       onRequestClose={cancel}
     >
-      <View style={styles.confirmOverlay} accessibilityViewIsModal onAccessibilityEscape={cancel}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={[styles.confirmOverlay, { backgroundColor: t.scrim }]}
+        accessibilityViewIsModal
+        onAccessibilityEscape={cancel}
+      >
+        {!children && (
+          <Pressable
+            accessibilityRole='button'
+            accessibilityLabel='关闭确认框'
+            disabled={busy}
+            onPress={cancel}
+            style={StyleSheet.absoluteFill}
+          />
+        )}
         <ScrollView
-          style={[styles.confirmDialog, { backgroundColor: colors.background }]}
-          contentContainerStyle={styles.confirm}
+          style={[styles.confirmDialog, { backgroundColor: t.surface, boxShadow: t.shadow }]}
+          contentContainerStyle={{ gap: 0 }}
           keyboardShouldPersistTaps='handled'
         >
-          <Label>{message}</Label>
-          {!!error && <Text accessibilityRole='alert' style={{ color: colors.draft }}>{error}</Text>}
-          {busy && <ActivityIndicator accessibilityLabel='正在处理' color={colors.attachment} />}
-          <View style={styles.actions}>
-            <Action title='确认' danger onPress={onConfirm} disabled={busy} />
-            <Action title='取消' onPress={cancel} disabled={busy} />
+          <View style={styles.confirm}>
+            {title && (
+              <Text
+                style={{
+                  textAlign: 'center',
+                  fontSize: 17,
+                  lineHeight: 24,
+                  fontWeight: '600',
+                  color: colors.name,
+                }}
+              >
+                {title}
+              </Text>
+            )}
+            {!!message && (
+              <Text
+                style={{
+                  textAlign: 'center',
+                  fontSize: title ? 14 : 17,
+                  lineHeight: title ? 21 : 24,
+                  fontWeight: title ? '400' : '600',
+                  color: title ? colors.message : colors.name,
+                }}
+              >
+                {message}
+              </Text>
+            )}
+            {children}
+            {!!error && (
+              <Text accessibilityRole='alert' style={{ color: colors.draft }}>
+                {error}
+              </Text>
+            )}
+            {busy && <ActivityIndicator accessibilityLabel='正在处理' color={colors.attachment} />}
+          </View>
+          <View
+            style={{
+              flexDirection: 'row',
+              borderTopWidth: StyleSheet.hairlineWidth,
+              borderColor: colors.divider,
+            }}
+          >
+            {[
+              { title: '取消', action: cancel },
+              { title: confirmLabel, action: onConfirm },
+            ].map((item, index) => (
+              <Pressable
+                key={item.title}
+                accessibilityRole='button'
+                accessibilityState={{ disabled: busy }}
+                disabled={busy}
+                onPress={item.action}
+                style={{
+                  flex: 1,
+                  height: 50,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderLeftWidth: index ? StyleSheet.hairlineWidth : 0,
+                  borderColor: colors.divider,
+                  opacity: busy ? 0.4 : 1,
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 17,
+                    fontWeight: index ? '600' : '400',
+                    color: index ? (danger ? colors.draft : colors.attachment) : colors.name,
+                  }}
+                >
+                  {item.title}
+                </Text>
+              </Pressable>
+            ))}
           </View>
         </ScrollView>
-      </View>
-    </Modal>
+      </KeyboardAvoidingView>
+    </ProductModal>
   )
 }
 export const styles = StyleSheet.create({
   page: {
-    padding: 20,
-    paddingTop: 56,
+    padding: 16,
+    paddingTop: 12,
     paddingBottom: 48,
     gap: 16,
-    maxWidth: 780,
+    maxWidth: 680,
     width: '100%',
     alignSelf: 'center',
   },
   title: { fontSize: 24, fontWeight: '700' },
   label: { fontSize: 16, fontWeight: '600' },
-  input: { borderWidth: 1, borderRadius: 10, padding: 12, fontSize: 16 },
+  input: { borderWidth: 0, borderRadius: 12, padding: 16, minHeight: 56, fontSize: 16 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -188,8 +295,20 @@ export const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center' },
-  button: { paddingVertical: 10, paddingHorizontal: 12, borderRadius: 10 },
-  confirmOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24, backgroundColor: 'rgba(0,0,0,0.4)' },
-  confirmDialog: { flexGrow: 0, maxHeight: '90%', width: '100%', maxWidth: 480, borderWidth: 1, borderColor: '#E56555', borderRadius: 12 },
-  confirm: { padding: 16, gap: 12 },
+  button: {
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    minHeight: 44,
+    justifyContent: 'center',
+  },
+  confirmOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+  },
+  confirmDialog: { flexGrow: 0, maxHeight: '90%', width: '100%', maxWidth: 300, borderRadius: 20 },
+  confirm: { paddingTop: 24, paddingHorizontal: 22, paddingBottom: 18, gap: 6 },
 })

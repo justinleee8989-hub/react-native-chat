@@ -6,6 +6,7 @@ import {
   Pressable,
 } from 'react-native'
 
+import { ContextMenuProps } from '../components/ContextMenu/types'
 import { FetchLinkPreview, LinkPreviewProps } from '../components/LinkPreviewCard'
 import { MessageReplyProps } from '../components/MessageReply'
 import { MessageImageProps } from '../MessageImage'
@@ -126,6 +127,8 @@ export interface BubbleProps<TMessage extends IMessage> {
   messageReply?: BubbleReplyProps<TMessage>
   /** Emoji reactions configuration */
   reactions?: ReactionsProps<TMessage>
+  /** Replace the actions overlay; omit messagePreview to leave the original bubble visible. */
+  renderContextMenu?: React.ComponentType<ContextMenuProps> | ((props: ContextMenuProps) => React.ReactNode) | React.ReactElement<ContextMenuProps>
   /** Long-press context menu actions (array or per-message function) */
   messageActions?: MessageMenuItem[] | ((message: TMessage) => MessageMenuItem[])
   /**
@@ -139,6 +142,8 @@ export interface BubbleProps<TMessage extends IMessage> {
    * @default true
    */
   isMessageGestureEnabled?: boolean | ((message: TMessage) => boolean)
+  /** Opt into the same actions menu on browser right-click. Defaults to false. */
+  isContextMenuEnabled?: boolean
   /**
    * Fetches the web page preview for the first link in a message that has no
    * `linkPreview` of its own (e.g. from your server's Open Graph endpoint). Each URL is fetched

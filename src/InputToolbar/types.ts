@@ -17,6 +17,8 @@ export interface InputToolbarProps<TMessage extends IMessage> {
    * still given up as the keyboard or the emoji panel covers it.
    */
   bottomInset?: number
+  /** Place attachments outside the field on the leading edge and emoji on the trailing edge. */
+  actionsPosition?: 'inside' | 'leading'
   actions?: AttachmentAction[]
   actionSheetOptionTintColor?: string
   containerStyle?: StyleProp<ViewStyle>

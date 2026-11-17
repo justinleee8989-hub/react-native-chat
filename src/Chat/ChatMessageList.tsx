@@ -86,6 +86,7 @@ export function ChatMessageList<TMessage extends IMessage> ({
     renderSend: _renderSend,
     renderAccessory: _renderAccessory,
     renderChatFooter: _renderChatFooter,
+    deferMessageListMount: _deferMessageListMount,
     onPressActionButton: _onPressActionButton,
     actions: _actions,
     actionSheetOptionTintColor: _actionSheetOptionTintColor,

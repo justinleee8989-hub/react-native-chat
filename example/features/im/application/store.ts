@@ -6,21 +6,31 @@ import { assertJoinableInvitation, parseCallInvitation } from '../calls/invitati
 import { createServerCallController } from '../calls/server-controller'
 import { encodeSignal } from '../calls/signaling'
 import { defaultConfig, platformID } from '../config'
-import type { ServerConfig, Session } from '../domain/types'
+import type { GroupMessageReadGuard, ServerConfig, Session } from '../domain/types'
 import { client } from '../infrastructure/openim/client'
 import { setDraftStorageScope } from '../infrastructure/openim/composer-storage'
 import { conversationService } from '../infrastructure/openim/conversation-client'
 import { attachmentOutbox } from '../infrastructure/storage/attachment-outbox'
+import { createHomeSnapshots } from '../infrastructure/storage/home-snapshot'
 import { storage } from '../infrastructure/storage/storage'
 import { createMessageProjectionService } from '../messages/projection'
 import { fetchServerHistory, type ServerHistoryRequest } from '../messages/server-history'
 import { createConversationActions } from './conversation-actions'
 import { subscribeEvents } from './events'
+import { createConversationRecovery } from './foreground-recovery'
+import { watchHomeSnapshot } from './home-persistence'
 import { createMessaging } from './messaging'
 import { createRuntime } from './runtime'
 
+declare const module: { hot?: { data?: { snapshot?: ReturnType<ReturnType<typeof createRuntime>['snapshot']> }, dispose: (callback: () => void) => void } }
+
 const key = 'openim-example-session-v1'
+const homeSnapshots = createHomeSnapshots(storage)
+let stopHomeSnapshot = () => {}
+let flushHomeSnapshot = async () => {}
 const runtime = createRuntime(defaultConfig)
+if (typeof module !== 'undefined' && module.hot?.data?.snapshot)
+  runtime.update({ ...module.hot.data.snapshot, busy: false })
 const messaging = createMessaging(runtime, client, async message => {
   const invite = parseCallInvitation(message.textElem?.content || '')
   if (!invite)
@@ -42,7 +52,7 @@ const messaging = createMessaging(runtime, client, async message => {
     return records
   },
 }, attachmentOutbox, recheckAttachmentDelivery)
-export const { setPinned, setMuted, setArchived, clearConversation, removeConversations } = createConversationActions(runtime, conversationService)
+export const { setPinned, setMuted, setArchived, clearConversation, removeConversations } = createConversationActions(runtime, conversationService, () => flushHomeSnapshot())
 let disposeEvents = () => {}
 let restored = false
 export const calls = createServerCallController({ request: async request => {
@@ -102,6 +112,7 @@ export const {
 
 async function connect (session: Session, config: ServerConfig) {
   const epoch = ++runtime.generation
+  stopHomeSnapshot()
   setDraftStorageScope(JSON.stringify([config.api, config.ws]))
   disposeEvents()
   runtime.update({ busy: true, error: '', status: '连接中', config, recoveryAvailable: true })
@@ -113,7 +124,11 @@ async function connect (session: Session, config: ServerConfig) {
       return
     sdkLoggedIn = true
     calls.reset(session.userID)
-    runtime.update({ session, status: '已连接' })
+    runtime.update({ session, status: '收取中…', initialized: true, startupSnapshot: undefined })
+    stopHomeSnapshot()
+    const homePersistence = watchHomeSnapshot(runtime, homeSnapshots, session.userID, config)
+    stopHomeSnapshot = homePersistence.stop
+    flushHomeSnapshot = homePersistence.flush
     let recoveryWarning = ''
     try {
       await messaging.restoreAttachmentBatches()
@@ -130,6 +145,7 @@ async function connect (session: Session, config: ServerConfig) {
     if (epoch !== runtime.generation)
       return
     if (!sdkLoggedIn && isInvalidSDKLoginError(error)) {
+      await homeSnapshots.remove(session.userID, config)
       await logout('登录凭据已失效，请重新登录')
       return
     }
@@ -141,6 +157,7 @@ async function connect (session: Session, config: ServerConfig) {
     const recoveryEpoch = ++runtime.generation
     disposeEvents()
     calls.reset('')
+    stopHomeSnapshot()
     runtime.activeID = ''
     runtime.pendingMessages = []
     messaging.reset()
@@ -155,6 +172,9 @@ async function connect (session: Session, config: ServerConfig) {
 export async function refresh () {
   const epoch = runtime.generation
   const session = runtime.state.session
+  const initial = !runtime.state.conversationsLoaded && !runtime.state.conversations.length
+  if (initial && session)
+    runtime.update({ busy: true, error: '' })
   try {
     const result = await messaging.refresh()
     if (epoch !== runtime.generation || session !== runtime.state.session)
@@ -169,13 +189,24 @@ export async function refresh () {
     if (session)
       runtime.update({ status: '同步暂时失败', error: '会话同步暂时失败，可下拉会话列表重试。', recoveryAvailable: true })
     throw error
+  } finally {
+    if (initial && epoch === runtime.generation && session === runtime.state.session)
+      runtime.update({ busy: false })
   }
+}
+const recoverConversation = createConversationRecovery({
+  isCurrent: context => runtime.generation === context.generation && runtime.activeID === context.conversationID && runtime.state.session === context.session,
+  refresh,
+  loadHistory: messaging.loadHistory,
+})
+export function resumeConversation (conversationID: string, session: Session) {
+  return recoverConversation({ conversationID, generation: runtime.generation, session })
 }
 export async function login (account: string, password: string, config: ServerConfig) {
   if (runtime.state.busy)
     return
   const epoch = ++runtime.generation
-  runtime.update({ busy: true, error: '' })
+  runtime.update({ busy: true, error: '', startupSnapshot: undefined, conversations: [], conversationsLoaded: false })
   try {
     const session = await authenticate(account, password, config.chat, platformID)
     if (epoch === runtime.generation) {
@@ -204,7 +235,11 @@ async function restore (retry = false) {
       return
     if (saved) {
       const { session, config } = JSON.parse(saved)
-      runtime.update({ config, recoveryAvailable: true })
+      const startupSnapshot = await homeSnapshots.load(session.userID, config)
+      if (epoch !== runtime.generation)
+        return
+      runtime.update({ config, recoveryAvailable: true, startupSnapshot,
+        conversations: startupSnapshot?.conversations || [], conversationsLoaded: !!startupSnapshot })
       await connect(session, config)
       return
     }
@@ -239,6 +274,9 @@ export async function retryRestore () {
   await restore(true)
 }
 export async function logout (error = '') {
+  const previousSession = runtime.state.session
+  const previousConfig = runtime.state.config
+  stopHomeSnapshot()
   void calls.finish('end').catch(() => {})
   calls.reset('')
   const epoch = ++runtime.generation
@@ -248,16 +286,22 @@ export async function logout (error = '') {
   messaging.reset()
   runtime.update({
     session: undefined,
+    startupSnapshot: undefined,
     busy: true,
     status: '未登录',
     error,
     recoveryAvailable: false,
+    conversationsLoaded: false,
     conversations: [],
     messages: {},
     historyEnd: {},
+    historyLoading: {},
+    historyPaging: {},
   })
   try {
     await storage.removeItem(key)
+    if (previousSession)
+      await homeSnapshots.remove(previousSession.userID, previousConfig)
   } catch {
     /* SDK logout still runs when local storage is unavailable. */
   }
@@ -276,7 +320,18 @@ export function useOpenIM () {
   return useSyncExternalStore(runtime.subscribe, runtime.snapshot, runtime.snapshot)
 }
 
+export function syncMessageReaders (conversationID: string, messageID: string, readCount: number, unreadCount: number, guard?: GroupMessageReadGuard) {
+  runtime.syncMessageReaders(conversationID, messageID, readCount, unreadCount, guard)
+}
+
 /** Search pages stay separate so sparse hits cannot create gaps in chat history. */
+/** Start local history retrieval before navigation; focus owns visible error reporting/retry. */
+export function prefetchConversationHistory (id: string) {
+  return messaging.loadHistory(id).catch(() => {
+    // The focused conversation joins this request (or retries it) and reports current-session errors.
+  })
+}
+
 export async function loadServerHistory (request: ServerHistoryRequest) {
   const { session, config } = runtime.state
   if (!session)
@@ -333,3 +388,14 @@ async function recheckAttachmentDelivery (conversationID: string, message: impor
     cursor = page.cursor
   }
 }
+
+// A replaced store must stop consuming SDK events; the page SDK/session stay alive.
+if (typeof module !== 'undefined' && module.hot)
+  module.hot.dispose(() => {
+    // Metro retains the hot object but invokes dispose without a data argument.
+    stopHomeSnapshot()
+    module.hot!.data = { snapshot: runtime.snapshot() }
+    ++runtime.generation
+    disposeEvents()
+    calls.reset('')
+  })

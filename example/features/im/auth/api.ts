@@ -28,6 +28,8 @@ export async function authenticate (
       }),
     })
     const result = await response.json()
+    if (result.errCode === 20001)
+      throw new Error('账号或密码错误')
     if (!response.ok || result.errCode)
       throw new Error(result.errMsg || `登录失败 (${response.status})`)
     const data = result.data

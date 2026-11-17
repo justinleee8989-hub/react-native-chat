@@ -1,4 +1,5 @@
 import React, { useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { Platform } from 'react-native'
 
 import { useLabels } from '../../hooks/useLabels'
 import { IMessage } from '../../Models'
@@ -7,7 +8,9 @@ import { RecordButtonPhase } from '../RecordButton'
 import { createRecordingMeter, RecordingMeterContext } from '../recordingMeter'
 import { clipsDuration, clipsLevels, createClip, isVoiceTrimAvailable, renderClips, VoiceClip } from '../voiceEditing'
 import { CANCEL_ARMED_PROGRESS, DEFAULT_MIN_DURATION_MS, IDLE_STATE, LEVEL_HISTORY, MIN_CLIP_MS } from './constants'
-import { expoAudio, normalizeMetering, releaseAudioSession, stopRecorderQuietly, viewOnceFields } from './recorder'
+import { expoAudio, normalizeMetering, releaseAudioSession, releaseRecorder, stopRecorderQuietly, viewOnceFields } from './recorder'
+import { awaitRecorderStart, RecorderStartCancelled, WEB_RECORDER_START_TIMEOUT_MS } from './startRecorder'
+import { stopRecorderWithTimeout, WEB_RECORDER_STOP_TIMEOUT_MS } from './stopRecorder'
 import { PendingFinish, VoiceMessageInputHandle, VoiceMessageInputProps, VoiceRecordingPreview } from './types'
 import { useLazyRecorder } from './useLazyRecorder'
 import { useStateReport } from './useStateReport'
@@ -69,7 +72,9 @@ export function useVoiceTake (
   // release be remembered and applied once `start` finishes, instead of being
   // dropped and leaving a recording nothing can stop.
   const startTokenRef = useRef(0)
+  const nextStartTokenRef = useRef(0)
   const pendingFinishRef = useRef<PendingFinish>(null)
+  const cancelStartRef = useRef<(() => void) | null>(null)
 
   const minDurationMs = config?.minDurationMs ?? DEFAULT_MIN_DURATION_MS
   const maxDurationMs = config?.maxDurationMs ?? 600000
@@ -103,7 +108,17 @@ export function useVoiceTake (
       // A release that lands while `start` is still awaiting natives: remember
       // it so `start` can apply it the moment the recorder is actually live.
       if (startTokenRef.current > 0 && outcome !== 'preview')
-        pendingFinishRef.current = { cancelled: outcome === 'cancel' }
+        if (outcome === 'cancel') {
+          startTokenRef.current = 0
+          pendingFinishRef.current = null
+          cancelStartRef.current?.()
+          cancelStartRef.current = null
+          // Detach any recorder whose prepare is still waiting on a browser
+          // permission prompt. A later take must not share that instance.
+          recorderRef.current = null
+        } else {
+          pendingFinishRef.current = { cancelled: false }
+        }
 
       return
     }
@@ -123,7 +138,7 @@ export function useVoiceTake (
     // still runs after every outcome, the early returns and a throwing `onError` included.
     await (async () => {
       const recorder = getRecorder()
-      await recorder.stop()
+      await stopRecorderWithTimeout(recorder, Platform.OS === 'web' ? WEB_RECORDER_STOP_TIMEOUT_MS : 0)
       const uri = recorder.uri
       const earlier = clipsRef.current
 
@@ -166,7 +181,7 @@ export function useVoiceTake (
         setIsLocked(false)
         releaseAudioSession()
       })
-  }, [getRecorder, minDurationMs, onSend, config, clearTimer])
+  }, [getRecorder, minDurationMs, onSend, config, clearTimer, recorderRef])
 
   const stopTakeRef = useRef(stopTake)
   useLayoutEffect(() => {
@@ -178,9 +193,17 @@ export function useVoiceTake (
     if (isRecordingRef.current || startTokenRef.current > 0)
       return
 
-    const token = Date.now()
+    const token = ++nextStartTokenRef.current
     startTokenRef.current = token
     pendingFinishRef.current = null
+    let rejectCancelled!: (error: Error) => void
+    const cancelled = new Promise<never>((_, reject) => {
+      rejectCancelled = reject
+    })
+    cancelStartRef.current = () => rejectCancelled(new RecorderStartCancelled())
+    const deadline = Date.now() + WEB_RECORDER_START_TIMEOUT_MS
+    const awaitStartup = <T>(operation: Promise<T>) =>
+      awaitRecorderStart(operation, Math.max(1, deadline - Date.now()), cancelled)
     if (!isResume) {
       clipsRef.current = []
       setIsViewOnce(false)
@@ -194,18 +217,38 @@ export function useVoiceTake (
 
     // A promise chain rather than try/finally, which the compiler cannot lower.
     await (async () => {
-      const permission = await expoAudio.AudioModule.requestRecordingPermissionsAsync()
+      const permission = await awaitStartup(expoAudio.AudioModule.requestRecordingPermissionsAsync() as Promise<{ granted?: boolean }>)
+      if (startTokenRef.current !== token)
+        return
       if (!permission?.granted) {
         config?.onPermissionDenied?.()
         return
       }
 
-      await expoAudio.setAudioModeAsync?.({ allowsRecording: true, playsInSilentMode: true })
+      await awaitStartup(Promise.resolve(expoAudio.setAudioModeAsync?.({ allowsRecording: true, playsInSilentMode: true })))
+      if (startTokenRef.current !== token)
+        return
       // Passing the options makes iOS build a new recorder, and so a new file.
       // Without them it reuses the last one and a resumed clip overwrites the
       // clip before it (Android makes a new file either way).
       const recorder = getRecorder()
-      await recorder.prepareToRecordAsync(recorderOptions)
+      const preparation = Promise.resolve(recorder.prepareToRecordAsync(recorderOptions))
+      void preparation.then(() => {
+        if (startTokenRef.current !== token) {
+          // A late Web permission result may have opened the stream while the
+          // caller had already cancelled. Start/stop immediately so Expo's
+          // recorder stop handler releases its tracks, without using the clip.
+          try {
+            recorder.record()
+            stopRecorderQuietly(recorder)
+          } catch {
+            releaseRecorder(recorder)
+          }
+          if (recorderRef.current === recorder)
+            recorderRef.current = null
+        }
+      }).catch(() => {})
+      await awaitStartup(preparation)
 
       // The component may have unmounted while we were awaiting natives.
       if (startTokenRef.current !== token)
@@ -243,7 +286,10 @@ export function useVoiceTake (
       }, 100)
     })()
       .catch(error => {
-        config?.onError?.(error)
+        pendingFinishRef.current = null
+        if (!(error instanceof RecorderStartCancelled))
+          config?.onError?.(error)
+        recorderRef.current = null
         isRecordingRef.current = false
         clipsRef.current = []
         setIsRecording(false)
@@ -255,21 +301,25 @@ export function useVoiceTake (
         setIsResuming(false)
         if (startTokenRef.current === token) {
           startTokenRef.current = 0
+          cancelStartRef.current = null
 
           // Apply a release that arrived while we were starting up. Without this
           // a quick tap leaves a live recording with no control to end it.
           const pending = takePendingFinish()
-          if (pending)
-            stopTakeRef.current(pending.cancelled ? 'cancel' : 'send')
+          if (pending && isRecordingRef.current)
+            return stopTakeRef.current(pending.cancelled ? 'cancel' : 'send')
         }
+        return undefined
       })
-  }, [getRecorder, recorderOptions, config, clearTimer, maxDurationMs, takePendingFinish, meter])
+  }, [getRecorder, recorderOptions, recorderRef, config, clearTimer, maxDurationMs, takePendingFinish, meter])
 
   // Tear the recorder down with the component: without this the mic stays hot
   // (and the iOS recording indicator lit) after navigating away mid-recording,
   // and the toolbar is left showing a frozen recording bar.
   useEffect(() => () => {
     clearTimer()
+    cancelStartRef.current?.()
+    cancelStartRef.current = null
     startTokenRef.current = 0
     pendingFinishRef.current = null
 

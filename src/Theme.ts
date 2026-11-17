@@ -226,9 +226,18 @@ export interface ChatThemeComposer {
   fieldPaddingH: number
   /** Size of the inset icons (emoji, attachment, camera). */
   insetIconSize: number
+  /** Optional width of inset composer controls; default 44. */
+  insetButtonWidth?: number
 }
 
 export interface ChatThemeVoice {
+  /** Optional idle recording control overrides; defaults retain the accent/white button. */
+  idleBackground?: string
+  idleIcon?: string
+  /** @deprecated Use labels.recordAudioMessage. This legacy override takes precedence. */
+  recordAudioLabel?: string
+  /** @deprecated Use labels.recordVideoMessage. This legacy override takes precedence. */
+  recordVideoLabel?: string
   /**
    * Full slide-to-cancel distance (px), capped at 35% of the window width.
    * Reaching it cancels the take mid-drag; releasing past 55% of
@@ -252,9 +261,10 @@ export interface ChatThemeBubble {
   /**
    * `'screen'`: one gradient spans the message list and each bubble shows its slice, so a
    * bubble changes color as it scrolls. `'bubble'`: every bubble carries the whole
-   * gradient, which costs nothing while scrolling.
+   * gradient, which costs nothing while scrolling. 'window' spans the full application
+   * window, including navigation and composer space; stops remain evenly distributed.
    */
-  outgoingGradientMode: 'screen' | 'bubble'
+  outgoingGradientMode: 'screen' | 'bubble' | 'window'
   /**
    * Text column inset: a bubble's text is at most `min(width, height) - maxWidthInset` wide
    * (80 by default), and narrower by the avatar column when avatars show.

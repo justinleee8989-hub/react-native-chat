@@ -32,6 +32,10 @@ export interface ChatLabels {
   location: string
   /** Accessibility label for the location card. */
   openLocationAccessibility: string
+  /** Accessibility label of the idle audio recording button. */
+  recordAudioMessage: string
+  /** Accessibility label of the idle video recording button. */
+  recordVideoMessage: string
   /** Voice recording slide-to-cancel hint. */
   slideToCancel: string
   /** Reply banner title; `{name}` is replaced with the author's name. */
@@ -247,6 +251,8 @@ export const defaultLabels: ChatLabels = {
   videoMessage: 'Video message',
   location: 'Location',
   openLocationAccessibility: 'Open location in maps',
+  recordAudioMessage: 'record voice message',
+  recordVideoMessage: 'record video message',
   slideToCancel: 'Slide left to cancel...',
   replyingTo: 'Replying to {name}',
   editing: 'Editing',

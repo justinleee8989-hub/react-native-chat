@@ -138,6 +138,18 @@ export function BubbleMenu<TMessage extends IMessage> ({ bubble, layout, menu, m
       }
       : undefined
 
+    if (bubble.renderContextMenu)
+      return renderComponentOrElement(bubble.renderContextMenu, {
+        visible: isPickerVisible,
+        items: menuItems,
+        onDismiss: close,
+        position: layout.visualPosition,
+        ...pickerAnchor,
+        ...touchPoint,
+        reactions: reactionsRow,
+        messagePreview,
+      })
+
     return (
       <ContextMenu
         visible={isPickerVisible}

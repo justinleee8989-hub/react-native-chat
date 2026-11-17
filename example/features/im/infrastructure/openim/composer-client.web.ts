@@ -60,7 +60,7 @@ export async function listGroupMembers (groupID: string) {
   if (typeof self?.userID !== 'string')
     throw new Error('无法确认当前账号，不能加载群成员')
   const pageSize = 100
-  const members = new Map<string, { userID: string, nickname: string }>()
+  const members = new Map<string, { userID: string, nickname: string, faceURL?: string, roleLevel?: number }>()
   for (let offset = 0; ; ) {
     const page = dataOf(await sdk.getGroupMemberList({ groupID, offset, count: pageSize, filter: 0 }, operationID()))
     if (!Array.isArray(page))
@@ -68,7 +68,7 @@ export async function listGroupMembers (groupID: string) {
     const previousCount = members.size
     for (const member of page)
       if (typeof member?.userID === 'string' && member.userID !== self.userID)
-        members.set(member.userID, { userID: member.userID, nickname: member.nickname || member.userID })
+        members.set(member.userID, { userID: member.userID, nickname: member.nickname || member.userID, faceURL: member.faceURL, roleLevel: member.roleLevel })
 
     if (page.length < pageSize)
       break

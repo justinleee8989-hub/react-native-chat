@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { ChatHandle } from '@kesha-antonov/react-native-chat'
 import { ensureMessageLoaded, reportError } from '../application/store'
 
@@ -6,16 +6,19 @@ import { ensureMessageLoaded, reportError } from '../application/store'
 export function useMessageLocation (id: string, messageID?: string) {
   const chatRef = useRef<ChatHandle>(null)
   const [locating, setLocating] = useState(false)
-  const [located, setLocated] = useState('')
+  const [request, setRequest] = useState<{ messageID: string }>()
+  const [located, setLocated] = useState<{ messageID: string }>()
+  const requestLocation = useCallback((target: string) => setRequest({ messageID: target }), [])
   useEffect(() => {
-    if (!messageID)
+    const target = request?.messageID || messageID
+    if (!target)
       return
     let active = true
     setLocating(true)
-    setLocated('')
-    void ensureMessageLoaded(id, messageID, () => active).then(() => {
+    setLocated(undefined)
+    void ensureMessageLoaded(id, target, () => active).then(() => {
       if (active)
-        setLocated(messageID)
+        setLocated({ messageID: target })
     }).catch(error => {
       if (active)
         reportError(error)
@@ -26,13 +29,13 @@ export function useMessageLocation (id: string, messageID?: string) {
     return () => {
       active = false
     }
-  }, [id, messageID])
+  }, [id, messageID, request])
   useEffect(() => {
     if (!located)
       return
-    const timer = setTimeout(() => chatRef.current?.scrollToMessage(located, { animated: true, isHighlighted: true }), 250)
+    const timer = setTimeout(() => chatRef.current?.scrollToMessage(located.messageID, { animated: true, isHighlighted: true }), 250)
     return () => clearTimeout(timer)
   }, [located])
 
-  return { chatRef, locating }
+  return { chatRef, locating, requestLocation }
 }

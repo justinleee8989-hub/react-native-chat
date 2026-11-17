@@ -21,8 +21,9 @@ jest.mock('react-native/Libraries/Modal/Modal', () => {
   }
 })
 jest.mock('expo-router', () => ({ useRouter: () => ({ canGoBack: () => false }) }))
-jest.mock('@/components/chat-list/theme', () => ({
-  useChatListColors: () => ({ name: '#111', message: '#777', background: '#fff', attachment: '#229af0', pressed: '#eee', draft: '#c00' }),
+jest.mock('../ui/theme', () => ({
+  useProductTheme: () => ({ surface: '#fff', scrim: 'rgba(0,0,0,.4)' }),
+  useProductColors: () => ({ name: '#111', message: '#777', background: '#fff', attachment: '#229af0', pressed: '#eee', draft: '#c00' }),
 }))
 
 beforeEach(() => {

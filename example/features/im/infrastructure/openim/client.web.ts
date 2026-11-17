@@ -5,9 +5,20 @@ import { createWebMedia } from './media.web'
 import { endWebSession } from './web-session'
 
 type SDK = ReturnType<typeof getSDK>
-let sdk: SDK | undefined
-let loading: Promise<SDK> | undefined
-const handlers = new Set<{ event: SdkEvent, listener: (response: { data: unknown }) => void }>()
+type Subscription = { event: SdkEvent, listener: (response: { data: unknown }) => void }
+interface WebRuntime {
+  sdk?: SDK
+  loading?: Promise<SDK>
+  handlers: Set<Subscription>
+  login?: { key: string, promise: Promise<void> }
+  authenticatedKey?: string
+}
+// WASM and its database worker live for the page, not the Metro module lifetime.
+const browserRuntime = typeof window === 'undefined' ? undefined : window as Window & { __openIMRuntime?: WebRuntime }
+const state: WebRuntime = browserRuntime
+  ? (browserRuntime.__openIMRuntime ??= { handlers: new Set() })
+  : { handlers: new Set() }
+
 function withTimeout<T>(operation: Promise<T>, milliseconds: number, message: string): Promise<T> {
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error(message)), milliseconds)
@@ -46,8 +57,8 @@ function loadScript (src: string, module = false) {
   })
 }
 function ready () {
-  if (!loading)
-    loading = loadScript('/wasm_exec.js')
+  if (!state.loading)
+    state.loading = loadScript('/wasm_exec.js')
       .then(() => loadScript('/openim-sdk-loader.js', true))
       .then(() => {
         // Keep the SDK as native browser modules so its import.meta.url resolves worker.js correctly.
@@ -56,40 +67,61 @@ function ready () {
         }
         if (!browser.OpenIMWebSDK)
           throw new Error('OpenIM Web SDK 加载失败，请检查 /openim-sdk-loader.js')
-        sdk = browser.OpenIMWebSDK.getSDK({
+        state.sdk = browser.OpenIMWebSDK.getSDK({
           coreWasmPath: '/openim.wasm',
           sqlWasmPath: '/sql-wasm.wasm',
           debug: false,
         })
-        handlers.forEach(({ event, listener }) => sdk!.on(event, listener))
-        return sdk
+        state.handlers.forEach(({ event, listener }) => state.sdk!.on(event, listener))
+        return state.sdk
       })
       .catch(error => {
-        loading = undefined
+        state.loading = undefined
         throw error
       })
-  return loading
+  return state.loading
 }
 export const client: IMClient = {
   async login(session, config) {
     const instance = await ready()
-    await withTimeout(
-      instance.login({
+    const key = JSON.stringify([session.userID, session.imToken, platformID, config.api, config.ws])
+    if (state.login) {
+      if (state.login.key !== key)
+        throw new Error('另一个账户正在连接，请稍后重试')
+      return withTimeout(state.login.promise, 30000, 'OpenIM 连接超时，请重试恢复登录')
+    }
+    const promise = (async () => {
+      if (state.authenticatedKey === key && (await instance.getLoginStatus()).data === 3)
+        return
+      state.authenticatedKey = undefined
+      await instance.login({
         userID: session.userID,
         token: session.imToken,
         platformID,
         apiAddr: config.api,
         wsAddr: config.ws,
         logLevel: 1,
-      }),
+        isLogStandardOutput: false,
+      })
+      state.authenticatedKey = key
+    })()
+    const attempt = { key, promise }
+    state.login = attempt
+    void promise.finally(() => {
+      if (state.login === attempt)
+        state.login = undefined
+    }).catch(() => {})
+    await withTimeout(
+      promise,
       30000,
       'OpenIM 连接超时，请检查服务地址与 SDK worker 静态资源'
     )
   },
   async logout() {
-    if (sdk)
+    state.authenticatedKey = undefined
+    if (state.sdk)
       await endWebSession(
-        () => withTimeout(sdk!.logout(), 5000, 'OpenIM 退出超时'),
+        () => withTimeout(state.sdk!.logout(), 5000, 'OpenIM 退出超时'),
         () => window.location.reload()
       )
   },
@@ -98,11 +130,11 @@ export const client: IMClient = {
     const event = `${name[0].toUpperCase()}${name.slice(1)}` as SdkEvent
     const listener = (response: { data: unknown }) => handler(response.data)
     const subscription = { event, listener }
-    handlers.add(subscription)
-    sdk?.on(event, listener)
+    state.handlers.add(subscription)
+    state.sdk?.on(event, listener)
     return () => {
-      handlers.delete(subscription)
-      sdk?.off(event, listener)
+      state.handlers.delete(subscription)
+      state.sdk?.off(event, listener)
     }
   },
   async conversations(offset) {

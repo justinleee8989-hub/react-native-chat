@@ -1,0 +1,17 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import { productSection, isDesktopProduct } from './layout.ts'
+test('deep links keep their matching master section', () => {
+  assert.equal(productSection('/chats/groups/requests'), 'contacts')
+  assert.equal(productSection('/chats/people/alice'), 'contacts')
+  assert.equal(productSection('/chats/people/alice/more'), 'contacts')
+  assert.equal(productSection('/chats/add-friend'), 'contacts')
+  assert.equal(productSection('/chats/friend-requests'), 'contacts')
+  assert.equal(productSection('/chats/settings'), 'me')
+  assert.equal(productSection('/chats/call-history'), 'me')
+  assert.equal(productSection('/chats/conversation/id'), 'chats')
+})
+test('desktop breakpoint does not change mobile navigation', () => {
+  assert.equal(isDesktopProduct(899), false)
+  assert.equal(isDesktopProduct(900), true)
+})

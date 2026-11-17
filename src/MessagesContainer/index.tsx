@@ -20,6 +20,7 @@ import { MessagesContainerProps, DaysPositions } from './types'
 import { useCellLayouts } from './useCellLayouts'
 import { useChained } from './useChained'
 import { useDaysPositions } from './useDaysPositions'
+import { useGradientWindow } from './useGradientWindow'
 import { useListChrome } from './useListChrome'
 import { useListMetrics, useRowsHeight } from './useListMetrics'
 import { useMessageRows } from './useMessageRows'
@@ -98,11 +99,14 @@ export const MessagesContainer = <TMessage extends IMessage>(props: MessagesCont
   } = useScrollActivity()
 
   const isScreenGradient = !!theme.bubble.outgoingGradient && theme.bubble.outgoingGradient.length > 1 &&
-    theme.bubble.outgoingGradientMode === 'screen'
+    theme.bubble.outgoingGradientMode !== 'bubble'
+  const isWindowGradient = isScreenGradient && theme.bubble.outgoingGradientMode === 'window'
+  const { ref: gradientRef, onLayout: onGradientLayout, frame: gradientFrame } = useGradientWindow(isWindowGradient)
+  const windowFrame = isWindowGradient ? gradientFrame : undefined
   const gradientStore = useMemo((): BubbleGradientStore | null => isScreenGradient
-    ? { scrolledY, listHeight, cellLayout, isInverted: false }
+    ? { scrolledY, listHeight, cellLayout, isInverted: false, windowFrame }
     : null
-  , [isScreenGradient, scrolledY, listHeight, cellLayout])
+  , [isScreenGradient, scrolledY, listHeight, cellLayout, windowFrame])
 
   const { ListHeaderComponent, ListFooterComponent, renderChatEmpty, onStartReached } = useListChrome(props)
 
@@ -220,6 +224,9 @@ export const MessagesContainer = <TMessage extends IMessage>(props: MessagesCont
 
   const list = (
     <View
+      ref={gradientRef}
+      onLayout={isWindowGradient ? onGradientLayout : undefined}
+      collapsable={isWindowGradient ? false : undefined}
       style={[styles.contentContainerStyle, themedStyles.root, stylesCommon.fill]}
       onTouchStart={onListTouchStart}
       onTouchEnd={onListTouchEnd}

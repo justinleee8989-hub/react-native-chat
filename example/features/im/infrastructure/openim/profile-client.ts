@@ -1,6 +1,7 @@
 import type { ProfilePatch } from '../../domain/profile'
 import { getSDKClient } from './client'
 import { createProfileService } from './profile-service'
+import { fetchSelfProfile } from './self-profile-api'
 
 export const profile = createProfileService(async () => {
   const sdk = await getSDKClient()
@@ -14,4 +15,4 @@ export const profile = createProfileService(async () => {
     addBlack: (params: { toUserID: string }) => sdk.addBlack(params),
     removeBlack: (id: string) => sdk.removeBlack(id),
   }
-}, value => value)
+}, value => value, fetchSelfProfile)

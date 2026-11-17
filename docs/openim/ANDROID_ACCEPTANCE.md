@@ -1,5 +1,9 @@
 # Android 真机验收
 
+最新 Release 性能专项见 [2026-11-17 实测报告](ANDROID_RELEASE_PERFORMANCE_2026-11-17.md)。历史 Debug 性能待办以该报告更新，仍有少量瞬时掉帧，不记零掉帧。
+
+Latest: [2026-11-17 focused regression](ANDROID_SCROLL_2026-11-17.md).
+
 ## 当前状态（2026-11-16）
 
 - ARM64 调试 APK 已安装至 Android 14 真机，独立 QA 账号登录、冷启动恢复、好友及双向文字已验证。

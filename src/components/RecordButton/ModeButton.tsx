@@ -2,6 +2,8 @@ import React, { useEffect } from 'react'
 import { GestureDetector } from 'react-native-gesture-handler'
 import Animated, { ReduceMotion, SharedValue, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
 
+import { useLabels } from '../../hooks/useLabels'
+import { useTheme } from '../../hooks/useTheme'
 import { Icon } from '../Icon'
 import { CameraIcon, MicIcon } from '../MediaControls'
 import { RecordButtonStyles } from './styles'
@@ -38,6 +40,9 @@ interface ModeButtonProps {
 
 /** The 36pt button a take is held on, with its mic and camera icons. */
 export function ModeButton ({ gesture, buttonShown, modeSV, isVideo, styles }: ModeButtonProps) {
+  const theme = useTheme()
+  const labels = useLabels()
+  const iconColor = theme.voice.idleIcon ?? '#fff'
   // Hidden under the big circle while a take records, back once it has left.
   const buttonStyle = useAnimatedStyle(() => ({
     opacity: buttonShown.value,
@@ -57,14 +62,14 @@ export function ModeButton ({ gesture, buttonShown, modeSV, isVideo, styles }: M
     <GestureDetector gesture={gesture}>
       <Animated.View
         accessibilityRole='button'
-        accessibilityLabel={isVideo ? 'record video message' : 'record voice message'}
+        accessibilityLabel={isVideo ? theme.voice.recordVideoLabel ?? labels.recordVideoMessage : theme.voice.recordAudioLabel ?? labels.recordAudioMessage}
         style={[styles.button, buttonStyle]}
       >
         <Animated.View style={[styles.modeIcon, micStyle]}>
-          <Icon name='mic' color='#fff' size={22} fallback={<MicIcon color='#fff' size={22} />} />
+          <Icon name='mic' color={iconColor} size={22} fallback={<MicIcon color={iconColor} size={22} />} />
         </Animated.View>
         <Animated.View style={[styles.modeIcon, cameraStyle]}>
-          <Icon name='camera' color='#fff' size={22} fallback={<CameraIcon color='#fff' size={22} />} />
+          <Icon name='camera' color={iconColor} size={22} fallback={<CameraIcon color={iconColor} size={22} />} />
         </Animated.View>
       </Animated.View>
     </GestureDetector>

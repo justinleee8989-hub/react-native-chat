@@ -68,3 +68,10 @@ test('call controller can surface group invitation failure after navigation', ()
  c.notifyError('群通话邀请未送达：消息被拒绝')
  assert.equal(c.snapshot().error, '群通话邀请未送达：消息被拒绝')
 })
+
+test('records the server terminal outcome instead of the requested finish label', async () => {
+ const recorded = []
+ const c = createServerCallController({ request: async req => [req.action === 'cancel' ? { ...call, status: 'canceled' } : call], record: async (_peer, signal) => recorded.push(signal.kind), now: () => 1000 })
+ c.reset('me'); await c.start('peer', 'Peer', 'id'); await c.finish('end')
+ assert.deepEqual(recorded, ['invite', 'cancel'])
+})

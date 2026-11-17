@@ -9,11 +9,15 @@ export interface ServerCall {
   created: number
   expires: number
   ended?: number
+  connectedAt?: number
+  durationSeconds?: number
+  serverRecordDelivery?: boolean
   members: Record<string, { lease: number }>
 }
 export interface CallRequest { action: string, room?: string, peer?: string, groupID?: string, requestID?: string }
 const results: Record<string, string> = { ended: '通话已结束', canceled: '通话已取消', rejected: '已拒接通话', missed: '未接通话', disconnected: '连接中断，通话已结束' }
-interface State { active?: ActiveCall & { groupID?: string }, error: string, notice: string }
+export interface MediaPreferences { microphone: boolean, camera: boolean, speaker: boolean }
+interface State { active?: ActiveCall & { groupID?: string, media: MediaPreferences, connectedAt?: number }, error: string, notice: string }
 export function createServerCallController ({ request, record, now = Date.now }: {
   request: (request: CallRequest) => Promise<ServerCall[]>
   record: (peer: string, signal: CallSignal) => Promise<void>
@@ -25,7 +29,7 @@ export function createServerCallController ({ request, record, now = Date.now }:
   const listeners = new Set<() => void>()
   const currentCall = () => state.active
   const update = (patch: Partial<State>) => {
-    state = { ...state, ...patch }; listeners.forEach(fn => fn()) 
+    state = { ...state, ...patch }; listeners.forEach(fn => fn())
   }
   function apply (calls: ServerCall[]) {
     const previous = state.active
@@ -38,6 +42,8 @@ export function createServerCallController ({ request, record, now = Date.now }:
     if (active) {
       const peer = active.caller === self ? active.callee || '' : active.caller
       update({ active: { room: active.room, expires: active.expires, kind: 'invite', peer, groupID: active.groupID,
+        connectedAt: active.connectedAt,
+        media: previous?.room === active.room ? previous.media : { microphone: true, camera: false, speaker: true },
         name: previous?.room === active.room ? previous.name : peer || '群通话',
         phase: active.status === 'accepted' ? 'connected' : active.caller === self ? 'outgoing' : 'incoming' } })
     } else if (previous && !results[existing?.status || '']) {
@@ -48,7 +54,7 @@ export function createServerCallController ({ request, record, now = Date.now }:
     if (!call.peer || generation !== epoch)
       return
     try {
-      await record(call.peer, { room: call.room, expires: call.expires, kind }) 
+      await record(call.peer, { room: call.room, expires: call.expires, kind })
     } catch (error) {
       if (generation === epoch)
         update({ error: `通话状态已保存，聊天记录发送失败：${safeCallErrorMessage(error, '请检查 IM 连接')}` })
@@ -62,7 +68,7 @@ export function createServerCallController ({ request, record, now = Date.now }:
     try {
       const calls = await request({ action: 'list' })
       if (generation !== epoch || pollRevision !== revision) {
-        if (generation === epoch) 
+        if (generation === epoch)
           polling = false
         return
       }
@@ -71,10 +77,10 @@ export function createServerCallController ({ request, record, now = Date.now }:
       const heartbeat = active?.phase === 'connected' && mediaRoom === active.room && now() - lastBeat > 8000
       if (heartbeat) {
         await request({ action: 'heartbeat', room: active.room })
-        if (generation === epoch) 
+        if (generation === epoch)
           lastBeat = now()
       }
-      if (generation === epoch) 
+      if (generation === epoch)
         lastOK = now()
     } catch {
       if (generation === epoch && state.active && now() - lastOK > 15000) {
@@ -86,31 +92,36 @@ export function createServerCallController ({ request, record, now = Date.now }:
       polling = false
   }
   return {
+    setMediaPreference (room: string, key: keyof MediaPreferences, enabled: boolean) {
+      const active = state.active
+      if (active?.room === room)
+        update({ active: { ...active, media: { ...active.media, [key]: enabled } } })
+    },
     mediaReady (room: string, ready: boolean) {
-      if (ready) 
+      if (ready)
         mediaRoom = room
-      else if (mediaRoom === room) 
+      else if (mediaRoom === room)
         mediaRoom = ''
     },
     snapshot: () => state,
     notifyError: (error: string) => update({ error }),
     subscribe: (fn: () => void) => {
       listeners.add(fn); return () => {
-        listeners.delete(fn) 
-      } 
+        listeners.delete(fn)
+      }
     },
     reset (user: string) {
-      self = user; mediaRoom = ''; epoch++; pending = false; polling = false; lastPoll = 0; lastOK = now(); lastBeat = 0; ignored.clear(); update({ active: undefined, error: '', notice: '' }) 
+      self = user; mediaRoom = ''; epoch++; pending = false; polling = false; lastPoll = 0; lastOK = now(); lastBeat = 0; ignored.clear(); update({ active: undefined, error: '', notice: '' })
     },
     dismiss: () => update({ error: '', notice: '' }),
     // OpenIM messages are durable display records, never authoritative call transitions.
     receive (message: unknown) {
-      void message 
+      void message
     },
     tick () {
       if (now() - lastPoll > 2000) {
-        lastPoll = now(); void poll() 
-      } 
+        lastPoll = now(); void poll()
+      }
     },
     poll,
     async start (peer: string, name: string, requestID: string) {
@@ -124,11 +135,11 @@ export function createServerCallController ({ request, record, now = Date.now }:
         lastOK = now(); apply(calls)
         const active = currentCall()
         if (active) {
-          update({ active: { ...active, name }, error: '', notice: '' }); await remember(active, 'invite', generation) 
+          update({ active: { ...active, name }, error: '', notice: '' }); await remember(active, 'invite', generation)
         }
       } finally {
-        if (generation === epoch) 
-          pending = false 
+        if (generation === epoch)
+          pending = false
       }
     },
     async group (groupID: string, requestID: string) {
@@ -141,8 +152,8 @@ export function createServerCallController ({ request, record, now = Date.now }:
           throw new Error('登录已改变')
         lastOK = now(); apply(calls); return calls[0]
       } finally {
-        if (generation === epoch) 
-          pending = false 
+        if (generation === epoch)
+          pending = false
       }
     },
     async join (room: string) {
@@ -169,14 +180,16 @@ export function createServerCallController ({ request, record, now = Date.now }:
       try {
         const calls = await request({ action: 'accept', room: call.room })
         if (generation === epoch && !ignored.has(call.room)) {
-          lastOK = now(); apply(calls); await remember(call, 'accept', generation) 
+          lastOK = now(); apply(calls); await remember(call, 'accept', generation)
         }
       } finally {
-        if (generation === epoch) 
-          pending = false 
+        if (generation === epoch)
+          pending = false
       }
     },
     async finish (kind: Exclude<SignalKind, 'invite' | 'accept' | 'busy'>) {
+      // Keep the caller API compatible; only the authority response decides the record.
+      void kind
       const call = state.active
       if (!call)
         return
@@ -187,7 +200,12 @@ export function createServerCallController ({ request, record, now = Date.now }:
       try {
         const calls = await request({ action, room: call.room })
         if (generation === epoch) {
-          update({ notice: results[calls[0]?.status] || '已离开通话' }); await remember(call, kind, generation) 
+          const result = calls.find(item => item.room === call.room)
+          const status = result?.status || ''
+          update({ notice: results[status] || '已离开通话' })
+          const terminalKinds: Record<string, SignalKind> = { canceled: 'cancel', rejected: 'reject', missed: 'missed', ended: 'end' }
+          if (!call.groupID && !result?.serverRecordDelivery && terminalKinds[status])
+            await remember(call, terminalKinds[status], generation)
         }
       } catch (error) {
         if (generation === epoch)

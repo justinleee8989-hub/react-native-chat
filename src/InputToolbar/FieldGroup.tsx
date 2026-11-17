@@ -33,7 +33,7 @@ interface FieldGroupProps {
   actionsFragment: React.ReactNode
   videoFragment: React.ReactNode
   /** The paperclip's step aside while there is text. */
-  attachStyle: ReturnType<typeof useAttachStyle>
+  attachStyle: ReturnType<typeof useAttachStyle> | undefined
   hasText: boolean
   /** A take has been recorded since mount, so the field fades back in. */
   hasHadTake: boolean
