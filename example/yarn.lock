@@ -2578,13 +2578,13 @@ __metadata:
 
 "@openim/rn-client-sdk@patch:@openim/rn-client-sdk@npm%3A3.8.3-patch.12.4#~/.yarn/patches/@openim-rn-client-sdk-npm-3.8.3-patch.12.4-bac3fad1bc.patch":
   version: 3.8.3-patch.12.4
-  resolution: "@openim/rn-client-sdk@patch:@openim/rn-client-sdk@npm%3A3.8.3-patch.12.4#~/.yarn/patches/@openim-rn-client-sdk-npm-3.8.3-patch.12.4-bac3fad1bc.patch::version=3.8.3-patch.12.4&hash=d3e2f0"
+  resolution: "@openim/rn-client-sdk@patch:@openim/rn-client-sdk@npm%3A3.8.3-patch.12.4#~/.yarn/patches/@openim-rn-client-sdk-npm-3.8.3-patch.12.4-bac3fad1bc.patch::version=3.8.3-patch.12.4&hash=b9531e"
   dependencies:
     react-native-uuid: "npm:^2.0.3"
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10c0/7b460844fcce98115c43031ee839a3a765287102299add218b8de5b2a263d656763abe588e1a93e0374aa3181b464e81fc277337f2d78af90c7c6096adbe97af
+  checksum: 10c0/de9807ac7b41bd6da1c43bdd711bc78818c7a1696a731d76d229c5b0634d2a3695c565c4a9a98f274cf0eadaaa023db9bce791e2410819d33e6220f425c42ef6
   languageName: node
   linkType: hard
 

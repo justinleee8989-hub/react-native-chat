@@ -30,6 +30,11 @@ export const client: IMClient = {
     }
   },
   on(event, handler) {
+    // Only the Web SDK emits group read receipts. iOS rejects listeners for events missing
+    // from the native module's supportedEvents (a red screen in debug), and Android never
+    // fires this one, so native gets its group read counts from the business notification.
+    if (event === 'onRecvGroupReadReceipt')
+      return () => {}
     const listener = OpenIMEmitter.addListener(
       event === 'onProgress' ? 'SendMessageProgress' : event,
       handler

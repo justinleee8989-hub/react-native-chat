@@ -67,3 +67,11 @@ diff --git a/ios/OpenImSdkRn.m b/ios/OpenImSdkRn.m
      if (flag) {
          resolve(@"init success");
      }else{
+@@ -1222,6 +1223,7 @@ - (NSArray *)parseJsonStr2Array:(NSString *)jsonStr {
+ // Third
+ RCT_EXPORT_METHOD(unInitSDK:(NSString *)operationID resolver:(RCTPromiseResolveBlock)resolver rejecter:(RCTPromiseRejectBlock)rejecter) {
+     Open_im_sdkUnInitSDK(operationID);
++    resolver(nil);
+ }
+ 
+ RCT_EXPORT_METHOD(updateFcmToken:(NSString *)fcmToken expireTime:(nonnull NSNumber *)expireTime operationID:(NSString *)operationID resolver:(RCTPromiseResolveBlock)resolver rejecter:(RCTPromiseRejectBlock)rejecter) {
