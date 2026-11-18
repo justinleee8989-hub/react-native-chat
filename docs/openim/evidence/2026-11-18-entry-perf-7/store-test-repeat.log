@@ -1,0 +1,54 @@
+(node:8073) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/czzz/work/kson/code/github/IM/react-native-chat/example/features/im/domain/model.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/czzz/work/kson/code/github/IM/react-native-chat/example/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ offline SDK messages update the current chat without leaving it and remain deduplicated (134.62225ms)
+✔ sync completion reloads the active conversation history after reconnect (58.308334ms)
+✔ foreground recovery coalesces refreshes and reloads history only while the same chat remains active (66.379083ms)
+✔ foreground recovery does not load history into a replacement session (48.409417ms)
+✔ initial login retains a non-blocking message projection warning (50.524042ms)
+✔ a rejected refresh from a previous login cannot change the current account status (48.68675ms)
+✔ a stale restore refresh cannot clear the busy state of a new login (54.97875ms)
+✔ media upload failure keeps one retryable message and progress events update the official ring (56.998209ms)
+✔ duplicate retry taps do not issue concurrent SDK sends (41.874458ms)
+✔ logout during pending HTTP login prevents late response from resurrecting session (51.017583ms)
+✔ late restore cannot revive a logged out account (52.90625ms)
+✔ storage removal failure does not skip SDK logout (42.159375ms)
+✔ store module reload restores the session without duplicating SDK event subscriptions (58.478542ms)
+✔ store module disposal clears subscriptions and fences an in-flight SDK login (45.5705ms)
+✔ opening an empty new conversation does not mark nonexistent server history read (44.056792ms)
+✔ checked call invite send rejects when SDK send fails (39.197333ms)
+✔ checked call invite send resolves only after SDK delivery succeeds (46.50925ms)
+✔ retrying a call invitation checks server authority before sending it (44.297292ms)
+✔ temporary SDK login failure preserves saved login and can be retried (39.896ms)
+✔ explicit expired or invalid OpenIM login tokens clear saved credentials (45.085583ms)
+✔ temporary conversation refresh failure preserves saved login for retry (43.917125ms)
+✔ explicit invalid-token event clears saved login (39.73625ms)
+✔ read receipts update only the matching outgoing message and never mark partial group reads as fully read (45.729708ms)
+✔ authoritative group reader details synchronize the matching cached message count (31.911291ms)
+✔ a stale reader request cannot overwrite a newer SDK receipt for the same message (38.857542ms)
+✖ a chat server group read notice asks the open group chat to refresh its read count (54.945834ms)
+✔ the same read counts leave the store state untouched (34.427917ms)
+✔ session initialization waits for storage before allowing an unauthenticated redirect (39.797625ms)
+✔ session initialization completes after storage failure so recovery is accessible (39.262083ms)
+✔ cold restore displays an account snapshot without treating it as authenticated (391.627792ms)
+✔ store deletion returns only after the persisted home snapshot excludes the conversation (338.532375ms)
+ℹ tests 31
+ℹ suites 0
+ℹ pass 30
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2386.46825
+
+✖ failing tests:
+
+test at features/im/application/store.test.mjs:552:1
+✖ a chat server group read notice asks the open group chat to refresh its read count (54.945834ms)
+  ReferenceError: process is not defined
+      at evalmachine.<anonymous>:123:9
+      at evalmachine.<anonymous>:11:17
+      at TestContext.<anonymous> (file:///Users/czzz/work/kson/code/github/IM/react-native-chat/example/features/im/application/store.test.mjs:558:46)
+      at async Test.run (node:internal/test_runner/test:1127:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:789:7)

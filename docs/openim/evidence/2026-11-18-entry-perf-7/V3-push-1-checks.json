@@ -1,0 +1,17 @@
+[
+  {
+    "epoch": 1794973032.2768269,
+    "read1": false,
+    "read0": true
+  },
+  {
+    "epoch": 1794973035.445041,
+    "read1": false,
+    "read0": true
+  },
+  {
+    "epoch": 1794973038.639269,
+    "read1": true,
+    "read0": false
+  }
+]

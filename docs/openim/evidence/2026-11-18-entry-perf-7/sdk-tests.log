@@ -1,0 +1,7 @@
+A worker process has failed to exit gracefully and has been force exited. This is likely caused by tests leaking due to improper teardown. Try running with --detectOpenHandles to find leaks. Active timers can also cause this, ensure that .unref() was called on them.
+
+Test Suites: 91 passed, 91 total
+Tests:       501 passed, 501 total
+Snapshots:   34 passed, 34 total
+Time:        6.909 s, estimated 27 s
+Ran all test suites.

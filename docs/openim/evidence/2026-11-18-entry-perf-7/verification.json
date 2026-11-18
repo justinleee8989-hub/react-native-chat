@@ -1,0 +1,33 @@
+{
+  "implementation": "ceed3a81d7701e998f1cdb967f487d35d525c835",
+  "comparison": "81c0b70",
+  "ui": {
+    "suites": 54,
+    "passed": 249,
+    "exit": 0
+  },
+  "sdk": {
+    "suites": 91,
+    "passed": 501,
+    "snapshots": 34,
+    "exit": 0
+  },
+  "business": {
+    "total": 287,
+    "passed": 286,
+    "failed": 1,
+    "exit": 1
+  },
+  "storeRepeat": {
+    "total": 31,
+    "passed": 30,
+    "failed": 1,
+    "exit": 1
+  },
+  "appTypecheck": 0,
+  "sdkTypecheck": 0,
+  "sourceLint": 0,
+  "sdkBuild": 0,
+  "androidCurrentBuild": 0,
+  "androidOldBuild": 0
+}

@@ -1,0 +1,18 @@
+[
+  {
+    "name": "openim-rn-local-openim-server-1",
+    "image": "local/openim-server:perf5-group-read-ready",
+    "health": "healthy",
+    "logLevel": [
+      "IMENV_LOG_REMAINLOGLEVEL=3"
+    ]
+  },
+  {
+    "name": "openim-rn-local-openim-chat-1",
+    "image": "local/openim-chat:perf5-group-read-push",
+    "health": "healthy",
+    "logLevel": [
+      "CHATENV_LOG_REMAINLOGLEVEL=3"
+    ]
+  }
+]

@@ -1,0 +1,23 @@
+[
+  {
+    "round": 1,
+    "clickEpoch": 1794973035.111,
+    "firstDetectedEpoch": 1794973038.639269,
+    "detectionUpperBoundSeconds": 3.528,
+    "known": true
+  },
+  {
+    "round": 2,
+    "clickEpoch": 1794973109.128,
+    "firstDetectedEpoch": 1794973113.1476831,
+    "detectionUpperBoundSeconds": 4.02,
+    "known": true
+  },
+  {
+    "round": 3,
+    "clickEpoch": 1794973236.441,
+    "firstDetectedEpoch": 1794973244.039235,
+    "detectionUpperBoundSeconds": 7.598,
+    "known": true
+  }
+]
