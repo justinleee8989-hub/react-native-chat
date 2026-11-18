@@ -1,5 +1,5 @@
-import React from 'react'
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native'
+import React, { useEffect, useRef, useState } from 'react'
+import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { type Href, useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { offlineStatus, useConnectionStatus } from '../application/connection-status'
@@ -28,6 +28,8 @@ export function ProductPage ({
   skeleton = 'list',
   skeletonGroup = false,
   onRetry,
+  onRefresh,
+  refreshing = false,
   backHref = '/(tabs)/contacts',
 }: React.PropsWithChildren<{
   title: string
@@ -50,6 +52,12 @@ export function ProductPage ({
   /** The `profile` skeleton stands in for a group (rounded-square avatar). */
   skeletonGroup?: boolean
   onRetry?: () => void
+  /**
+   * Pull to refresh (iOS, Android). `refreshing` while a refresh the page shows itself runs (the
+   * pull's spinner, or a header button's); the floating busy spinner then stays hidden.
+   */
+  onRefresh?: () => void
+  refreshing?: boolean
   backHref?: Href
 }>) {
   const router = useRouter()
@@ -97,6 +105,10 @@ export function ProductPage ({
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps='handled'
             contentContainerStyle={{ paddingBottom: 40 }}
+            refreshControl={onRefresh && (
+              // The platform's own spinner, as on the chat list.
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            )}
           >
             {!!error && (
               <Text accessibilityRole='alert' style={{ padding: 16, color: t.danger }}>
@@ -114,7 +126,7 @@ export function ProductPage ({
           </ScrollView>
           {/* Floats over the content: in the flow it pushed the page down on every refresh (pages
               refresh on focus), and back up when the refresh ended. */}
-          {busy && !initialLoading && !loading && (
+          {busy && !initialLoading && !loading && !refreshing && (
             <ActivityIndicator accessibilityLabel='正在处理' color={t.accent} style={styles.busy} pointerEvents='none' />
           )}
         </View>
@@ -123,20 +135,50 @@ export function ProductPage ({
     </View>
   )
 }
+/**
+ * `busy`, held for at least `minimum` ms once it starts: a reload that answers at once still shows
+ * its spinner long enough to read as having happened, instead of a flash that looks like nothing.
+ */
+function useVisibleBusy (busy: boolean, minimum = 600) {
+  const [held, setHeld] = useState(false)
+  const since = useRef(0)
+  useEffect(() => {
+    if (busy) {
+      since.current = Date.now()
+      setHeld(true)
+      return
+    }
+    const left = minimum - (Date.now() - since.current)
+    if (left <= 0) {
+      setHeld(false)
+      return
+    }
+    const timer = setTimeout(() => setHeld(false), left)
+    return () => clearTimeout(timer)
+  }, [busy, minimum])
+  return busy || held
+}
+
 export function ProductIconButton ({
   name,
   label,
   onPress,
+  busy = false,
 }: {
   name: React.ComponentProps<typeof ProductIcon>['name']
   label: string
   onPress: () => void
+  /** The icon becomes the platform spinner and the button waits, as `ProductButton` does (0.6s at least). */
+  busy?: boolean
 }) {
   const t = useProductTheme()
+  const waiting = useVisibleBusy(busy)
   return (
     <Pressable
       accessibilityRole='button'
       accessibilityLabel={label}
+      accessibilityState={{ busy: waiting, disabled: waiting }}
+      disabled={waiting}
       onPress={onPress}
       style={({ pressed }) => ({
         width: 44,
@@ -147,7 +189,7 @@ export function ProductIconButton ({
         backgroundColor: pressed ? t.surface2 : undefined,
       })}
     >
-      <ProductIcon name={name} color={t.text} />
+      {waiting ? <ActivityIndicator size='small' color={t.text} /> : <ProductIcon name={name} color={t.text} />}
     </Pressable>
   )
 }

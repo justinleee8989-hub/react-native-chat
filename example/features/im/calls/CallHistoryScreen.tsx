@@ -1,14 +1,14 @@
 import React, { useCallback, useState } from 'react'
-import { Pressable, Text, View } from 'react-native'
+import { Platform, Pressable, Text, View } from 'react-native'
 import { useFocusEffect } from 'expo-router'
 import { calls, openConversation, useOpenIM } from '../application/store'
 import LoginScreen from '../auth/LoginScreen'
-import { HeaderAction, ProductHint } from '../groups/group-ui'
+import { ProductHint } from '../groups/group-ui'
 import { shortTime } from '../messages/presentation'
 import { rememberedValue } from '../shared/remembered'
 import { useTask } from '../shared/useTask'
 import { ProductAvatar } from '../ui/primitives'
-import { ProductPage, ProductEmpty } from '../ui/ProductPage'
+import { ProductEmpty, ProductIconButton, ProductPage } from '../ui/ProductPage'
 import { useProductTheme } from '../ui/theme'
 import { callAuthority } from './authority-api'
 import { startConversationCall } from './CallControls'
@@ -60,29 +60,30 @@ function History ({
   const [unavailable, setUnavailable] = useState(() => !!serviceOff.get(account))
   const task = useTask()
   const { run } = task
-  const load = useCallback(() => {
-    void run(async current => {
-      try {
-        const result = await callAuthority(session, url, { action: 'list' })
-        serviceOff.set(account, false)
-        // The service is back: incoming calls are watched again without signing in again.
-        calls.serviceAnswered()
-        if (current()) {
-          setUnavailable(false)
-          setRecords(result)
-          remembered.set(account, result)
-        }
-      } catch (error) {
-        const off = isCallServiceUnavailable(error)
-        serviceOff.set(account, off)
-        if (current())
-          setUnavailable(off)
-        throw error
+  const [pulling, setPulling] = useState(false)
+  const load = useCallback(() => run(async current => {
+    try {
+      const result = await callAuthority(session, url, { action: 'list' })
+      serviceOff.set(account, false)
+      // The service is back: incoming calls are watched again without signing in again.
+      calls.serviceAnswered()
+      if (current()) {
+        setUnavailable(false)
+        setRecords(result)
+        remembered.set(account, result)
       }
-    })
-  }, [run, session, url, account])
+    } catch (error) {
+      const off = isCallServiceUnavailable(error)
+      serviceOff.set(account, off)
+      if (current())
+        setUnavailable(off)
+      throw error
+    }
+  }), [run, session, url, account])
   // One request per visit, also while the service is off: entering the page is the user asking.
-  useFocusEffect(load)
+  useFocusEffect(useCallback(() => {
+    void load()
+  }, [load]))
   return (
     <ProductPage
       title='通话'
@@ -93,8 +94,27 @@ function History ({
       // Until the first answer, rows of the list's shape stand in for it; an empty state shown
       // first read as "no calls" and then jumped to the list.
       initialLoading={!task.hasSucceeded && !kept && !unavailable}
-      onRetry={load}
-      right={<HeaderAction title='刷新' disabled={task.busy} onPress={load} />}
+      onRetry={() => {
+        void load()
+      }}
+      // Refreshed by pulling the list, like 消息; the page also reloads on every visit. The browser
+      // has no pull-to-refresh, so it keeps a refresh button there.
+      right={Platform.OS === 'web' ? (
+        <ProductIconButton
+          name='retry'
+          label='刷新'
+          busy={task.busy}
+          onPress={() => {
+            void load()
+          }}
+        />
+      ) : undefined}
+      // The header button shows the browser's reload, so the page's own floating spinner stays away.
+      refreshing={pulling || (Platform.OS === 'web' && task.busy)}
+      onRefresh={() => {
+        setPulling(true)
+        void load().finally(() => setPulling(false))
+      }}
     >
       {unavailable && (
         <ProductEmpty title='通话服务未启用' subtitle='当前服务器没有开启音视频通话，暂时无法查看通话记录或发起通话' />

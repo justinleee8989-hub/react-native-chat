@@ -1,6 +1,6 @@
 import React from 'react'
 import { beforeEach, expect, it, jest } from '@jest/globals'
-import { act, render, waitFor } from '@testing-library/react-native'
+import { act, fireEvent, render, waitFor } from '@testing-library/react-native'
 import { callAuthority } from './authority-api'
 import CallHistoryScreen from './CallHistoryScreen'
 
@@ -57,9 +57,9 @@ jest.mock('../ui/primitives', () => {
   return { ProductAvatar: (props: { group?: boolean, size: number }) => <Native.View testID='call-history-avatar' {...props} /> }
 })
 jest.mock('../ui/ProductPage', () => ({
-  ProductPage: ({ children, title, right, root, initialLoading }: { children: React.ReactNode, title: string, right?: React.ReactNode, root?: boolean, initialLoading?: boolean }) => {
+  ProductPage: ({ children, title, right, root, initialLoading, onRefresh }: { children: React.ReactNode, title: string, right?: React.ReactNode, root?: boolean, initialLoading?: boolean, onRefresh?: () => void }) => {
     const Native = require('react-native')
-    return <Native.View><Native.Text>{title}</Native.Text>{root && <Native.Text>root</Native.Text>}{right}{initialLoading ? <Native.Text>skeleton</Native.Text> : children}</Native.View>
+    return <Native.View><Native.Text>{title}</Native.Text>{root && <Native.Text>root</Native.Text>}{right}{onRefresh && <Native.Pressable accessibilityLabel='下拉刷新' onPress={onRefresh} />}{initialLoading ? <Native.Text>skeleton</Native.Text> : children}</Native.View>
   },
   ProductEmpty: ({ title, subtitle }: { title: string, subtitle?: string }) => {
     const Native = require('react-native')
@@ -140,14 +140,14 @@ it('shows at once that the call service is off on the next visit, rechecks, and 
   jest.mocked(callAuthority).mockImplementation(async () => {
     throw new CallServiceUnavailableError()
   })
-  const first = await render(<CallHistoryScreen />)
+  const again = await render(<CallHistoryScreen key='first' />)
   await focusHistory()
-  await waitFor(() => expect(first.getByText(/通话服务未启用/)).toBeTruthy())
-  first.unmount()
+  await waitFor(() => expect(again.getByText(/通话服务未启用/)).toBeTruthy())
   mockFocusCallbacks.length = 0
-  // The service has been turned on in between.
+  // The service has been turned on in between. A new key mounts the page again (a new visit),
+  // without unmounting by hand, which left the renderer empty for the following tests.
   jest.mocked(callAuthority).mockImplementation(async () => [mockRecord])
-  const again = await render(<CallHistoryScreen />)
+  await again.rerender(<CallHistoryScreen key='again' />)
   expect(again.getByText(/通话服务未启用/)).toBeTruthy()
   expect(again.queryByText('skeleton')).toBeNull()
   await focusHistory()
@@ -156,4 +156,15 @@ it('shows at once that the call service is off on the next visit, rechecks, and 
   expect(again.queryByText(/通话服务未启用/)).toBeNull()
   // The overlay watches for incoming calls again.
   expect(mockServiceAnswered).toHaveBeenCalledTimes(1)
+})
+
+it('refreshes by pulling the list, with no 刷新 button in the header', async () => {
+  const view = await render(<CallHistoryScreen />)
+  await focusHistory()
+  await waitFor(() => expect(callAuthority).toHaveBeenCalledTimes(1))
+  expect(view.queryByText('刷新')).toBeNull()
+  await act(async () => {
+    await fireEvent.press(view.getByLabelText('下拉刷新'))
+  })
+  await waitFor(() => expect(callAuthority).toHaveBeenCalledTimes(2))
 })

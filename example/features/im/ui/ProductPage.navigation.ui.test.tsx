@@ -1,8 +1,8 @@
 import React from 'react'
 import { StyleSheet, Text } from 'react-native'
 import { expect, it, jest } from '@jest/globals'
-import { fireEvent, render } from '@testing-library/react-native'
-import { ProductPage } from './ProductPage'
+import { act, fireEvent, render } from '@testing-library/react-native'
+import { ProductIconButton, ProductPage } from './ProductPage'
 
 let mockDesktop = true
 let mockCanGoBack = false
@@ -100,13 +100,44 @@ it('says only that the network is down when a page fails while the app is offlin
   let status = '网络异常，无法连接服务器'
   provideConnectionStatus({ subscribe: () => () => {}, status: () => status })
   try {
-    const offline = await render(<ProductPage title='通讯录' busy={false} error='操作失败，请稍后重试' />)
-    expect(offline.getByRole('alert').props.children).toBe('网络异常，无法连接服务器')
-    offline.unmount()
+    const view = await render(<ProductPage title='通讯录' busy={false} error='操作失败，请稍后重试' />)
+    expect(view.getByRole('alert').props.children).toBe('网络异常，无法连接服务器')
     status = '已连接'
-    const online = await render(<ProductPage title='通讯录' busy={false} error='操作失败，请稍后重试' />)
-    expect(online.getByRole('alert').props.children).toBe('操作失败，请稍后重试')
+    await view.rerender(<ProductPage title='通讯录' busy={false} error='操作失败，请稍后重试' />)
+    expect(view.getByRole('alert').props.children).toBe('操作失败，请稍后重试')
   } finally {
     provideConnectionStatus({ subscribe: () => () => {}, status: () => '' })
+  }
+})
+
+it('turns an icon button into a waiting spinner while busy, and leaves it as it was otherwise', async () => {
+  const press = jest.fn()
+  const view = await render(<ProductIconButton name='retry' label='刷新' onPress={press} />)
+  await fireEvent.press(view.getByRole('button', { name: '刷新' }))
+  expect(press).toHaveBeenCalledTimes(1)
+  await view.rerender(<ProductIconButton name='retry' label='刷新' busy onPress={press} />)
+  const button = view.getByRole('button', { name: '刷新' })
+  expect(button.props.accessibilityState).toEqual(expect.objectContaining({ busy: true, disabled: true }))
+  await fireEvent.press(button)
+  expect(press).toHaveBeenCalledTimes(1)
+})
+
+it('keeps the spinner up for 0.6s even when the reload answers at once', async () => {
+  jest.useFakeTimers()
+  try {
+    const view = await render(<ProductIconButton name='retry' label='刷新' busy onPress={() => {}} />)
+    await view.rerender(<ProductIconButton name='retry' label='刷新' busy={false} onPress={() => {}} />)
+    const state = () => view.getByRole('button', { name: '刷新' }).props.accessibilityState
+    expect(state()).toEqual(expect.objectContaining({ busy: true }))
+    await act(async () => {
+      jest.advanceTimersByTime(400)
+    })
+    expect(state()).toEqual(expect.objectContaining({ busy: true }))
+    await act(async () => {
+      jest.advanceTimersByTime(250)
+    })
+    expect(state()).toEqual(expect.objectContaining({ busy: false }))
+  } finally {
+    jest.useRealTimers()
   }
 })

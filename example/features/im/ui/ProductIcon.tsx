@@ -42,7 +42,8 @@ const paths = {
   edit: 'M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4',
   undo: 'M4 8h10a5 5 0 0 1 0 10H8M4 8l4-4M4 8l4 4',
   eye: 'M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z',
-  retry: 'M20 11A8 8 0 1 0 18 17M20 5v6h-6',
+  // Lucide rotate-cw: one arc ending in its arrowhead (the old one stopped short of a detached corner).
+  retry: 'M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8M21 3v5h-5',
   play: 'M8 5l11 7-11 7z',
   pause: 'M8 5v14M16 5v14',
   speaker: 'M4 9v6h4l5 4V5L8 9zM16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11',
