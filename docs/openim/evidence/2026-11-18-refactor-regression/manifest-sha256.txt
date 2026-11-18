@@ -1,0 +1,12 @@
+1af398834110f9d6ccba153e4dbc5b4cd47e2fcdb772b8a7d311fb93bf510d55  docs/openim/evidence/2026-11-18-refactor-regression/read-push.log
+21199c8f5d4fbd90994b1ba63717d689e208d7ded92325106c3bb7230551c83f  docs/openim/evidence/2026-11-18-refactor-regression/final-read-state.xml
+3d7b1f3e84621334088d5d86999327ec1e54fcf54a627a2665481dcf78684e24  docs/openim/evidence/2026-11-18-refactor-regression/apk-sha256.txt
+75fd0ca5dbfd2f19d2d5a903731863046bdde0ae8f0a09af6ca2e7576920e8a3  docs/openim/evidence/2026-11-18-refactor-regression/final-read-state.png
+a17ff70c8a35a6f321bc343f0c2247696baa0d57d55d170ba49aa291da7ad40c  docs/openim/evidence/2026-11-18-refactor-regression/release-build.log
+ab71800bb33c0693551c949b6b258dec1ee68b601e5655129dbfeee5013f2022  docs/openim/evidence/2026-11-18-refactor-regression/business-tests.log
+bcc3595f26ad92e58ee8d400cfac01c6dbfd8e5982bcdf10db66876c6e7b077a  docs/openim/evidence/2026-11-18-refactor-regression/ui-tests.log
+cbc52a8840a64aecfc454b3a0cd08e00724ba28bf2d2e1a405da93a45fb8b9b6  docs/openim/evidence/2026-11-18-refactor-regression/sdk-tests.log
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  docs/openim/evidence/2026-11-18-refactor-regression/app-typecheck.log
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  docs/openim/evidence/2026-11-18-refactor-regression/sdk-build.log
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  docs/openim/evidence/2026-11-18-refactor-regression/sdk-typecheck.log
+f89ad31278a5a68ba691273cb9430e8d1f21c4372f63936d4db77485e23d21ba  docs/openim/evidence/2026-11-18-refactor-regression/lint.log
