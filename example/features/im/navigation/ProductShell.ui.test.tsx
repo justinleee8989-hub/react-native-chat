@@ -14,6 +14,7 @@ jest.mock('expo-router', () => ({ usePathname: () => '/chats/id', useRouter: () 
 jest.mock('../contacts/ContactsScreen', () => () => null)
 jest.mock('../conversations/ChatListScreen', () => () => null)
 jest.mock('./MyScreen', () => () => null)
+jest.mock('../calls/CallHistoryScreen', () => () => null)
 jest.mock('../ui/primitives', () => ({ ProductAvatar: () => null }))
 jest.mock('../ui/ProductIcon', () => ({ ProductIcon: () => null }))
 function Draft () {

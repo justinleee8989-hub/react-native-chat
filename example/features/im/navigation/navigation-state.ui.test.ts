@@ -1,5 +1,5 @@
 import { expect, it } from '@jest/globals'
-import { createSectionHistory, persistentSnapshot, sectionDetailDepth, sectionFromState, sectionRoot } from './navigation-state'
+import { conversationOf, createSectionHistory, persistentSnapshot, sectionDetailDepth, sectionFromState, sectionRoot, withoutPreparedChat } from './navigation-state'
 
 const tabs = (routes: { name: string, state?: any }[], index: number): any => ({ index, routes })
 const rootState = (tabState: any, extra: Record<string, unknown> = {}): any => ({ ...extra, index: 0, routes: [{ name: '(tabs)', state: tabState }, { name: 'modal', key: 'modal-key' }] })
@@ -8,6 +8,7 @@ it('derives the visible section from nested tabs and maps groups to contacts', (
   const state = rootState(tabs([{ name: 'chats' }, { name: 'contacts' }, { name: 'groups' }, { name: 'me' }], 2))
   expect(sectionFromState(state, 'chats')).toBe('contacts')
   expect(sectionFromState(rootState(tabs([{ name: 'chats' }, { name: 'contacts' }, { name: 'groups' }, { name: 'me' }], 3)), 'chats')).toBe('me')
+  expect(sectionFromState(rootState(tabs([{ name: 'chats' }, { name: 'calls' }, { name: 'contacts' }, { name: 'me' }], 1)), 'chats')).toBe('calls')
   expect(sectionFromState({ routes: [{ name: 'outside-tabs' }] }, 'chats')).toBe('chats')
 })
 
@@ -92,4 +93,26 @@ it('unwraps and preserves the real __root wrapper while targeting and restoring 
   expect(restored.routes[0].name).toBe('__root')
   expect(restored.routes[0].state.routes.map((route: any) => route.name)).toEqual(['(tabs)', 'chats'])
   expect(restored.routes[0].state.routes[1].state.routes[1].params.id).toBe('chat-42')
+})
+
+it('drops the conversation prepared off-screen unless it is the one being opened', () => {
+  // As router.prefetch leaves it: after the focused index, with the conversation as nested state.
+  const prepared = { key: 'chats-preloaded', name: 'chats', isPreloaded: true, state: { index: 0, routes: [{ name: '[id]', params: { id: 'si_alice_bob' } }] } }
+  const stack = { key: 'stack', index: 0, stale: false, routes: [{ key: 'tabs', name: '(tabs)' }, prepared] }
+  const root = { key: 'root', index: 0, routes: [{ name: '__root', state: stack }] }
+  const next: any = withoutPreparedChat(root)
+  expect(next.key).toBe('root')
+  expect(next.routes[0].state.index).toBe(0)
+  expect(next.routes[0].state.routes.map((route: any) => route.key)).toEqual(['tabs'])
+  expect(withoutPreparedChat(root, 'si_alice_bob')).toBeUndefined()
+  expect(withoutPreparedChat(root, 'other')).toBeTruthy()
+  // An open conversation (at or before the focused index) is never touched.
+  expect(withoutPreparedChat({ key: 'stack', index: 1, routes: [{ name: '(tabs)' }, prepared] })).toBeUndefined()
+})
+
+it('reads the conversation id from a conversation href only', () => {
+  expect(conversationOf('/chats/si_alice_bob')).toBe('si_alice_bob')
+  expect(conversationOf('/chats/a%20b')).toBe('a b')
+  expect(conversationOf('/chats/people/charlie')).toBeUndefined()
+  expect(conversationOf('/(tabs)/contacts')).toBeUndefined()
 })

@@ -96,7 +96,6 @@ function MyAccount ({ userID, account }: { userID: string, account: string }) {
           />
         </ProductCard>
         <ProductCard>
-          <ProductRow title='通话记录' onPress={() => openMaster('/chats/call-history' as Href)} />
           <ProductRow
             title='外观'
             trailing={

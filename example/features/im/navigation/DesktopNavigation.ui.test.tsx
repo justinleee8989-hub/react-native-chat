@@ -21,6 +21,7 @@ jest.mock('../ui/preferences', () => ({ useProductLayout: () => ({ desktop: true
 function rootState (tabIndex = 0, detail = true) {
   const tabs = { key: 'tabs-key', index: tabIndex, routes: [
     { key: 'chats-key', name: 'chats', state: { key: 'chat-tab', index: 0, routes: [{ name: 'index' }] } },
+    { key: 'calls-key', name: 'calls' },
     { key: 'contacts-key', name: 'contacts' },
     { key: 'me-key', name: 'me' },
   ] }
@@ -35,7 +36,7 @@ function rootState (tabIndex = 0, detail = true) {
 }
 
 function wrappedRootState (detail = true) {
-  const routes: any[] = [{ name: '(tabs)', state: { type: 'tab', index: 0, routes: [{ name: 'chats' }, { name: 'contacts' }, { name: 'me' }] } }]
+  const routes: any[] = [{ name: '(tabs)', state: { type: 'tab', index: 0, routes: [{ name: 'chats' }, { name: 'calls' }, { name: 'contacts' }, { name: 'me' }] } }]
   if (detail)
     routes.push({ name: 'chats', state: { index: 1, routes: [{ name: 'index' }, { name: 'chat', params: { id: 'real-chat-42' } }] } })
   return { key: 'navigator:root', index: 0, routes: [{ name: '__root', key: '__root:0', state: { key: 'navigator:0', type: 'stack', index: routes.length - 1, routes } }] }
@@ -48,6 +49,7 @@ function Probe () {
     <Text testID='back'>{String(navigation?.canGoBackInSection)}</Text>
     <Pressable testID='contacts' onPress={() => navigation?.switchSection('contacts')} />
     <Pressable testID='chats' onPress={() => navigation?.switchSection('chats')} />
+    <Pressable testID='calls' onPress={() => navigation?.switchSection('calls')} />
     <Pressable testID='conversation' onPress={() => navigation?.openMaster('/chats/chat-8')} />
     <Pressable testID='master' onPress={() => navigation?.openMaster('/chats/new')} />
   </View>
@@ -62,7 +64,7 @@ describe('desktop navigation provider', () => {
     Platform.OS = 'web'
     mockSession = { userID: 'account-a', imToken: 'token-a' }
     mockRoot = rootState()
-    mockNavigation = { dispatch: jest.fn(), getRootState: jest.fn(() => mockRoot) }
+    mockNavigation = { dispatch: jest.fn(), getRootState: jest.fn(() => mockRoot), isReady: () => true }
     mockRouter = { push: jest.fn(), navigate: jest.fn(), replace: jest.fn(), dismissAll: jest.fn() }
     mockPath = '/chats'
   })
@@ -107,7 +109,7 @@ describe('desktop navigation provider', () => {
     await fireEvent.press(view.getByTestId('contacts'))
     const contactsReset = mockNavigation.dispatch.mock.calls[0][0]
     expect(contactsReset.payload.routes).toHaveLength(1)
-    expect(contactsReset.payload.routes[0].state.index).toBe(1)
+    expect(contactsReset.payload.routes[0].state.index).toBe(2)
     mockRoot = contactsReset.payload
     await view.rerender(app())
 
@@ -116,6 +118,58 @@ describe('desktop navigation provider', () => {
     expect(chatsReset.payload.routes.map((route: any) => route.name)).toEqual(['(tabs)', 'chats'])
     expect(chatsReset.payload.routes[1].state.routes[1].params.id).toBe('chat-7')
     expect(mockRouter.navigate).not.toHaveBeenCalled()
+  })
+
+  it('gives 通话 its own section history, right after 消息', async () => {
+    const view = await render(app())
+    await fireEvent.press(view.getByTestId('calls'))
+    const callsReset = mockNavigation.dispatch.mock.calls[0][0]
+    // Only the tabs: the calls tab is selected and the open conversation is not carried over.
+    expect(callsReset.payload.routes).toHaveLength(1)
+    expect(callsReset.payload.routes[0].state.index).toBe(1)
+    expect(callsReset.payload.routes[0].state.routes[1].name).toBe('calls')
+    mockRoot = callsReset.payload
+    await view.rerender(app())
+    expect(view.getByTestId('section').props.children).toBe('calls')
+
+    await fireEvent.press(view.getByTestId('chats'))
+    const chatsReset = mockNavigation.dispatch.mock.calls[1][0]
+    expect(chatsReset.payload.routes[1].state.routes[1].params.id).toBe('chat-7')
+    mockRoot = chatsReset.payload
+    await view.rerender(app())
+
+    await fireEvent.press(view.getByTestId('calls'))
+    const callsAgain = mockNavigation.dispatch.mock.calls[2][0]
+    expect(callsAgain.payload.routes).toHaveLength(1)
+    expect(callsAgain.payload.routes[0].state.index).toBe(1)
+    expect(mockRouter.navigate).not.toHaveBeenCalled()
+  })
+
+  it('on a phone, drops the conversation prepared off-screen before pushing another page on top of it', async () => {
+    Platform.OS = 'ios'
+    const prepared = { key: 'chats-preloaded', name: 'chats', isPreloaded: true, state: { index: 0, routes: [{ name: '[id]', params: { id: 'chat-7' } }] } }
+    const tabs = rootState(1, false)
+    mockRoot = { ...tabs, routes: [...tabs.routes, prepared] }
+    const view = await render(app())
+    await fireEvent.press(view.getByTestId('master'))
+    expect(mockNavigation.dispatch).toHaveBeenCalledWith(expect.objectContaining({
+      type: 'RESET',
+      target: 'root-key',
+      payload: expect.objectContaining({ index: 0, routes: [expect.objectContaining({ name: '(tabs)' })] }),
+    }))
+    expect(mockNavigation.dispatch.mock.invocationCallOrder[0]).toBeLessThan(mockRouter.push.mock.invocationCallOrder[0])
+    expect(mockRouter.push).toHaveBeenCalledWith('/chats/new')
+  })
+
+  it('on a phone, keeps the prepared conversation when that conversation is the one opened', async () => {
+    Platform.OS = 'ios'
+    const prepared = { key: 'chats-preloaded', name: 'chats', isPreloaded: true, state: { index: 0, routes: [{ name: '[id]', params: { id: 'chat-8' } }] } }
+    const tabs = rootState(0, false)
+    mockRoot = { ...tabs, routes: [...tabs.routes, prepared] }
+    const view = await render(app())
+    await fireEvent.press(view.getByTestId('conversation'))
+    expect(mockNavigation.dispatch).not.toHaveBeenCalled()
+    expect(mockRouter.push).toHaveBeenCalledWith('/chats/chat-8')
   })
 
   it('replaces a conversation directly without exposing the empty master screen', async () => {

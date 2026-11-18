@@ -1,3 +1,15 @@
+/** The chat server runs without a call service (no RTC authority configured). */
+export class CallServiceUnavailableError extends Error {
+  constructor () {
+    super('通话服务未启用，暂时无法使用音视频通话')
+    this.name = 'CallServiceUnavailableError'
+  }
+}
+
+export function isCallServiceUnavailable (error: unknown) {
+  return (error as { name?: string })?.name === 'CallServiceUnavailableError'
+}
+
 export function callError (error: unknown): Error {
   const value = error as { name?: string, message?: string }
   if (value?.name === 'NotFoundError' || value?.message?.includes('Requested device not found'))

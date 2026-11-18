@@ -14,7 +14,7 @@
 | `features/im/messages/` | 聊天呈现、输入、搜索、转发、附件及已读详情 |
 | `features/im/auth/contacts/groups/profile/calls/` | 对应业务页面和操作 |
 | `features/im/ui/` | 产品主题、尺寸、基础组件与跨页面 UI |
-| `features/im/navigation/` | PC 分栏、手机导航、路由恢复和产品外框 |
+| `features/im/navigation/` | PC 分栏、手机导航、路由恢复和产品外框；主导航四个分区（`ProductSection`）：消息、通话、通讯录、我的 |
 
 ## 本轮拆分的模块
 
@@ -23,7 +23,7 @@
 - `messages/ProductInputToolbar.tsx`：兼容导出；内部 `ProductInputToolbar/` 包含组合入口、`useComposerSize.ts`、`EmojiPanel.tsx`、`styles.ts`、`constants.ts`、`types.ts`。输入高度与 ref 转发留在 Hook，表情面板只负责显示和回调，发送仍走原来的真实业务回调。
 - `messages/ProductMessage.tsx`：兼容导出；内部 `ProductMessage/` 区分 `Bubble.tsx`、`MessageRow.tsx`、`context.ts` 和 `types.ts`。SDK `Bubble`/`Message` 仍负责聊天基础渲染。
 - `navigation/ProductShell.tsx`：兼容导出；内部 `Frame.tsx` 处理外框，`Rail.tsx` 处理导航栏，`Layout.tsx` 处理主从分栏，固定布局值集中到 `styles.ts`。
-- `ui/primitives.tsx`：公共组件出口；`primitives/` 内拆为 Header/Card/Row/Search/Segment，分隔线 Context 只有一份，共享固定样式集中到 `styles.ts`。
+- `ui/primitives.tsx`：公共组件出口；`primitives/` 内拆为 Header/Card/Row/Search/Segment，分隔线 Context 只有一份，共享固定样式集中到 `styles.ts`。分区标题（`ProductHeader large`）手机和 PC 共用 `styles.pageTitle`（18/600），PC 只改左对齐。
 - `auth/AuthForm.tsx`：公共表单出口；`AuthForm/` 内分别为 Page/Field/Controls/styles。认证逻辑继续在原有业务模块中。
 - `messages/ChatScreen/`：聊天页，`index.tsx` 保留原导入路径和默认导出。消息行渲染在同级 `useChatRows.tsx`；目录内 `useGroupReadCount.ts`（最新自己群消息的已读人数）、`useChatSend.ts`（发送）、`useFocusedConversation.ts`（聚焦与回到前台）、`useOpeningTransition.ts`（推入转场与诊断打点）、`attachments.tsx`（附件菜单）、`history.tsx`（更早历史）、`inputToolbar.tsx`（输入栏或无权限提示）、`ChatNotices.tsx`、`MissingConversation.tsx`、`voice-errors.ts`、`styles.ts`。
 - `shared/diagnostics.ts`：诊断开关（`EXPO_PUBLIC_OPENIM_ENTRY_TRACE=1`）与 `[tag] {json}` 输出，各层共用；不得输出账号或群 ID、令牌、消息内容。

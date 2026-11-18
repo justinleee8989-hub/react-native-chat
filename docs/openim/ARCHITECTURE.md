@@ -1,6 +1,6 @@
 # OpenIM 二次开发结构与对接约定
 
-产品已增加独立认证流程与三个主导航入口（消息、通讯录、我的；群组从通讯录进入）；官方聊天组件、原业务详情路由及本地数据保留。
+产品已增加独立认证流程与四个主导航入口（消息、通话、通讯录、我的；群组从通讯录进入，通话即通话记录）；官方聊天组件、原业务详情路由及本地数据保留。
 
 ## 目录职责
 
@@ -81,7 +81,7 @@ node /tmp/im-tooling/yarn.cjs expo export --platform web
 
 ## 产品导航与网页部署（2026-11-15）
 
-`app/auth` 为认证路由；`features/im/navigation` 负责会话恢复守卫、响应式主导航和我的功能入口。业务页面继续走原 application/domain/infrastructure，不在导航层直接调用 SDK。
+`app/auth` 为认证路由；`features/im/navigation` 负责会话恢复守卫、响应式主导航（手机底部标签栏、PC 左侧导航栏，四个分区各自记住导航历史）和我的功能入口。旧链接 `/chats/call-history` 转到通话分区。业务页面继续走原 application/domain/infrastructure，不在导航层直接调用 SDK。
 
 网页使用 Expo `web.output=single`：浏览器恢复本地登录状态后决定登录或产品入口，不为私有聊天内容生成静态 HTML。部署静态产物时需将未知路径回退到 `index.html`，以支持刷新详情页。开发组件入口仍保留 `/explore`，不出现在主导航。
 

@@ -8,7 +8,9 @@ test('deep links keep their matching master section', () => {
   assert.equal(productSection('/chats/add-friend'), 'contacts')
   assert.equal(productSection('/chats/friend-requests'), 'contacts')
   assert.equal(productSection('/chats/settings'), 'me')
-  assert.equal(productSection('/chats/call-history'), 'me')
+  assert.equal(productSection('/chats/call-history'), 'calls')
+  assert.equal(productSection('/calls'), 'calls')
+  assert.equal(productSection('/chats/call'), 'chats')
   assert.equal(productSection('/chats/conversation/id'), 'chats')
 })
 test('desktop breakpoint does not change mobile navigation', () => {

@@ -1,4 +1,4 @@
-import { safeCallErrorMessage } from './errors.ts'
+import { isCallServiceUnavailable, safeCallErrorMessage } from './errors.ts'
 import type { ActiveCall, CallSignal, SignalKind } from './signaling'
 export interface ServerCall {
   room: string
@@ -25,6 +25,9 @@ export function createServerCallController ({ request, record, now = Date.now }:
 }) {
   let self = ''; let epoch = 0; let revision = 0; let state: State = { error: '', notice: '' }
   let pending = false; let polling = false; let lastPoll = 0; let lastOK = 0; let lastBeat = 0; let mediaRoom = ''
+  // Set when the server has no call service: polling stops until the next sign-in, instead of
+  // asking every two seconds for as long as the app is open.
+  let unavailable = false
   const ignored = new Set<string>()
   const listeners = new Set<() => void>()
   const currentCall = () => state.active
@@ -32,6 +35,8 @@ export function createServerCallController ({ request, record, now = Date.now }:
     state = { ...state, ...patch }; listeners.forEach(fn => fn())
   }
   function apply (calls: ServerCall[]) {
+    // Any answer from the authority means the call service is there again.
+    unavailable = false
     const previous = state.active
     const existing = calls.find(c => c.room === previous?.room)
     if (existing && results[existing.status]) {
@@ -82,7 +87,9 @@ export function createServerCallController ({ request, record, now = Date.now }:
       }
       if (generation === epoch)
         lastOK = now()
-    } catch {
+    } catch (error) {
+      if (generation === epoch && isCallServiceUnavailable(error))
+        unavailable = true
       if (generation === epoch && state.active && now() - lastOK > 15000) {
         ignored.add(state.active.room)
         update({ active: undefined, error: '无法确认服务端通话状态，已断开本地通话，请检查网络后重新发起' })
@@ -111,7 +118,7 @@ export function createServerCallController ({ request, record, now = Date.now }:
       }
     },
     reset (user: string) {
-      self = user; mediaRoom = ''; epoch++; pending = false; polling = false; lastPoll = 0; lastOK = now(); lastBeat = 0; ignored.clear(); update({ active: undefined, error: '', notice: '' })
+      self = user; mediaRoom = ''; epoch++; pending = false; polling = false; lastPoll = 0; lastOK = now(); lastBeat = 0; unavailable = false; ignored.clear(); update({ active: undefined, error: '', notice: '' })
     },
     dismiss: () => update({ error: '', notice: '' }),
     // OpenIM messages are durable display records, never authoritative call transitions.
@@ -119,7 +126,7 @@ export function createServerCallController ({ request, record, now = Date.now }:
       void message
     },
     tick () {
-      if (now() - lastPoll > 2000) {
+      if (!unavailable && now() - lastPoll > 2000) {
         lastPoll = now(); void poll()
       }
     },

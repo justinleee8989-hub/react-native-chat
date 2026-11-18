@@ -22,7 +22,9 @@ function underlyingTabs (state: NavigationSnapshot | undefined) {
 export function sectionFromState (state: NavigationSnapshot | undefined, fallback: ProductSection): ProductSection {
   const tabs = underlyingTabs(state)?.state
   const name = tabs?.routes[tabs.index ?? 0]?.name
-  return name === 'me' ? 'me' : name === 'contacts' || name === 'groups' ? 'contacts' : name === 'chats' ? 'chats' : fallback
+  if (name === 'groups')
+    return 'contacts'
+  return name === 'chats' || name === 'contacts' || name === 'calls' || name === 'me' ? name : fallback
 }
 
 export function sectionRoot (state: NavigationSnapshot, section: ProductSection): NavigationSnapshot {
@@ -104,4 +106,45 @@ export function openDetailScreens (state: NavigationSnapshot | undefined): numbe
   if (!active || active.name !== 'chats')
     return 0
   return active.state?.routes.length || 1
+}
+
+/** The conversation a `chats` route shows: its focused `[id]` screen. */
+function preparedConversation (route: NavigationSnapshot['routes'][number]): unknown {
+  const nested = route.state
+  const focused = nested?.routes[nested.index ?? nested.routes.length - 1]
+  return focused?.name === '[id]' ? (focused.params as { id?: unknown } | undefined)?.id : undefined
+}
+
+/**
+ * The product stack without the conversation the chat list prepared off-screen, or undefined when
+ * there is nothing to drop. `keep` names the conversation being opened, which stays prepared.
+ *
+ * `router.prefetch` keeps a prepared route in the stack after the focused index, and a PUSH reuses
+ * a route found there by name, nested state included. So any other `/chats/...` page pushed while
+ * a conversation was prepared opened on top of that conversation, and 返回 led into it.
+ */
+export function withoutPreparedChat (state: NavigationSnapshot | undefined, keep?: string): NavigationSnapshot | undefined {
+  if (!state?.routes.length)
+    return undefined
+  // Returned whole from the root, as section switching resets it: Expo Router wraps the product
+  // stack in its own root navigator.
+  const active = state.routes[state.index ?? 0]
+  if (active?.name === '__root' && active.state) {
+    const nested = withoutPreparedChat(active.state, keep)
+    return nested && { ...state, routes: state.routes.map(route => route === active ? { ...route, state: nested } : route) }
+  }
+  const index = state.index ?? state.routes.length - 1
+  const routes = state.routes.filter((route, position) =>
+    position <= index || route.name !== 'chats' || (!!keep && preparedConversation(route) === keep))
+  return routes.length === state.routes.length ? undefined : { ...state, routes }
+}
+
+/** The one segment after `/chats/`: a conversation id when the href opens a conversation. */
+export function conversationOf (href: string): string | undefined {
+  const match = /^\/chats\/([^/?#]+)$/.exec(href)
+  try {
+    return match ? decodeURIComponent(match[1]) : undefined
+  } catch {
+    return undefined
+  }
 }

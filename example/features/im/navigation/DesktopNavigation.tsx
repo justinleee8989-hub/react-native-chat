@@ -11,12 +11,14 @@ import { useOpenIM } from '../application/store'
 import { useProductLayout } from '../ui/preferences'
 import { productSection, type ProductSection } from './layout'
 import {
+  conversationOf,
   createSectionHistory,
   openDetailScreens,
   productNavigationState,
   sectionDetailDepth,
   sectionFromState,
   sectionRoot,
+  withoutPreparedChat,
   type NavigationSnapshot,
 } from './navigation-state'
 
@@ -25,6 +27,8 @@ type DesktopNavigation = {
   canGoBackInSection: boolean
   switchSection: (section: ProductSection) => void
   openMaster: (href: Href) => void
+  /** Drop the conversation the chat list prepared off-screen, unless it is `keep`. */
+  releasePreparedChat: (keep?: string) => void
 }
 const Context = createContext<DesktopNavigation | null>(null)
 
@@ -105,8 +109,18 @@ export function DesktopNavigationProvider ({ children }: React.PropsWithChildren
     history.remember(account, sectionFromState(current, section), current)
     reset(history.target(account, next, current))
   }
+  const releasePreparedChat = (keep?: string) => {
+    if (!navigation.isReady())
+      return
+    const next = withoutPreparedChat(navigation.getRootState(), keep)
+    if (next)
+      reset(next)
+  }
   const openMaster = (href: Href) => {
     if (!enabled || !account) {
+      // Native prepares the last conversation off-screen; any other page pushed now would be
+      // stacked on it, and 返回 would lead into that conversation instead of back to this list.
+      releasePreparedChat(typeof href === 'string' ? conversationOf(href) : undefined)
       router.push(href)
       return
     }
@@ -140,6 +154,7 @@ export function DesktopNavigationProvider ({ children }: React.PropsWithChildren
         canGoBackInSection: !enabled || sectionDetailDepth(root) > 1,
         switchSection,
         openMaster,
+        releasePreparedChat,
       }}
     >
       {children}

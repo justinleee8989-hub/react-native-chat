@@ -15,6 +15,7 @@ import { styles } from './styles'
 const items = [
   { key: 'me', label: '我的', icon: 'user' },
   { key: 'chats', label: '消息', icon: 'chat' },
+  { key: 'calls', label: '通话', icon: 'phone' },
   { key: 'contacts', label: '通讯录', icon: 'users' },
 ] as const
 

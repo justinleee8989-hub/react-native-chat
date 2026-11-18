@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { CallServiceUnavailableError } from './errors.ts'
 import { createServerCallController } from './server-controller.ts'
 const call={room:'imcall-test',caller:'me',callee:'peer',status:'ringing',created:1000,expires:46000,members:{}}
 test('untrusted IM text cannot accept server-owned calls',async()=>{
@@ -74,4 +75,20 @@ test('records the server terminal outcome instead of the requested finish label'
  const c = createServerCallController({ request: async req => [req.action === 'cancel' ? { ...call, status: 'canceled' } : call], record: async (_peer, signal) => recorded.push(signal.kind), now: () => 1000 })
  c.reset('me'); await c.start('peer', 'Peer', 'id'); await c.finish('end')
  assert.deepEqual(recorded, ['invite', 'cancel'])
+})
+
+test('polling stops while the server has no call service and resumes after it answers again', async () => {
+ let clock = 1000; let polls = 0; let enabled = false
+ const c = createServerCallController({ request: async () => {
+  polls++
+  if (!enabled) throw new CallServiceUnavailableError()
+  return []
+ }, record: async () => {}, now: () => clock })
+ c.reset('me')
+ for (let i = 0; i < 10; i++) { clock += 3000; c.tick(); await new Promise(r => setImmediate(r)) }
+ assert.equal(polls, 1)
+ enabled = true
+ await c.start('peer', 'Peer', 'id')
+ clock += 3000; c.tick(); await new Promise(r => setImmediate(r))
+ assert.equal(polls, 3)
 })

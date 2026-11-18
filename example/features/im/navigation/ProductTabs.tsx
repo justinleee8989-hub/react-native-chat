@@ -50,6 +50,15 @@ export default function ProductTabs () {
           }}
         />
         <Tabs.Screen
+          name='calls'
+          options={{
+            title: '通话',
+            tabBarIcon: ({ focused, size }) => (
+              <ProductIcon name='phone' size={size} color={focused ? colors.badge : colors.date} />
+            ),
+          }}
+        />
+        <Tabs.Screen
           name='contacts'
           options={{
             title: '通讯录',

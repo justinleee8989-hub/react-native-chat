@@ -1,6 +1,7 @@
 import React from 'react'
 import { Text, View } from 'react-native'
 import { usePathname } from 'expo-router'
+import CallHistoryScreen from '../../calls/CallHistoryScreen'
 import ContactsScreen from '../../contacts/ContactsScreen'
 import ChatListScreen from '../../conversations/ChatListScreen'
 import { useProductLayout } from '../../ui/preferences'
@@ -24,8 +25,10 @@ export default function ProductShell ({
   const blank = {
     chats: ['选择一个会话', '从左侧列表选择会话，或点右上角发起新的聊天'],
     contacts: ['通讯录', '从左侧选择好友，或查看新的朋友和群聊'],
+    calls: ['通话', '点左侧的通话记录可以再次呼叫'],
     me: ['我的', '从左侧选择要查看的设置'],
   }[section]
+  const blankIcon = { chats: 'chat', contacts: 'users', calls: 'phone', me: 'user' } as const
   const t = useProductTheme()
   return (
     <View style={styles.columns}>
@@ -42,6 +45,8 @@ export default function ProductShell ({
         ) : desktop ? (
           section === 'contacts' ? (
             <ContactsScreen root />
+          ) : section === 'calls' ? (
+            <CallHistoryScreen />
           ) : section === 'me' ? (
             <MyScreen />
           ) : (
@@ -63,7 +68,7 @@ export default function ProductShell ({
                 backgroundColor: t.surface2,
               }}
             >
-              <ProductIcon name='chat' size={30} color={t.text3} />
+              <ProductIcon name={blankIcon[section]} size={30} color={t.text3} />
             </View>
             <Text style={{ fontSize: 17, fontWeight: '600', color: t.text2 }}>{blank[0]}</Text>
             <Text style={{ fontSize: 14, color: t.text3, maxWidth: 280, textAlign: 'center' }}>

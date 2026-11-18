@@ -3,11 +3,16 @@ import { Platform } from 'react-native'
 import { type Href, useFocusEffect, useRouter } from 'expo-router'
 import { prefetchConversationHistory, reportError } from '../application/store'
 import { isChatEntryReady, registerChatEntryReady, waitForChatEntry } from './chat-entry'
+import { useDesktopNavigation } from './DesktopNavigation'
 import { traceChatEntry } from './entry-performance'
 
 /** Native preloads the actual route; Web already renders its selected pane in place. */
 export function useChatEntry (account: string, open: (href: Href) => void, hasHistory: (id: string) => boolean = () => false, warmConversationID?: string) {
   const router = useRouter()
+  const navigation = useDesktopNavigation()
+  // A ref: the provider hands out a new function on every render, and as a focus-effect dependency
+  // it would cancel an entry in progress each time.
+  const releasePreparedChat = useRef(navigation?.releasePreparedChat)
   const intent = useRef(0)
   const requested = useRef<string | undefined>(undefined)
   const committed = useRef(false)
@@ -21,6 +26,9 @@ export function useChatEntry (account: string, open: (href: Href) => void, hasHi
   useLayoutEffect(() => {
     warmTarget.current = { account, id: warmConversationID, hasHistory }
   }, [account, warmConversationID, hasHistory])
+  useLayoutEffect(() => {
+    releasePreparedChat.current = navigation?.releasePreparedChat
+  })
   const prepare = useCallback((id: string) => {
     if (Platform.OS === 'web' || committed.current || prepared.current === id || isChatEntryReady(account, id))
       return
@@ -58,6 +66,11 @@ export function useChatEntry (account: string, open: (href: Href) => void, hasHi
     return () => {
       intent.current++
       cancel.current?.()
+      // Leaving the list (another tab, the call screen) must not leave the prepared conversation
+      // behind: the next /chats page pushed from anywhere would open on top of it. An opened
+      // conversation is no longer prepared by now, so it is untouched.
+      if (prepared.current)
+        releasePreparedChat.current?.()
       prepared.current = undefined
     }
   }, []))
