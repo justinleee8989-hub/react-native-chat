@@ -78,7 +78,9 @@ function harness (loginResponse = async () => ({ data: { userID: 'me', imToken: 
   }
   const storeUrl = new URL('./store.ts', import.meta.url)
   const store = load(storeUrl)
-  return { store, client, events, storage, snapshotEntries: () => [...otherStorage], savedSession: () => savedSession, removeCount: () => removeCount,
+  return { store, client, events, storage, snapshotEntries: () => [...otherStorage],
+    // The home snapshots alone: other entries (the last account) outlive a sign-out on purpose.
+    homeEntries: () => [...otherStorage].filter(([name]) => name.startsWith('openim-home-v1')), savedSession: () => savedSession, removeCount: () => removeCount,
     mount: (target = store) => { target.useOpenIM(); effects.pop()() },
     reloadStore: () => {
       for (const dispose of moduleDisposers.get(storeUrl.href) || []) dispose()
@@ -178,7 +180,6 @@ test('initial login retains a non-blocking message projection warning', async ()
   const state = store.useOpenIM()
   assert.equal(state.session.userID, 'me')
   assert.match(state.error, /编辑信息暂时无法同步/)
-  assert.equal(state.recoveryAvailable, true)
   assert.equal(JSON.parse(state.conversations[0].latestMsg).textElem.content, 'original')
 })
 
@@ -204,7 +205,6 @@ test('a rejected refresh from a previous login cannot change the current account
   assert.equal(after.session.userID, 'account-2')
   assert.equal(after.status, before.status)
   assert.equal(after.error, before.error)
-  assert.equal(after.recoveryAvailable, before.recoveryAvailable)
   assert.equal(staleErrorReported, false)
 })
 
@@ -421,7 +421,6 @@ test('a network failure at SDK login keeps the user in the app and reconnects on
   assert.equal(state.offline, true)
   assert.equal(state.status, '网络异常，无法连接服务器')
   assert.equal(state.error, '')
-  assert.equal(state.recoveryAvailable, false)
   assert.equal(state.busy, false)
   assert.ok(h.savedSession())
   assert.equal(h.removeCount(), 0)
@@ -498,11 +497,12 @@ test('explicit expired or invalid OpenIM login tokens clear saved credentials', 
   h.client.logout = async () => { logouts++ }
   await h.store.login('me', 'password', { chat: 'http://test' })
   assert.equal(h.store.useOpenIM().session, undefined)
-  assert.equal(h.store.useOpenIM().recoveryAvailable, false)
   assert.equal(h.savedSession(), null)
   assert.equal(h.removeCount(), 1)
   assert.equal(logouts, 1)
-  assert.match(h.store.useOpenIM().error, /凭据已失效/)
+  assert.equal(h.store.useOpenIM().error, '登录已失效，请重新登录')
+  // The login page is filled in with the account, so only the password is asked.
+  assert.equal(h.store.useOpenIM().lastAccount.account, 'me')
 })
 
 test('temporary conversation refresh failure preserves saved login for retry', async () => {
@@ -515,7 +515,6 @@ test('temporary conversation refresh failure preserves saved login for retry', a
   h.client.conversations = async () => { if (++refreshes === 1) throw new Error('server unavailable'); return [conversation] }
   await h.store.login('me', 'password', { chat: 'http://test' })
   assert.equal(h.store.useOpenIM().session.userID, 'me')
-  assert.equal(h.store.useOpenIM().recoveryAvailable, true)
   assert.equal(h.store.useOpenIM().status, '同步暂时失败')
   assert.equal(logins, 1)
   assert.equal(logouts, 0)
@@ -527,7 +526,7 @@ test('temporary conversation refresh failure preserves saved login for retry', a
   assert.equal(h.removeCount(), 0)
   assert.equal(logins, 1)
   assert.equal(logouts, 0)
-  assert.equal(h.store.useOpenIM().recoveryAvailable, false)
+  assert.equal(h.store.useOpenIM().status, '已连接')
 })
 
 test('explicit invalid-token event clears saved login', async () => {
@@ -537,9 +536,9 @@ test('explicit invalid-token event clears saved login', async () => {
   h.events.get('onUserTokenInvalid')()
   await settle()
   assert.equal(h.store.useOpenIM().session, undefined)
-  assert.equal(h.store.useOpenIM().recoveryAvailable, false)
   assert.equal(h.savedSession(), null)
   assert.equal(h.removeCount(), 1)
+  assert.equal(h.store.useOpenIM().lastAccount.account, 'me')
 })
 
 test('a tab signed out by another sign-in says so after the web reload, once', async () => {
@@ -690,14 +689,33 @@ test('session initialization waits for storage before allowing an unauthenticate
   assert.equal(h.store.useOpenIM().session, undefined)
 })
 
-test('session initialization completes after storage failure so recovery is accessible', async () => {
+test('an unreadable saved login is read again once, then leaves the plain login page', async () => {
   const h = harness()
-  h.storage.getItem = async () => { throw new Error('storage unavailable') }
+  let reads = 0
+  h.storage.getItem = async key => {
+    if (key === 'openim-example-session-v1')
+      reads++
+    throw new Error('storage unavailable')
+  }
   h.mount()
   await settle()
+  assert.equal(reads, 2)
   assert.equal(h.store.useOpenIM().initialized, true)
   assert.equal(h.store.useOpenIM().busy, false)
-  assert.equal(h.store.useOpenIM().recoveryAvailable, true)
+  assert.equal(h.store.useOpenIM().session, undefined)
+  assert.equal(h.store.useOpenIM().error, '无法读取已保存的登录信息，请重新登录')
+})
+
+test('the last account survives a manual sign-out and a cold start, to fill the login page', async () => {
+  const first = harness()
+  await first.store.login('alice@example.com', 'password', { chat: 'http://test' })
+  await first.store.logout()
+  assert.equal(first.store.useOpenIM().lastAccount.account, 'alice@example.com')
+  const second = harness(undefined, { snapshotEntries: first.snapshotEntries() })
+  second.mount()
+  await settle()
+  assert.equal(second.store.useOpenIM().session, undefined)
+  assert.equal(JSON.stringify(second.store.useOpenIM().lastAccount), JSON.stringify({ account: 'alice@example.com', config: { chat: 'http://test' } }))
 })
 
 
@@ -718,15 +736,15 @@ test('cold restore displays an account snapshot without treating it as authentic
   assert.equal(second.store.useOpenIM().session.userID, 'me')
   assert.equal(second.store.useOpenIM().startupSnapshot, undefined)
   await second.store.logout()
-  assert.equal(second.snapshotEntries().length, 0)
+  assert.equal(second.homeEntries().length, 0)
 })
 
 test('store deletion returns only after the persisted home snapshot excludes the conversation', async () => {
   const qa = harness(undefined, { conversationService: { remove: async () => {} } })
   await qa.store.login('me', 'password', { chat: 'http://test' })
   await new Promise(resolve => setTimeout(resolve, 300))
-  assert.equal(JSON.parse(qa.snapshotEntries()[0][1]).conversations.length, 1)
+  assert.equal(JSON.parse(qa.homeEntries()[0][1]).conversations.length, 1)
   await qa.store.removeConversations(['chat-bob'])
   assert.equal(qa.store.useOpenIM().conversations.length, 0)
-  assert.equal(JSON.parse(qa.snapshotEntries()[0][1]).conversations.length, 0)
+  assert.equal(JSON.parse(qa.homeEntries()[0][1]).conversations.length, 0)
 })

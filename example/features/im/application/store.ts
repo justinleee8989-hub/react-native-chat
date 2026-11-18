@@ -31,6 +31,11 @@ const key = 'openim-example-session-v1'
  * the page, and the message set in memory before the reload was gone by the time the page loaded.
  */
 const signOutReasonKey = 'openim-example-signout-reason-v1'
+/**
+ * The account (email) and servers last signed in with, kept through any sign-out so the login page
+ * is filled in and only the password is asked. The saved login holds the user ID and tokens only.
+ */
+const lastAccountKey = 'openim-example-last-account-v1'
 const homeSnapshots = createHomeSnapshots(storage)
 // The saved account could not reach the IM server for a reason other than its credentials. The user
 // stays in the app on the cached list and is told only that; the store connects again by itself,
@@ -160,7 +165,7 @@ async function connect (session: Session, config: ServerConfig, quiet = false) {
   stopHomeSnapshot()
   setDraftStorageScope(JSON.stringify([config.api, config.ws]))
   disposeEvents()
-  runtime.update(quiet ? { config } : { busy: true, error: '', status: '连接中', config, recoveryAvailable: true })
+  runtime.update(quiet ? { config } : { busy: true, error: '', status: '连接中', config })
   disposeEvents = subscribeEvents(client, runtime, { ...messaging, refresh }, logout, epoch, message => calls.receive(message))
   let sdkLoggedIn = false
   try {
@@ -186,17 +191,17 @@ async function connect (session: Session, config: ServerConfig, quiet = false) {
     const syncResult = await refresh()
     const warning = [recoveryWarning, syncResult?.projectionWarning].filter(Boolean).join(' ')
     if (epoch === runtime.generation && warning)
-      runtime.update({ error: warning, recoveryAvailable: true })
+      runtime.update({ error: warning })
   } catch (error) {
     if (epoch !== runtime.generation)
       return
     if (!sdkLoggedIn && isInvalidSDKLoginError(error)) {
       await homeSnapshots.remove(session.userID, config)
-      await logout('登录凭据已失效，请重新登录')
+      await logout('登录已失效，请重新登录')
       return
     }
     if (sdkLoggedIn) {
-      runtime.update({ busy: false, status: '同步暂时失败', recoveryAvailable: true,
+      runtime.update({ busy: false, status: '同步暂时失败',
         error: '已登录，但会话同步暂时失败。可下拉会话列表重试。' })
       return
     }
@@ -210,7 +215,7 @@ async function connect (session: Session, config: ServerConfig, quiet = false) {
     if (recoveryEpoch === runtime.generation) {
       // Not a credentials problem: open the app on what it has instead of the login page.
       offline = { session, config }
-      runtime.update({ session, offline: true, initialized: true, busy: false, status: offlineStatus, error: '', recoveryAvailable: false })
+      runtime.update({ session, offline: true, initialized: true, busy: false, status: offlineStatus, error: '' })
       scheduleReconnect()
     }
     return
@@ -236,13 +241,13 @@ export async function refresh () {
     // The SDK answers from its local database while the server is unreachable: a refresh that worked
     // says nothing about the connection, so it must not replace the failure with 已连接.
     if (session)
-      runtime.update({ status: runtime.state.status === offlineStatus ? offlineStatus : '已连接', error: projectionWarning || '', recoveryAvailable: !!projectionWarning })
+      runtime.update({ status: runtime.state.status === offlineStatus ? offlineStatus : '已连接', error: projectionWarning || '' })
     return projectionWarning ? { projectionWarning } : undefined
   } catch (error) {
     if (epoch !== runtime.generation || session !== runtime.state.session)
       return
     if (session)
-      runtime.update({ status: '同步暂时失败', error: '会话同步暂时失败，可下拉会话列表重试。', recoveryAvailable: true })
+      runtime.update({ status: '同步暂时失败', error: '会话同步暂时失败，可下拉会话列表重试。' })
     throw error
   } finally {
     if (initial && epoch === runtime.generation && session === runtime.state.session)
@@ -266,6 +271,8 @@ export async function login (account: string, password: string, config: ServerCo
   try {
     const session = await authenticate(account, password, config.chat, platformID)
     if (epoch === runtime.generation) {
+      runtime.update({ lastAccount: { account, config } })
+      await storage.setItem(lastAccountKey, JSON.stringify({ account, config })).catch(() => {})
       await storage.setItem(key, JSON.stringify({ session, config }))
       await storage.removeItem(signOutReasonKey)
       if (epoch !== runtime.generation)
@@ -279,6 +286,17 @@ export async function login (account: string, password: string, config: ServerCo
   if (epoch === runtime.generation)
     runtime.update({ busy: false })
 }
+function loadLastAccount (raw: string | null) {
+  if (!raw || runtime.state.lastAccount)
+    return
+  try {
+    const value = JSON.parse(raw) as { account?: unknown, config?: ServerConfig }
+    if (typeof value.account === 'string' && value.config)
+      runtime.update({ lastAccount: { account: value.account, config: value.config } })
+  } catch {
+    /* A damaged entry only means the login page starts empty. */
+  }
+}
 async function restore (retry = false) {
   if ((!retry && restored) || runtime.state.busy)
     return
@@ -286,8 +304,11 @@ async function restore (retry = false) {
     restored = true
   const epoch = runtime.generation
   runtime.update({ busy: true, error: '' })
+  // Not awaited: only the login page uses it, and it fills in whenever this arrives.
+  void storage.getItem(lastAccountKey).then(loadLastAccount, () => {})
   try {
-    const saved = await storage.getItem(key)
+    // Read twice before giving up: a failed read is rarely the data, and there is no choice to offer.
+    const saved = await storage.getItem(key).catch(() => storage.getItem(key))
     if (epoch !== runtime.generation)
       return
     if (saved) {
@@ -295,7 +316,7 @@ async function restore (retry = false) {
       const startupSnapshot = await homeSnapshots.load(session.userID, config)
       if (epoch !== runtime.generation)
         return
-      runtime.update({ config, recoveryAvailable: true, startupSnapshot,
+      runtime.update({ config, startupSnapshot,
         conversations: startupSnapshot?.conversations || [], conversationsLoaded: !!startupSnapshot })
       await connect(session, config)
       return
@@ -306,11 +327,10 @@ async function restore (retry = false) {
       await storage.removeItem(signOutReasonKey).catch(() => {})
     if (epoch !== runtime.generation)
       return
-    runtime.update({ busy: false, recoveryAvailable: false, ...(reason ? { error: reason } : {}) })
+    runtime.update({ busy: false, ...(reason ? { error: reason } : {}) })
   } catch {
     if (epoch === runtime.generation)
-      runtime.update({ busy: false, status: '恢复失败', recoveryAvailable: true,
-        error: '读取已保存的登录信息失败，原数据已保留，可重试恢复登录。' })
+      runtime.update({ busy: false, error: '无法读取已保存的登录信息，请重新登录' })
   } finally {
     runtime.update({ initialized: true })
   }
@@ -330,7 +350,7 @@ export async function retryRestore () {
       await refresh()
     } catch (error) {
       if (epoch === runtime.generation)
-        runtime.update({ error: error instanceof Error ? error.message : '恢复失败，请重试', recoveryAvailable: true })
+        runtime.update({ error: error instanceof Error ? error.message : '恢复失败，请重试' })
       /* refresh preserves a retryable status and the current SDK session. */
     } finally {
       if (epoch === runtime.generation)
@@ -359,7 +379,6 @@ export async function logout (error = '') {
     busy: true,
     status: '未登录',
     error,
-    recoveryAvailable: false,
     conversationsLoaded: false,
     conversations: [],
     messages: {},

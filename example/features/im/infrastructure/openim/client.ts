@@ -1,4 +1,4 @@
-import SDK, { OpenIMEmitter } from '@openim/rn-client-sdk'
+import SDK, { LoginStatus, OpenIMEmitter } from '@openim/rn-client-sdk'
 import { Directory, Paths } from 'expo-file-system'
 import type { IMClient } from '../../domain/types'
 import { createNativeMedia } from './media'
@@ -6,6 +6,14 @@ import { createNativeMedia } from './media'
 let initialized = false
 export const client: IMClient = {
   async login(session, config) {
+    // A JS reload (Metro, an update) leaves the native SDK signed in from the previous JS context,
+    // and it refuses to sign in again; that error read as "offline" until the app was killed. The
+    // same account still signed in is a login that has already happened.
+    const status = await SDK.getLoginStatus().catch(() => undefined)
+    if (status === LoginStatus.Logged && (await SDK.getLoginUserID().catch(() => '')) === session.userID) {
+      initialized = true
+      return
+    }
     if (!initialized) {
       const directory = new Directory(Paths.document, 'openim')
       directory.create({ intermediates: true, idempotent: true })

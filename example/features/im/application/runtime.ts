@@ -13,7 +13,8 @@ interface State {
   status: string
   busy: boolean
   error: string
-  recoveryAvailable: boolean
+  /** The account last signed in on this device, kept through sign-out to fill the login page. */
+  lastAccount?: { account: string, config: ServerConfig }
   /**
    * Signed in, but the IM server could not be reached: the app shows what it has while the store
    * connects again by itself (see `connect` in store.ts).
@@ -37,7 +38,6 @@ export function createRuntime (config: ServerConfig) {
     status: '未登录',
     busy: false,
     error: '',
-    recoveryAvailable: false,
     conversationsLoaded: false,
     conversations: [],
     messages: {},

@@ -1,6 +1,6 @@
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useLocalSearchParams, useRouter, type Href } from 'expo-router'
-import { login, retryRestore, useOpenIM } from '../application/store'
+import { login, useOpenIM } from '../application/store'
 import {
   AdvancedSettings,
   AuthButton,
@@ -20,13 +20,31 @@ export default function LoginScreen () {
     ws?: string
   }>()
   const state = useOpenIM()
-  const [account, setAccount] = useState(params.email || '')
+  // The account last signed in here, unless the page was opened with one (from 注册 or 忘记密码):
+  // a sign-out for an expired login then only asks for the password.
+  const last = params.email ? undefined : state.lastAccount
+  const [account, setAccount] = useState(params.email || last?.account || '')
   const [password, setPassword] = useState('')
   const [config, setConfig] = useState({
-    chat: params.chat || state.config.chat,
-    api: params.api || state.config.api,
-    ws: params.ws || state.config.ws,
+    chat: params.chat || last?.config.chat || state.config.chat,
+    api: params.api || last?.config.api || state.config.api,
+    ws: params.ws || last?.config.ws || state.config.ws,
   })
+  // The last account is read from storage alongside startup and can arrive after this page mounts;
+  // it fills the form then, unless the user has started typing.
+  const touched = useRef(!!(params.email || last))
+  const lastAccount = state.lastAccount
+  useEffect(() => {
+    if (touched.current || params.email || !lastAccount)
+      return
+    touched.current = true
+    setAccount(lastAccount.account)
+    setConfig(lastAccount.config)
+  }, [lastAccount, params.email])
+  const type = (value: string) => {
+    touched.current = true
+    setAccount(value)
+  }
   const navigate = (mode: 'register' | 'reset') =>
     router.push({ pathname: `/auth/${mode}`, params: { ...config, email: account.trim() } } as Href)
   const submit = () => {
@@ -41,7 +59,7 @@ export default function LoginScreen () {
         keyboardType='email-address'
         autoComplete='email'
         value={account}
-        onChangeText={setAccount}
+        onChangeText={type}
         editable={!state.busy}
       />
       <AuthField
@@ -50,6 +68,7 @@ export default function LoginScreen () {
         password
         reveal
         autoComplete='current-password'
+        autoFocus={!!account}
         value={password}
         onChangeText={setPassword}
         editable={!state.busy}
@@ -63,16 +82,6 @@ export default function LoginScreen () {
         disabled={!account.trim() || !password}
         onPress={submit}
       />
-      {state.recoveryAvailable && (
-        <AuthButton
-          title='重试恢复上次登录'
-          secondary
-          disabled={state.busy}
-          onPress={() => {
-            void retryRestore()
-          }}
-        />
-      )}
       <AuthLinks>
         <AuthLink title='忘记密码？' disabled={state.busy} onPress={() => navigate('reset')} />
         <AuthLink title='注册新账户' disabled={state.busy} onPress={() => navigate('register')} />
