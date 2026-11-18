@@ -5,6 +5,10 @@ Guidance for AI coding agents working **inside this repository**.
 If you are instead helping someone *use* this library in their own app, read
 [`llms.txt`](llms.txt) - it is a compact integration guide and does not require the checkout.
 
+## OpenIM project branch
+
+Subsequent OpenIM optimizations, bug fixes, and acceptance records belong on `perf` in this repository, `../chat`, and `../open-im-server`. Keep the older feature branches as history. Read `docs/openim/CURRENT_ACCEPTANCE.md` for the current handoff.
+
 ## What this is
 
 `@kesha-antonov/react-native-chat` is a chat UI component library for React Native and
