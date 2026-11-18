@@ -221,7 +221,7 @@ function Contacts ({ root, account }: { root: boolean, account: string }) {
       )}
       {!!task.error && (
         <Action
-          title='重试'
+          title='重新加载'
           disabled={task.busy}
           onPress={() => {
             void refresh()

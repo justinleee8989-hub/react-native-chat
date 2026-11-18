@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Href, useRootNavigationState, useRouter, useSegments } from 'expo-router'
 import * as SplashScreen from 'expo-splash-screen'
 import { useOpenIM } from '../application/store'
-import { useStartupReadiness } from './StartupReadiness'
+import { sessionKey, useStartupReadiness } from './StartupReadiness'
 import { StartupScreen } from './StartupScreen'
 
 /** Keep the root navigator mounted while saved credentials are restored. */
@@ -21,11 +21,12 @@ export default function SessionGuard () {
     else if (session && auth)
       router.replace('/(tabs)/chats')
   }, [auth, busy, development, initialized, navigation?.key, router, session])
-  const { readySession, markReady } = useStartupReadiness()
+  const { readyKey, markReady } = useStartupReadiness()
+  const account = sessionKey(session)
   const home = segments[0] === '(tabs)' && (!segments[1] || segments[1] === 'chats')
   const routeReady = development || (initialized && (auth ? !session : !!session))
-  const homePending = !!session && home && readySession !== session
-  const [presentedSession, setPresentedSession] = useState<typeof session>()
+  const homePending = !!session && home && readyKey !== account
+  const [presented, setPresented] = useState('')
   const [slow, setSlow] = useState(false)
   useEffect(() => {
     if (!homePending)
@@ -42,11 +43,11 @@ export default function SessionGuard () {
     // Content-size/empty-state layout has committed. Keep the product cover through
     // the next paint rather than exposing the FlatList's initial mount.
     let frame = requestAnimationFrame(() => {
-      frame = requestAnimationFrame(() => setPresentedSession(session))
+      frame = requestAnimationFrame(() => setPresented(account))
     })
     return () => cancelAnimationFrame(frame)
-  }, [homePending, routeReady, session])
-  const ready = routeReady && (!session || !home || presentedSession === session)
+  }, [account, homePending, routeReady, session])
+  const ready = routeReady && (!session || !home || presented === account)
   useEffect(() => {
     if (!ready)
       return

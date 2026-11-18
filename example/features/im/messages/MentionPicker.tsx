@@ -75,8 +75,8 @@ export function MentionPicker ({
               </Text>
             )}
             {!!error && (
-              <Pressable onPress={() => setAttempt(value => value + 1)} style={{ padding: 12 }}>
-                <Text style={{ color: t.accent }}>重试</Text>
+              <Pressable accessibilityRole='button' onPress={() => setAttempt(value => value + 1)} style={{ padding: 12 }}>
+                <Text style={{ color: t.accent }}>重新加载</Text>
               </Pressable>
             )}
           </View>

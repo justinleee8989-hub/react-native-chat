@@ -5,13 +5,29 @@ import LoginScreen from './LoginScreen'
 
 let mockState: Record<string, unknown>
 let mockParams: Record<string, string>
+let mockTransitionEnd: ((event: { data?: { closing?: boolean } }) => void) | undefined
+const mockFocus = jest.fn()
 jest.mock('../application/store', () => ({ login: jest.fn(), useOpenIM: () => mockState }))
-jest.mock('expo-router', () => ({ useLocalSearchParams: () => mockParams, useRouter: () => ({ push: jest.fn() }) }))
+jest.mock('expo-router', () => ({
+  useLocalSearchParams: () => mockParams,
+  useRouter: () => ({ push: jest.fn() }),
+  useNavigation: () => ({
+    addListener: () => () => {},
+    getParent: () => ({ addListener: (_event: string, listener: (event: { data?: { closing?: boolean } }) => void) => {
+      mockTransitionEnd = listener
+      return () => {}
+    } }),
+  }),
+}))
 jest.mock('./AuthForm', () => {
   const { Text, TextInput, View } = jest.requireActual<typeof import('react-native')>('react-native')
   return {
     AuthPage: ({ children }: React.PropsWithChildren) => <View>{children}</View>,
-    AuthField: (props: { label: string, value: string, autoFocus?: boolean }) => <TextInput accessibilityLabel={props.label} value={props.value} autoFocus={props.autoFocus} />,
+    AuthField: (props: { label: string, value: string, autoFocus?: boolean, ref?: { current: unknown } }) => {
+      if (props.ref)
+        props.ref.current = { focus: mockFocus }
+      return <TextInput accessibilityLabel={props.label} value={props.value} autoFocus={props.autoFocus} />
+    },
     AuthButton: ({ title }: { title: string }) => <Text>{title}</Text>,
     AuthLink: ({ title }: { title: string }) => <Text>{title}</Text>,
     AuthLinks: ({ children }: React.PropsWithChildren) => <View>{children}</View>,
@@ -25,6 +41,8 @@ const last = { account: 'alice@example.com', config: { chat: 'http://saved-chat'
 
 beforeEach(() => {
   mockParams = {}
+  mockTransitionEnd = undefined
+  mockFocus.mockClear()
   mockState = { busy: false, error: '', config: servers }
 })
 
@@ -53,4 +71,15 @@ it('keeps the account a link opened it with (注册, 忘记密码)', async () =>
   const view = await render(<LoginScreen />)
   expect(view.getByLabelText('邮箱账号').props.value).toBe('bob@example.com')
   expect(view.getByLabelText('账户服务地址').props.value).toBe('http://chat')
+})
+
+it('focuses the password again when the sign-out transition ends, so Android shows the keyboard', async () => {
+  mockState = { ...mockState, lastAccount: last }
+  await render(<LoginScreen />)
+  expect(mockTransitionEnd).toBeDefined()
+  mockTransitionEnd?.({ data: { closing: false } })
+  expect(mockFocus).toHaveBeenCalledTimes(1)
+  // Signed in: the page's own closing transition must not bring the keyboard up over the home page.
+  mockTransitionEnd?.({ data: { closing: true } })
+  expect(mockFocus).toHaveBeenCalledTimes(1)
 })

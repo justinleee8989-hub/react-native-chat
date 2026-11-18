@@ -7,9 +7,10 @@ export interface NavigationWithTransitions {
 }
 
 /**
- * Listens to the push that opens a chat page starting or ending. Opened from the Chats tab, the
- * page is the first screen of the nested `chats` stack, so the push is the root stack's; opened
- * from inside `chats` (archived, search) it is the nested stack's own. Both are listened to.
+ * Listens to the transition that opens a page starting or ending; closing transitions are ignored.
+ * A page that is the first screen of a nested stack (a chat opened from the Chats tab, the login
+ * page after a sign-out) arrives with the root stack's transition; one pushed inside its own stack
+ * (a chat from archived or search, login from 注册) with that stack's. Both are listened to.
  */
 export function onOpeningTransition (
   navigation: NavigationWithTransitions | undefined,

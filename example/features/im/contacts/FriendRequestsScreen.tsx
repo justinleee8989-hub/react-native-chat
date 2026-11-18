@@ -136,7 +136,7 @@ function Requests () {
       {task.hasSucceeded && !requests.length && !task.busy && <ProductEmpty title='暂无申请' />}
       {!!task.error && (
         <Action
-          title='重试'
+          title='重新加载'
           disabled={task.busy}
           onPress={() => {
             void refresh()

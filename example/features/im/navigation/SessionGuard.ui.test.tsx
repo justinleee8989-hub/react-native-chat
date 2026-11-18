@@ -36,6 +36,21 @@ it('keeps startup over an authenticated home until its real content has laid out
   await view.rerender(<App />)
   expect(view.getByText('启动页')).toBeTruthy()
 })
+it('does not cover the home again for the same account in a new session object (a JS reload)', async () => {
+  jest.useFakeTimers()
+  const view = await render(<App />)
+  await fireEvent.press(view.getByLabelText('首屏布局完成'))
+  await act(async () => {
+    jest.advanceTimersByTime(100)
+  })
+  expect(view.queryByText('启动页')).toBeNull()
+  mockState = { ...mockState, session: { ...mockSession } }
+  await view.rerender(<App />)
+  await act(async () => {
+    jest.advanceTimersByTime(100)
+  })
+  expect(view.queryByText('启动页')).toBeNull()
+})
 it('lets a slow home be entered explicitly without an automatic timed flash', async () => {
   jest.useFakeTimers()
   const view = await render(<App />)

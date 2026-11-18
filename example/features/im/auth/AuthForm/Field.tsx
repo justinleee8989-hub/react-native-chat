@@ -23,6 +23,8 @@ export function AuthField ({
   reveal?: boolean
   compact?: boolean
   trailing?: React.ReactNode
+  /** Reaches the input, so a page can focus it (React 19 passes `ref` as a prop). */
+  ref?: React.Ref<React.ComponentRef<typeof TextInput>>
 }) {
   const colors = useChatListColors()
   const [visible, setVisible] = useState(false)

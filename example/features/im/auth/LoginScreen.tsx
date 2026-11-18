@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { useLocalSearchParams, useRouter, type Href } from 'expo-router'
+import type { TextInput } from 'react-native'
+import { useLocalSearchParams, useNavigation, useRouter, type Href } from 'expo-router'
 import { login, useOpenIM } from '../application/store'
+import { type NavigationWithTransitions, onOpeningTransition } from '../navigation/opening-transition'
 import {
   AdvancedSettings,
   AuthButton,
@@ -45,6 +47,18 @@ export default function LoginScreen () {
     touched.current = true
     setAccount(value)
   }
+  // Opened at start-up, `autoFocus` brings up the keyboard. After a sign-out the page arrives with
+  // a stack transition, and Android gives a field focused during it the cursor but no keyboard;
+  // focusing again when the opening transition ends shows it. Its closing transition (signed in)
+  // is ignored, or the keyboard would come up over the home page.
+  const passwordField = useRef<React.ComponentRef<typeof TextInput>>(null)
+  const filled = !!account
+  const navigation = useNavigation() as unknown as NavigationWithTransitions
+  useEffect(() => {
+    if (!filled)
+      return
+    return onOpeningTransition(navigation, 'transitionEnd', () => passwordField.current?.focus())
+  }, [filled, navigation])
   const navigate = (mode: 'register' | 'reset') =>
     router.push({ pathname: `/auth/${mode}`, params: { ...config, email: account.trim() } } as Href)
   const submit = () => {
@@ -68,7 +82,8 @@ export default function LoginScreen () {
         password
         reveal
         autoComplete='current-password'
-        autoFocus={!!account}
+        ref={passwordField}
+        autoFocus={filled}
         value={password}
         onChangeText={setPassword}
         editable={!state.busy}
