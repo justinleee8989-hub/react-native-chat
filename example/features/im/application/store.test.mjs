@@ -611,7 +611,10 @@ test('the same read counts leave the store state untouched', async () => {
 test('session initialization waits for storage before allowing an unauthenticated redirect', async () => {
   const h = harness()
   let finishRead
-  h.storage.getItem = () => new Promise(resolve => { finishRead = resolve })
+  // Hold only the saved-session read: after it the store also reads the sign-out reason, and a
+  // stub that never answers that one kept initialization pending forever.
+  const getItem = h.storage.getItem
+  h.storage.getItem = key => key === 'openim-example-session-v1' ? new Promise(resolve => { finishRead = resolve }) : getItem(key)
   assert.equal(h.store.useOpenIM().initialized, false)
   h.mount()
   assert.equal(h.store.useOpenIM().initialized, false)
