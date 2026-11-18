@@ -9,6 +9,7 @@ let mockCanGoBack = false
 let mockRouterCanGoBack = true
 const mockBack = jest.fn()
 const mockReplace = jest.fn()
+jest.mock('react-native-safe-area-context', () => ({ ...jest.requireActual<object>('react-native-safe-area-context'), useSafeAreaInsets: () => ({ top: 0, right: 0, bottom: 0, left: 0 }) }))
 jest.mock('../navigation/DesktopNavigation', () => ({ useDesktopNavigation: () => ({ canGoBackInSection: mockCanGoBack }) }))
 jest.mock('./preferences', () => ({ useProductLayout: () => ({ desktop: mockDesktop }) }))
 jest.mock('./theme', () => ({ useProductTheme: () => ({}) }))

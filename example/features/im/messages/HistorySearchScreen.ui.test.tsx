@@ -4,6 +4,7 @@ import { act, fireEvent, render, waitFor } from '@testing-library/react-native'
 import HistorySearchScreen from './HistorySearchScreen'
 const mockPush = jest.fn()
 const mockSearch = jest.fn<(...args: unknown[]) => Promise<unknown>>()
+jest.mock('react-native-safe-area-context', () => ({ ...jest.requireActual<object>('react-native-safe-area-context'), useSafeAreaInsets: () => ({ top: 0, right: 0, bottom: 0, left: 0 }) }))
 jest.mock('../application/store', () => ({ useOpenIM: () => ({ session: { userID: 'self', imToken: 'token' }, conversations: [] }), loadServerHistory: (...args: unknown[]) => mockSearch(...args) }))
 jest.mock('../auth/LoginScreen', () => () => null)
 jest.mock('expo-router', () => ({ useRouter: () => ({ push: jest.fn(), dismissTo: mockPush, back: jest.fn(), canGoBack: () => true }) }))

@@ -164,3 +164,13 @@ it('reports the buffer growing once, whether the user drags or the push ends fir
   await act(() => result.current.onScrollBeginDrag())
   expect(onExpand).toHaveBeenCalledTimes(1)
 })
+
+it('is opening until the buffer grows', async () => {
+  const { result } = await renderHook(useMessageListLayout)
+  await act(() => result.current.onLayout(layout(390, 700)))
+  expect(result.current.opening).toBe(true)
+  await act(() => result.current.onReady())
+  await act(() => result.current.onScrollBeginDrag())
+  expect(result.current.opening).toBe(false)
+  expect(result.current.drawDistance).toBe(1400)
+})

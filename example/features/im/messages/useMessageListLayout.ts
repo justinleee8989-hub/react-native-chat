@@ -114,5 +114,7 @@ export function useMessageListLayout ({ onExpand }: { onExpand?: () => void } = 
       })
     })
   }, [])
-  return { messagesContainerRef, onLayout, onReady, onTransitionEnd, onScrollBeginDrag, drawDistance, width }
+  // Until the buffer grows the page is still opening: only the viewport is built.
+  const opening = drawDistance === 0
+  return { messagesContainerRef, onLayout, onReady, onTransitionEnd, onScrollBeginDrag, drawDistance, opening, width }
 }

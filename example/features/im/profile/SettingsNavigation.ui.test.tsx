@@ -7,6 +7,7 @@ import SettingsScreen from './SettingsScreen'
 const mockBack = jest.fn()
 const mockReplace = jest.fn()
 let mockCanGoBack = false
+jest.mock('react-native-safe-area-context', () => ({ ...jest.requireActual<object>('react-native-safe-area-context'), useSafeAreaInsets: () => ({ top: 0, right: 0, bottom: 0, left: 0 }) }))
 jest.mock('expo-router', () => ({
   useRouter: () => ({ back: mockBack, canGoBack: () => mockCanGoBack, replace: mockReplace, push: jest.fn() }),
   useLocalSearchParams: () => ({ section: 'profile' }),

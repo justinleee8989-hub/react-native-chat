@@ -25,3 +25,45 @@ index 0705b33dfea0d16cdcc3002c7d4be948ee7217be..e833547ed6701f76f080f52c4bbc69d4
      defaultConfig {
          minSdkVersion safeExtGet('OpenImSdkRn_minSdkVersion', 16)
          targetSdkVersion safeExtGet('OpenImSdkRn_targetSdkVersion', 33)
+diff --git a/android/src/main/java/com/openimsdkrn/OpenImSdkRnModule.java b/android/src/main/java/com/openimsdkrn/OpenImSdkRnModule.java
+--- a/android/src/main/java/com/openimsdkrn/OpenImSdkRnModule.java
++++ b/android/src/main/java/com/openimsdkrn/OpenImSdkRnModule.java
+@@ -22,6 +22,7 @@ import com.openimsdkrn.listener.UploadLogProgressListener;
+ import com.openimsdkrn.listener.UserListener;
+ import com.openimsdkrn.listener.UploadFileCallbackListener;
+ import com.openimsdkrn.listener.BatchMsgListener;
++import com.openimsdkrn.listener.SetCustomBusinessListener;
+ import com.openimsdkrn.utils.Emitter;
+ 
+ import java.util.ArrayList;
+@@ -77,6 +78,7 @@ public class OpenImSdkRnModule extends ReactContextBaseJavaModule {
+     setGroupListener();
+     setAdvancedMsgListener();
+     setBatchMsgListener();
++    Open_im_sdk.setCustomBusinessListener(new SetCustomBusinessListener(reactContext));
+ 
+     if (initialized) {
+       promise.resolve("init success");
+diff --git a/ios/OpenImSdkRn.h b/ios/OpenImSdkRn.h
+--- a/ios/OpenImSdkRn.h
++++ b/ios/OpenImSdkRn.h
+@@ -9,7 +9,7 @@
+ #import <React/RCTEventEmitter.h>
+ #endif
+ 
+-@interface OpenIMSDKRN : RCTEventEmitter <RCTBridgeModule,Open_im_sdk_callbackOnConnListener,Open_im_sdk_callbackOnUserListener, Open_im_sdk_callbackOnAdvancedMsgListener, Open_im_sdk_callbackOnFriendshipListener, Open_im_sdk_callbackOnConversationListener, Open_im_sdk_callbackOnGroupListener, Open_im_sdk_callbackOnBatchMsgListener>
++@interface OpenIMSDKRN : RCTEventEmitter <RCTBridgeModule,Open_im_sdk_callbackOnConnListener,Open_im_sdk_callbackOnUserListener, Open_im_sdk_callbackOnAdvancedMsgListener, Open_im_sdk_callbackOnFriendshipListener, Open_im_sdk_callbackOnConversationListener, Open_im_sdk_callbackOnGroupListener, Open_im_sdk_callbackOnBatchMsgListener, Open_im_sdk_callbackOnCustomBusinessListener>
+ 
+ - (void)pushEvent:(NSString *) eventName data:(id) data;
+ 
+diff --git a/ios/OpenImSdkRn.m b/ios/OpenImSdkRn.m
+--- a/ios/OpenImSdkRn.m
++++ b/ios/OpenImSdkRn.m
+@@ -161,6 +161,7 @@ - (NSArray *)parseJsonStr2Array:(NSString *)jsonStr {
+     Open_im_sdkSetGroupListener(self);
+     Open_im_sdkSetAdvancedMsgListener(self);
+     Open_im_sdkSetBatchMsgListener(self);
++    Open_im_sdkSetCustomBusinessListener(self);
+     if (flag) {
+         resolve(@"init success");
+     }else{

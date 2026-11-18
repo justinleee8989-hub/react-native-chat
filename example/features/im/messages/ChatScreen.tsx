@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Button, StyleSheet, Text, View } from 'react-native'
 import { Chat, IMessage, ReplyMessage } from '@kesha-antonov/react-native-chat'
 import { useFocusEffect, useNavigation, useRouter } from 'expo-router'
@@ -76,6 +76,12 @@ export default function ChatScreen ({ id, messageID }: { id: string, messageID?:
 const EMPTY_MESSAGES: IMMessage[] = []
 /** A chat opens with one history page (30); below two, the next is fetched as the buffer grows. */
 const PREFETCH_EARLIER_BELOW = 60
+/**
+ * Messages the list is given while the page opens, newest first. However much history is cached
+ * (a prefetched page, or all of it after reading far up), the first build then lays out only
+ * about one page: round five opened ~140ms later with more cached. The rest follows with the buffer.
+ */
+const OPENING_MESSAGES = 30
 
 function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
   const state = useOpenIM()
@@ -276,6 +282,13 @@ function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
     requestCall,
     onRevoke: setRevoke,
   })
+  // Not while locating a message, which may be further back than the opening window.
+  const windowed = messageListLayout.opening && !messageID
+  const allMessages = rows.messages
+  const listMessages = useMemo(
+    () => windowed ? allMessages.slice(0, OPENING_MESSAGES) : allMessages,
+    [windowed, allMessages]
+  )
 
   if (!state.session)
     return <LoginScreen />
@@ -460,7 +473,7 @@ function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
         renderTypingIndicator={() => (
           <ProductTyping group={!!conversation.groupID} user={composer.typingUsers[0]} />
         )}
-        messages={rows.messages}
+        messages={listMessages}
         renderCustomView={rows.renderCustomView}
         onSend={onSend}
         onEditMessage={extras.edit}

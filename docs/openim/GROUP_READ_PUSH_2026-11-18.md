@@ -125,3 +125,7 @@ RN SDK 事件名已核实：`@openim/rn-client-sdk/src/constants/OpenIMEvents.ts
 | 已读明细 | 两轮已读1/未读0，正确 |
 | 新增可见系统消息 | 未见；新范围只有两条QA文本 |
 | UI / 类型 / lint / 业务 / SDK / Go | UI23失败；其余指定检查通过，见报告 |
+
+## 2026-11-18 第五轮失败的原因
+
+两轮真实阅读后发送者页面都没有刷新。原因在客户端 SDK：`@openim/rn-client-sdk` 3.8.3-patch.12.4 的原生层（Android `OpenImSdkRnModule.initSDK`、iOS `initSDK`）只注册了 6 个监听器，**没有注册业务通知监听器**，所以 `onRecvCustomBusinessMessage` 永远到不了 JS。事件名本身是对的。修复在 `example/.yarn/patches/@openim-rn-client-sdk-npm-3.8.3-patch.12.4-bac3fad1bc.patch`，复测见 [第六轮 V3](entry-perf-2026-11-18/TEST_6.md)。服务端两个分支不用改。

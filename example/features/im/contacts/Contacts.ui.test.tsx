@@ -10,6 +10,7 @@ import FriendRequestsScreen from './FriendRequestsScreen'
 
 const mockPush = jest.fn()
 let mockInitialID = ''
+jest.mock('react-native-safe-area-context', () => ({ ...jest.requireActual<object>('react-native-safe-area-context'), useSafeAreaInsets: () => ({ top: 0, right: 0, bottom: 0, left: 0 }) }))
 jest.mock('expo-router', () => ({ useRouter: () => ({ push: mockPush, canGoBack: () => false, replace: jest.fn() }), useLocalSearchParams: () => ({ id: mockInitialID }) }))
 jest.mock('../application/store', () => ({ useOpenIM: () => ({ session: { userID: 'self', imToken: 'token' } }) }))
 jest.mock('../application/directory', () => ({ directory: { friends: jest.fn(), groups: jest.fn(), requests: jest.fn(), respond: jest.fn(), users: jest.fn(), add: jest.fn() }, contactDirectoryEvents: [], groupDirectoryEvents: [], subscribeDirectory: () => () => {} }))
