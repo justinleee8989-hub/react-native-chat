@@ -1,0 +1,37 @@
+[
+  {
+    "epoch": 1794974468.668328,
+    "read1": false,
+    "read0": true
+  },
+  {
+    "epoch": 1794974471.9304209,
+    "read1": false,
+    "read0": true
+  },
+  {
+    "epoch": 1794974475.23406,
+    "read1": false,
+    "read0": true
+  },
+  {
+    "epoch": 1794974478.673685,
+    "read1": false,
+    "read0": true
+  },
+  {
+    "epoch": 1794974482.050007,
+    "read1": false,
+    "read0": true
+  },
+  {
+    "epoch": 1794974485.433999,
+    "read1": false,
+    "read0": true
+  },
+  {
+    "epoch": 1794974488.634908,
+    "read1": true,
+    "read0": false
+  }
+]

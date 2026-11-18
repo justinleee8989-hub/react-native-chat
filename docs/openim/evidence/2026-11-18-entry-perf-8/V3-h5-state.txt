@@ -1,0 +1,3 @@
+Browser tab: 46, Title: "example", URL: "http://127.0.0.1:35882/chats/sg_1386688880".
+There has been no change in the accessibility tree.
+The focused UI element is 0 AXWebArea example, URL: 127.0.0.1:35882/chats/sg_1386688880

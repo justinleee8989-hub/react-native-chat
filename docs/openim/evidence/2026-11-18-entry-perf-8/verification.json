@@ -1,0 +1,24 @@
+{
+  "app-typecheck": 0,
+  "sdk-typecheck": 0,
+  "lint": 0,
+  "sdk-build": 0,
+  "implementation": "a79b12cc405ab83a72a391d1f1c209275ddbd8b7",
+  "ui": {
+    "suites": 54,
+    "passed": 249,
+    "exit": 0
+  },
+  "sdk": {
+    "suites": 91,
+    "passed": 501,
+    "snapshots": 34,
+    "exit": 0
+  },
+  "business": {
+    "passed": 287,
+    "failed": 0,
+    "exit": 0
+  },
+  "releaseBuild": 0
+}
