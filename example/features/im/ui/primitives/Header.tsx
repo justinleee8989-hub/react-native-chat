@@ -38,8 +38,9 @@ export function ProductHeader ({
             paddingTop: desktop ? 16 : 10,
             paddingBottom: desktop ? 6 : 8,
             paddingRight: desktop ? 8 : 10,
-            alignItems: desktop ? 'flex-end' : 'center',
-            minHeight: desktop ? 0 : 62,
+            // 58 keeps the PC header the height the 36px title line gave it, so the list below
+            // does not move; centred, the smaller title lines up with the header buttons.
+            minHeight: desktop ? 58 : 62,
           },
         ],
         { backgroundColor: backgroundColor || t.bg },
@@ -64,14 +65,10 @@ export function ProductHeader ({
           <Text
             accessibilityRole='header'
             numberOfLines={1}
-            style={{
-              color: t.text,
-              fontSize: large ? (desktop ? 24 : 18) : 17,
-              lineHeight: large ? (desktop ? 36 : 24) : 22,
-              fontWeight: desktopLarge ? '700' : '600',
-              letterSpacing: desktopLarge ? -0.3 : undefined,
-              textAlign: desktopLarge ? 'left' : 'center',
-            }}
+            style={[
+              large ? styles.pageTitle : styles.detailTitle,
+              { color: t.text, textAlign: desktopLarge ? 'left' : 'center' },
+            ]}
           >
             {title}
           </Text>

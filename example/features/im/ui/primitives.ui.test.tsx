@@ -138,15 +138,27 @@ it('constrains overlays to the desktop or phone preview frame and preserves nati
   expect(productOverlayGeometry(1280, 1000, true, false)).toEqual({ width: 1280, height: 1000, topInset: 0, radius: 0 })
 })
 
-it('lets a large no-action desktop header size to its 58px content instead of the 66px minimum', async () => {
+it('keeps a large no-action desktop header at 58px instead of the 66px minimum', async () => {
   const previous = mockDesktop
   mockDesktop = true
   try {
     const screen = await render(<ProductHeader title='我的' large />)
     const style = StyleSheet.flatten(screen.toJSON()?.props.style)
-    expect(style.minHeight).toBe(0)
-    expect(style.alignItems).toBe('flex-end')
-    expect(style.paddingTop + style.paddingBottom + 36).toBe(58)
+    expect(style.minHeight).toBe(58)
+    expect(style.alignItems).toBe('center')
+  } finally {
+    mockDesktop = previous
+  }
+})
+
+it.each([false, true])('draws a section title the same on a phone and on PC (desktop=%s)', async desktop => {
+  const previous = mockDesktop
+  mockDesktop = desktop
+  try {
+    const screen = await render(<ProductHeader title='通讯录' large />)
+    const style = StyleSheet.flatten(screen.getByRole('header', { name: '通讯录' }).props.style)
+    expect(style).toEqual(expect.objectContaining({ fontSize: 18, lineHeight: 24, fontWeight: '600' }))
+    expect(style.textAlign).toBe(desktop ? 'left' : 'center')
   } finally {
     mockDesktop = previous
   }
