@@ -20,6 +20,11 @@ export function useMessageListLayout () {
   const targetDistance = useRef(1000)
   const bufferFrame = useRef<number | undefined>(undefined)
   const bufferTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const growFrame = useRef<number | undefined>(undefined)
+  // Grown one viewport at a time. All at once, the rows of both screens were built in one JS frame
+  // (230-460ms on a cold start, rounds four to seven); a fling that had just started kept going
+  // natively meanwhile, past rows placed for where it began, and showed an empty band. Between the
+  // two steps the list places rows again for where the fling has got to.
   const expand = useCallback(() => {
     if (expanded.current)
       return
@@ -27,7 +32,11 @@ export function useMessageListLayout () {
     if (bufferTimer.current !== undefined)
       clearTimeout(bufferTimer.current)
     bufferTimer.current = undefined
-    setDrawDistance(targetDistance.current)
+    setDrawDistance(Math.round(targetDistance.current / 2))
+    growFrame.current = requestAnimationFrame(() => {
+      growFrame.current = undefined
+      setDrawDistance(targetDistance.current)
+    })
   }, [])
   const expandInTwoFrames = useCallback(() => {
     bufferFrame.current = requestAnimationFrame(() => {
@@ -70,6 +79,8 @@ export function useMessageListLayout () {
   useEffect(() => () => {
     if (bufferFrame.current !== undefined)
       cancelAnimationFrame(bufferFrame.current)
+    if (growFrame.current !== undefined)
+      cancelAnimationFrame(growFrame.current)
     if (bufferTimer.current !== undefined)
       clearTimeout(bufferTimer.current)
     if (frame.current !== undefined)
@@ -79,8 +90,12 @@ export function useMessageListLayout () {
     const height = event.nativeEvent.layout.height
     if (Number.isFinite(height) && height > 0) {
       targetDistance.current = Math.max(600, Math.min(2400, Math.round(height * 2)))
-      if (expanded.current)
+      if (expanded.current) {
+        if (growFrame.current !== undefined)
+          cancelAnimationFrame(growFrame.current)
+        growFrame.current = undefined
         setDrawDistance(targetDistance.current)
+      }
     }
     const width = event.nativeEvent.layout.width
     if (!Number.isFinite(width) || width <= 0 || previousWidth.current === width)

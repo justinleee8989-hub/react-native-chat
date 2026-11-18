@@ -87,6 +87,8 @@ it('builds only the viewport first and expands the normal fling buffer after the
   await act(() => result.current.onTransitionEnd())
   await flushFrame()
   await flushFrame()
+  expect(result.current.drawDistance).toBe(700)
+  await flushFrame()
   expect(result.current.drawDistance).toBe(1400)
 })
 
@@ -100,6 +102,7 @@ it('keeps the first viewport while the page slides in and grows after the push e
   await act(() => result.current.onTransitionEnd())
   await flushFrame()
   await flushFrame()
+  await flushFrame()
   expect(result.current.drawDistance).toBe(1400)
 })
 
@@ -111,6 +114,7 @@ it('grows after the push already ended before the list was ready', async () => {
   await act(() => result.current.onReady())
   await flushFrame()
   await flushFrame()
+  await flushFrame()
   expect(result.current.drawDistance).toBe(1400)
 })
 
@@ -120,6 +124,8 @@ it('grows at once when the user starts scrolling during the push', async () => {
   await act(() => result.current.onReady())
   expect(result.current.drawDistance).toBe(0)
   await act(() => result.current.onScrollBeginDrag())
+  expect(result.current.drawDistance).toBe(700)
+  await flushFrame()
   expect(result.current.drawDistance).toBe(1400)
   await act(() => result.current.onTransitionEnd())
   await flushFrame()
@@ -135,6 +141,8 @@ it('grows anyway when no push end arrives', async () => {
     await act(() => result.current.onReady())
     expect(result.current.drawDistance).toBe(0)
     await act(() => jest.advanceTimersByTime(700))
+    expect(result.current.drawDistance).toBe(700)
+    await flushFrame()
     expect(result.current.drawDistance).toBe(1400)
   } finally {
     jest.useRealTimers()
