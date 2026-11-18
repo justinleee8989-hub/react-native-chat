@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { View } from 'react-native'
 import { type Href, useRouter } from 'expo-router'
+import { directory } from '../application/directory'
 import { openConversation, useOpenIM } from '../application/store'
 import LoginScreen from '../auth/LoginScreen'
 import { ProductHint, SettingField } from '../groups/group-ui'
@@ -22,7 +23,15 @@ function NewMessage ({ self }: { self: string }) {
   const task = useTask()
   const start = () => {
     void task.run(async current => {
-      const id = await openConversation(userID.trim())
+      const target = userID.trim()
+      // The SDK opens a conversation with any ID, registered or not; a mistyped ID became a chat
+      // that looked real and sent into nothing.
+      const [person] = await directory.users(target)
+      if (!current())
+        return
+      if (!person)
+        throw new Error('没有找到该用户，请检查用户 ID 是否完整、正确。')
+      const id = await openConversation(target)
       if (current())
         router.replace(`/chats/${encodeURIComponent(id)}` as Href)
     })

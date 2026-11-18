@@ -52,7 +52,12 @@ export function subscribeEvents (
       })
   })
   on('onSyncServerFailed', () => runtime.update({ error: '同步失败，请刷新会话重试' }))
-  for (const event of ['onKickedOffline', 'onUserTokenExpired', 'onUserTokenInvalid'])
+  // Said apart: a user signed out because the same account signed in elsewhere could not tell it
+  // from an expired login or a network problem.
+  on('onKickedOffline', () => {
+    void logout('该账号已在其他设备或浏览器标签页登录，当前登录已退出。')
+  })
+  for (const event of ['onUserTokenExpired', 'onUserTokenInvalid'])
     on(event, () => {
       void logout('登录已失效，请重新登录')
     })

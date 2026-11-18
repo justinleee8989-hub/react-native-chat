@@ -478,6 +478,32 @@ test('explicit invalid-token event clears saved login', async () => {
   assert.equal(h.removeCount(), 1)
 })
 
+test('a tab signed out by another sign-in says so after the web reload, once', async () => {
+  const first = harness()
+  await first.store.login('me', 'password', { chat: 'http://test' })
+  first.events.get('onKickedOffline')()
+  await settle()
+  assert.equal(first.store.useOpenIM().session, undefined)
+  assert.match(first.store.useOpenIM().error, /其他设备或浏览器标签页登录/)
+  // The page reloads: a fresh store over the same tab storage.
+  const reloaded = harness(undefined, { snapshotEntries: first.snapshotEntries() })
+  reloaded.mount()
+  await settle()
+  assert.match(reloaded.store.useOpenIM().error, /其他设备或浏览器标签页登录/)
+  const again = harness(undefined, { snapshotEntries: reloaded.snapshotEntries() })
+  again.mount()
+  await settle()
+  assert.equal(again.store.useOpenIM().error, '')
+})
+
+test('an expired login is not reported as a sign-in elsewhere', async () => {
+  const h = harness()
+  await h.store.login('me', 'password', { chat: 'http://test' })
+  h.events.get('onUserTokenExpired')()
+  await settle()
+  assert.equal(h.store.useOpenIM().error, '登录已失效，请重新登录')
+})
+
 test('read receipts update only the matching outgoing message and never mark partial group reads as fully read', async () => {
   const h = harness()
   await h.store.login('me', 'password', { chat: 'http://test' })

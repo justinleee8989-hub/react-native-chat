@@ -1,7 +1,9 @@
 import React from 'react'
 import { StyleSheet } from 'react-native'
 import { expect, it, jest } from '@jest/globals'
-import { fireEvent, render, screen } from '@testing-library/react-native'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react-native'
+import { directory } from '../application/directory'
+import { openConversation } from '../application/store'
 import { productPalette as mockProductPalette } from '../ui/tokens'
 import NewMessageScreen from './NewMessageScreen'
 
@@ -13,6 +15,7 @@ let mockCanGoBackInSection = true
 jest.mock('expo-router', () => ({ useRouter: () => ({ replace: mockReplace, back: mockBack, canGoBack: () => mockRouterCanGoBack }) }))
 jest.mock('../application/store', () => ({ openConversation: jest.fn(), useOpenIM: () => ({ session: { userID: 'self', imToken: 'token' } }) }))
 jest.mock('../auth/LoginScreen', () => () => null)
+jest.mock('../application/directory', () => ({ directory: { users: jest.fn() } }))
 jest.mock('../ui/preferences', () => ({ useProductLayout: () => ({ desktop: mockDesktop }), useProductScheme: () => 'light' }))
 jest.mock('../ui/theme', () => ({ useProductTheme: () => mockProductPalette.light }))
 jest.mock('../ui/ProductIcon', () => ({ ProductIcon: () => null }))
@@ -57,4 +60,25 @@ it('shows a desktop back button on the new chat root and falls back to chats for
   await fireEvent.press(view.getByLabelText('返回'))
   expect(mockReplace).toHaveBeenCalledWith('/(tabs)/chats')
   expect(mockBack).not.toHaveBeenCalled()
+})
+
+it('refuses an ID that belongs to no user instead of opening an empty chat', async () => {
+  jest.mocked(directory.users).mockResolvedValue([])
+  await render(<NewMessageScreen />)
+  await fireEvent.changeText(screen.getByPlaceholderText('用户 ID'), '9999999999')
+  await fireEvent.press(screen.getByRole('button', { name: '打开会话' }))
+  await waitFor(() => expect(screen.getByText('没有找到该用户，请检查用户 ID 是否完整、正确。')).toBeTruthy())
+  expect(openConversation).not.toHaveBeenCalled()
+  expect(mockReplace).not.toHaveBeenCalled()
+})
+
+it('opens the chat with a registered user', async () => {
+  jest.mocked(directory.users).mockResolvedValue([{ userID: 'bob', nickname: 'Bob' }])
+  jest.mocked(openConversation).mockResolvedValue('si_self_bob')
+  await render(<NewMessageScreen />)
+  await fireEvent.changeText(screen.getByPlaceholderText('用户 ID'), ' bob ')
+  await fireEvent.press(screen.getByRole('button', { name: '打开会话' }))
+  await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/chats/si_self_bob'))
+  expect(directory.users).toHaveBeenCalledWith('bob')
+  expect(openConversation).toHaveBeenCalledWith('bob')
 })

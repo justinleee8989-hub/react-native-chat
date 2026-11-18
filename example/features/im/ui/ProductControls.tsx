@@ -86,6 +86,10 @@ export function ProductSwitch ({
       accessibilityRole='switch'
       accessibilityLabel={accessibilityLabel}
       accessibilityState={{ checked: value, disabled }}
+      // react-native-web reads the aria-* props: through accessibilityState alone a screen reader
+      // heard the switch as off while it was on.
+      aria-checked={value}
+      aria-disabled={disabled}
       disabled={disabled}
       onPress={() => onValueChange(!value)}
       hitSlop={7}

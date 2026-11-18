@@ -25,6 +25,11 @@ import { createRuntime } from './runtime'
 declare const module: { hot?: { data?: { snapshot?: ReturnType<ReturnType<typeof createRuntime>['snapshot']> }, dispose: (callback: () => void) => void } }
 
 const key = 'openim-example-session-v1'
+/**
+ * Why this tab was signed out, kept until the login page shows it. On the web, signing out reloads
+ * the page, and the message set in memory before the reload was gone by the time the page loaded.
+ */
+const signOutReasonKey = 'openim-example-signout-reason-v1'
 const homeSnapshots = createHomeSnapshots(storage)
 let stopHomeSnapshot = () => {}
 let flushHomeSnapshot = async () => {}
@@ -211,6 +216,7 @@ export async function login (account: string, password: string, config: ServerCo
     const session = await authenticate(account, password, config.chat, platformID)
     if (epoch === runtime.generation) {
       await storage.setItem(key, JSON.stringify({ session, config }))
+      await storage.removeItem(signOutReasonKey)
       if (epoch !== runtime.generation)
         return
       await connect(session, config)
@@ -243,7 +249,13 @@ async function restore (retry = false) {
       await connect(session, config)
       return
     }
-    runtime.update({ busy: false, recoveryAvailable: false })
+    // A lost reason must not turn into "could not read the saved login".
+    const reason = await storage.getItem(signOutReasonKey).catch(() => null)
+    if (reason)
+      await storage.removeItem(signOutReasonKey).catch(() => {})
+    if (epoch !== runtime.generation)
+      return
+    runtime.update({ busy: false, recoveryAvailable: false, ...(reason ? { error: reason } : {}) })
   } catch {
     if (epoch === runtime.generation)
       runtime.update({ busy: false, status: '恢复失败', recoveryAvailable: true,
@@ -300,6 +312,8 @@ export async function logout (error = '') {
   })
   try {
     await storage.removeItem(key)
+    if (error)
+      await storage.setItem(signOutReasonKey, error)
     if (previousSession)
       await homeSnapshots.remove(previousSession.userID, previousConfig)
   } catch {

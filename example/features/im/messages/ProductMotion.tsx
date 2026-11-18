@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react'
-import { Animated, View } from 'react-native'
+import { Animated, Platform, View } from 'react-native'
 import { useProductLayout } from '../ui/preferences'
 import { ProductAvatar } from '../ui/primitives'
 import { useProductTheme } from '../ui/theme'
+
+// The web has no native animation driver: asking for it only logs a warning on every run.
+const nativeDriver = Platform.OS !== 'web'
 
 export function ProductPulse ({
   color,
@@ -26,8 +29,8 @@ export function ProductPulse ({
       Animated.delay(index * (wave ? 40 : 150)),
       Animated.loop(
         Animated.sequence([
-          Animated.timing(value, { toValue: 1, duration: wave ? 700 : 300, useNativeDriver: true }),
-          Animated.timing(value, { toValue: 0, duration: wave ? 700 : 300, useNativeDriver: true }),
+          Animated.timing(value, { toValue: 1, duration: wave ? 700 : 300, useNativeDriver: nativeDriver }),
+          Animated.timing(value, { toValue: 0, duration: wave ? 700 : 300, useNativeDriver: nativeDriver }),
           ...(wave ? [] : [Animated.delay(400)]),
         ])
       ),
