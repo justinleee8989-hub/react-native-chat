@@ -1,0 +1,12 @@
+[
+  {
+    "container": "openim-rn-local-openim-server-1",
+    "image": "local/openim-server:perf5-group-read-ready",
+    "health": "healthy"
+  },
+  {
+    "container": "openim-rn-local-openim-chat-1",
+    "image": "local/openim-chat:perf5-group-read-push",
+    "health": "healthy"
+  }
+]

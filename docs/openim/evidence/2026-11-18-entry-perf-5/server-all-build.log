@@ -1,0 +1,14 @@
+built openim-cmdutils
+built openim-api
+built openim-crontask
+built openim-msggateway
+built openim-msgtransfer
+built openim-push
+built openim-rpc-auth
+built openim-rpc-conversation
+built openim-rpc-friend
+built openim-rpc-group
+built openim-rpc-msg
+built openim-rpc-third
+built openim-rpc-user
+ALL SERVER BINARIES COMPLETE

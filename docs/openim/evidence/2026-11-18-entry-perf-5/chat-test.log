@@ -1,0 +1,31 @@
+ok  	github.com/openimsdk/chat/internal/api/chat	0.916s
+?   	github.com/openimsdk/chat/pkg/common/apistruct	[no test files]
+ok  	github.com/openimsdk/chat/pkg/common/callprotocol	0.873s
+?   	github.com/openimsdk/chat/pkg/common/cmd	[no test files]
+?   	github.com/openimsdk/chat/pkg/common/config	[no test files]
+?   	github.com/openimsdk/chat/pkg/common/constant	[no test files]
+?   	github.com/openimsdk/chat/pkg/common/convert	[no test files]
+?   	github.com/openimsdk/chat/pkg/common/db/cache	[no test files]
+?   	github.com/openimsdk/chat/pkg/common/db/database	[no test files]
+?   	github.com/openimsdk/chat/pkg/common/db/dbutil	[no test files]
+?   	github.com/openimsdk/chat/pkg/common/db/model/admin	[no test files]
+?   	github.com/openimsdk/chat/pkg/common/db/model/bot	[no test files]
+ok  	github.com/openimsdk/chat/pkg/common/db/model/chat	1.388s
+?   	github.com/openimsdk/chat/pkg/common/db/table/admin	[no test files]
+?   	github.com/openimsdk/chat/pkg/common/db/table/bot	[no test files]
+?   	github.com/openimsdk/chat/pkg/common/db/table/chat	[no test files]
+?   	github.com/openimsdk/chat/pkg/common/imapi	[no test files]
+?   	github.com/openimsdk/chat/pkg/common/imwebhook	[no test files]
+?   	github.com/openimsdk/chat/pkg/common/kdisc	[no test files]
+?   	github.com/openimsdk/chat/pkg/common/kdisc/direct	[no test files]
+?   	github.com/openimsdk/chat/pkg/common/kdisc/etcd	[no test files]
+?   	github.com/openimsdk/chat/pkg/common/mctx	[no test files]
+ok  	github.com/openimsdk/chat/pkg/common/messageextras	1.124s
+?   	github.com/openimsdk/chat/pkg/common/mw	[no test files]
+ok  	github.com/openimsdk/chat/pkg/common/rtc	0.278s
+ok  	github.com/openimsdk/chat/pkg/common/rtcauthority	1.671s
+?   	github.com/openimsdk/chat/pkg/common/startrpc	[no test files]
+?   	github.com/openimsdk/chat/pkg/common/tokenverify	[no test files]
+?   	github.com/openimsdk/chat/pkg/common/version	[no test files]
+?   	github.com/openimsdk/chat/pkg/common/xlsx	[no test files]
+?   	github.com/openimsdk/chat/pkg/common/xlsx/model	[no test files]

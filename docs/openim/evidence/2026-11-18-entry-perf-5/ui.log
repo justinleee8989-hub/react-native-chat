@@ -1,0 +1,1259 @@
+FAIL example/features/im/ui/ProductPage.navigation.ui.test.tsx
+  ● shows the default back control for desktop=true deeper=false: false
+
+    No safe area value available. Make sure you are rendering `<SafeAreaProvider>` at the top of your app.
+
+      48 |   // The inset is padded from JS, not by SafeAreaView: a native SafeAreaView applies it a frame after
+      49 |   // it mounts, so a tab opened for the first time drew its title under the status bar, then jumped.
+    > 50 |   const insets = useSafeAreaInsets()
+         |                                   ^
+      51 |   return (
+      52 |     <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: white ? t.page : t.bg }}>
+      53 |       <View
+
+      at useSafeAreaInsets (example/node_modules/react-native-safe-area-context/src/SafeAreaContext.tsx:253:11)
+      at ProductPage (example/features/im/ui/ProductPage.tsx:50:35)
+      at Object.Component [as react_stack_bottom_frame] (node_modules/react-reconciler/cjs/react-reconciler.development.js:19204:20)
+      at callComponentInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:5549:22)
+      at renderWithHooks (node_modules/react-reconciler/cjs/react-reconciler.development.js:7969:19)
+      at updateFunctionComponent (node_modules/react-reconciler/cjs/react-reconciler.development.js:9591:18)
+      at callback (node_modules/react-reconciler/cjs/react-reconciler.development.js:2663:13)
+      at runWithFiberInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:16674:22)
+      at performUnitOfWork (node_modules/react-reconciler/cjs/react-reconciler.development.js:16500:41)
+      at workLoopSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:16481:11)
+      at renderRootSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:15620:35)
+      at performWorkOnRoot (node_modules/react-reconciler/cjs/react-reconciler.development.js:3520:7)
+      at callback (node_modules/react/cjs/react.development.js:664:34)
+      at flushActQueue (node_modules/react/cjs/react.development.js:923:21)
+
+  ● shows the default back control for desktop=true deeper=true: true
+
+    No safe area value available. Make sure you are rendering `<SafeAreaProvider>` at the top of your app.
+
+      48 |   // The inset is padded from JS, not by SafeAreaView: a native SafeAreaView applies it a frame after
+      49 |   // it mounts, so a tab opened for the first time drew its title under the status bar, then jumped.
+    > 50 |   const insets = useSafeAreaInsets()
+         |                                   ^
+      51 |   return (
+      52 |     <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: white ? t.page : t.bg }}>
+      53 |       <View
+
+      at useSafeAreaInsets (example/node_modules/react-native-safe-area-context/src/SafeAreaContext.tsx:253:11)
+      at ProductPage (example/features/im/ui/ProductPage.tsx:50:35)
+      at Object.Component [as react_stack_bottom_frame] (node_modules/react-reconciler/cjs/react-reconciler.development.js:19204:20)
+      at callComponentInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:5549:22)
+      at renderWithHooks (node_modules/react-reconciler/cjs/react-reconciler.development.js:7969:19)
+      at updateFunctionComponent (node_modules/react-reconciler/cjs/react-reconciler.development.js:9591:18)
+      at callback (node_modules/react-reconciler/cjs/react-reconciler.development.js:2663:13)
+      at runWithFiberInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:16674:22)
+      at performUnitOfWork (node_modules/react-reconciler/cjs/react-reconciler.development.js:16500:41)
+      at workLoopSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:16481:11)
+      at renderRootSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:15620:35)
+      at performWorkOnRoot (node_modules/react-reconciler/cjs/react-reconciler.development.js:3520:7)
+      at callback (node_modules/react/cjs/react.development.js:664:34)
+      at flushActQueue (node_modules/react/cjs/react.development.js:923:21)
+
+  ● shows the default back control for desktop=false deeper=false: true
+
+    No safe area value available. Make sure you are rendering `<SafeAreaProvider>` at the top of your app.
+
+      48 |   // The inset is padded from JS, not by SafeAreaView: a native SafeAreaView applies it a frame after
+      49 |   // it mounts, so a tab opened for the first time drew its title under the status bar, then jumped.
+    > 50 |   const insets = useSafeAreaInsets()
+         |                                   ^
+      51 |   return (
+      52 |     <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: white ? t.page : t.bg }}>
+      53 |       <View
+
+      at useSafeAreaInsets (example/node_modules/react-native-safe-area-context/src/SafeAreaContext.tsx:253:11)
+      at ProductPage (example/features/im/ui/ProductPage.tsx:50:35)
+      at Object.Component [as react_stack_bottom_frame] (node_modules/react-reconciler/cjs/react-reconciler.development.js:19204:20)
+      at callComponentInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:5549:22)
+      at renderWithHooks (node_modules/react-reconciler/cjs/react-reconciler.development.js:7969:19)
+      at updateFunctionComponent (node_modules/react-reconciler/cjs/react-reconciler.development.js:9591:18)
+      at callback (node_modules/react-reconciler/cjs/react-reconciler.development.js:2663:13)
+      at runWithFiberInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:16674:22)
+      at performUnitOfWork (node_modules/react-reconciler/cjs/react-reconciler.development.js:16500:41)
+      at workLoopSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:16481:11)
+      at renderRootSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:15620:35)
+      at performWorkOnRoot (node_modules/react-reconciler/cjs/react-reconciler.development.js:3520:7)
+      at callback (node_modules/react/cjs/react.development.js:664:34)
+      at flushActQueue (node_modules/react/cjs/react.development.js:923:21)
+
+  ● keeps a long service error accessible while the page is busy
+
+    No safe area value available. Make sure you are rendering `<SafeAreaProvider>` at the top of your app.
+
+      48 |   // The inset is padded from JS, not by SafeAreaView: a native SafeAreaView applies it a frame after
+      49 |   // it mounts, so a tab opened for the first time drew its title under the status bar, then jumped.
+    > 50 |   const insets = useSafeAreaInsets()
+         |                                   ^
+      51 |   return (
+      52 |     <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: white ? t.page : t.bg }}>
+      53 |       <View
+
+      at useSafeAreaInsets (example/node_modules/react-native-safe-area-context/src/SafeAreaContext.tsx:253:11)
+      at ProductPage (example/features/im/ui/ProductPage.tsx:50:35)
+      at Object.Component [as react_stack_bottom_frame] (node_modules/react-reconciler/cjs/react-reconciler.development.js:19204:20)
+      at callComponentInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:5549:22)
+      at renderWithHooks (node_modules/react-reconciler/cjs/react-reconciler.development.js:7969:19)
+      at updateFunctionComponent (node_modules/react-reconciler/cjs/react-reconciler.development.js:9591:18)
+      at callback (node_modules/react-reconciler/cjs/react-reconciler.development.js:2663:13)
+      at runWithFiberInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:16674:22)
+      at performUnitOfWork (node_modules/react-reconciler/cjs/react-reconciler.development.js:16500:41)
+      at workLoopSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:16481:11)
+      at renderRootSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:15620:35)
+      at performWorkOnRoot (node_modules/react-reconciler/cjs/react-reconciler.development.js:3520:7)
+      at callback (node_modules/react/cjs/react.development.js:664:34)
+      at flushActQueue (node_modules/react/cjs/react.development.js:923:21)
+
+  ● keeps an explicit back control on desktop root pages and falls back to its route
+
+    No safe area value available. Make sure you are rendering `<SafeAreaProvider>` at the top of your app.
+
+      48 |   // The inset is padded from JS, not by SafeAreaView: a native SafeAreaView applies it a frame after
+      49 |   // it mounts, so a tab opened for the first time drew its title under the status bar, then jumped.
+    > 50 |   const insets = useSafeAreaInsets()
+         |                                   ^
+      51 |   return (
+      52 |     <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: white ? t.page : t.bg }}>
+      53 |       <View
+
+      at useSafeAreaInsets (example/node_modules/react-native-safe-area-context/src/SafeAreaContext.tsx:253:11)
+      at ProductPage (example/features/im/ui/ProductPage.tsx:50:35)
+      at Object.Component [as react_stack_bottom_frame] (node_modules/react-reconciler/cjs/react-reconciler.development.js:19204:20)
+      at callComponentInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:5549:22)
+      at renderWithHooks (node_modules/react-reconciler/cjs/react-reconciler.development.js:7969:19)
+      at updateFunctionComponent (node_modules/react-reconciler/cjs/react-reconciler.development.js:9591:18)
+      at callback (node_modules/react-reconciler/cjs/react-reconciler.development.js:2663:13)
+      at runWithFiberInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:16674:22)
+      at performUnitOfWork (node_modules/react-reconciler/cjs/react-reconciler.development.js:16500:41)
+      at workLoopSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:16481:11)
+      at renderRootSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:15620:35)
+      at performWorkOnRoot (node_modules/react-reconciler/cjs/react-reconciler.development.js:3520:7)
+      at callback (node_modules/react/cjs/react.development.js:664:34)
+      at flushActQueue (node_modules/react/cjs/react.development.js:923:21)
+
+  ● shows a content skeleton before first data and keeps the page title
+
+    No safe area value available. Make sure you are rendering `<SafeAreaProvider>` at the top of your app.
+
+      48 |   // The inset is padded from JS, not by SafeAreaView: a native SafeAreaView applies it a frame after
+      49 |   // it mounts, so a tab opened for the first time drew its title under the status bar, then jumped.
+    > 50 |   const insets = useSafeAreaInsets()
+         |                                   ^
+      51 |   return (
+      52 |     <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: white ? t.page : t.bg }}>
+      53 |       <View
+
+      at useSafeAreaInsets (example/node_modules/react-native-safe-area-context/src/SafeAreaContext.tsx:253:11)
+      at ProductPage (example/features/im/ui/ProductPage.tsx:50:35)
+      at Object.Component [as react_stack_bottom_frame] (node_modules/react-reconciler/cjs/react-reconciler.development.js:19204:20)
+      at callComponentInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:5549:22)
+      at renderWithHooks (node_modules/react-reconciler/cjs/react-reconciler.development.js:7969:19)
+      at updateFunctionComponent (node_modules/react-reconciler/cjs/react-reconciler.development.js:9591:18)
+      at callback (node_modules/react-reconciler/cjs/react-reconciler.development.js:2663:13)
+      at runWithFiberInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:16674:22)
+      at performUnitOfWork (node_modules/react-reconciler/cjs/react-reconciler.development.js:16500:41)
+      at workLoopSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:16481:11)
+      at renderRootSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:15620:35)
+      at performWorkOnRoot (node_modules/react-reconciler/cjs/react-reconciler.development.js:3520:7)
+      at callback (node_modules/react/cjs/react.development.js:664:34)
+      at flushActQueue (node_modules/react/cjs/react.development.js:923:21)
+
+  ● shows a retry instead of skeleton or false empty content after initial failure
+
+    No safe area value available. Make sure you are rendering `<SafeAreaProvider>` at the top of your app.
+
+      48 |   // The inset is padded from JS, not by SafeAreaView: a native SafeAreaView applies it a frame after
+      49 |   // it mounts, so a tab opened for the first time drew its title under the status bar, then jumped.
+    > 50 |   const insets = useSafeAreaInsets()
+         |                                   ^
+      51 |   return (
+      52 |     <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: white ? t.page : t.bg }}>
+      53 |       <View
+
+      at useSafeAreaInsets (example/node_modules/react-native-safe-area-context/src/SafeAreaContext.tsx:253:11)
+      at ProductPage (example/features/im/ui/ProductPage.tsx:50:35)
+      at Object.Component [as react_stack_bottom_frame] (node_modules/react-reconciler/cjs/react-reconciler.development.js:19204:20)
+      at callComponentInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:5549:22)
+      at renderWithHooks (node_modules/react-reconciler/cjs/react-reconciler.development.js:7969:19)
+      at updateFunctionComponent (node_modules/react-reconciler/cjs/react-reconciler.development.js:9591:18)
+      at callback (node_modules/react-reconciler/cjs/react-reconciler.development.js:2663:13)
+      at runWithFiberInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:16674:22)
+      at performUnitOfWork (node_modules/react-reconciler/cjs/react-reconciler.development.js:16500:41)
+      at workLoopSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:16481:11)
+      at renderRootSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:15620:35)
+      at performWorkOnRoot (node_modules/react-reconciler/cjs/react-reconciler.development.js:3520:7)
+      at callback (node_modules/react/cjs/react.development.js:664:34)
+      at flushActQueue (node_modules/react/cjs/react.development.js:923:21)
+
+  ● preserves loaded content during background refresh
+
+    No safe area value available. Make sure you are rendering `<SafeAreaProvider>` at the top of your app.
+
+      48 |   // The inset is padded from JS, not by SafeAreaView: a native SafeAreaView applies it a frame after
+      49 |   // it mounts, so a tab opened for the first time drew its title under the status bar, then jumped.
+    > 50 |   const insets = useSafeAreaInsets()
+         |                                   ^
+      51 |   return (
+      52 |     <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: white ? t.page : t.bg }}>
+      53 |       <View
+
+      at useSafeAreaInsets (example/node_modules/react-native-safe-area-context/src/SafeAreaContext.tsx:253:11)
+      at ProductPage (example/features/im/ui/ProductPage.tsx:50:35)
+      at Object.Component [as react_stack_bottom_frame] (node_modules/react-reconciler/cjs/react-reconciler.development.js:19204:20)
+      at callComponentInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:5549:22)
+      at renderWithHooks (node_modules/react-reconciler/cjs/react-reconciler.development.js:7969:19)
+      at updateFunctionComponent (node_modules/react-reconciler/cjs/react-reconciler.development.js:9591:18)
+      at callback (node_modules/react-reconciler/cjs/react-reconciler.development.js:2663:13)
+      at runWithFiberInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:16674:22)
+      at performUnitOfWork (node_modules/react-reconciler/cjs/react-reconciler.development.js:16500:41)
+      at workLoopSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:16481:11)
+      at renderRootSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:15620:35)
+      at performWorkOnRoot (node_modules/react-reconciler/cjs/react-reconciler.development.js:3520:7)
+      at callback (node_modules/react/cjs/react.development.js:664:34)
+      at flushActQueue (node_modules/react/cjs/react.development.js:923:21)
+
+FAIL example/features/im/messages/HistorySearchScreen.ui.test.tsx
+  ● shows search result rows and navigates to the exact message
+
+    No safe area value available. Make sure you are rendering `<SafeAreaProvider>` at the top of your app.
+
+      48 |   // The inset is padded from JS, not by SafeAreaView: a native SafeAreaView applies it a frame after
+      49 |   // it mounts, so a tab opened for the first time drew its title under the status bar, then jumped.
+    > 50 |   const insets = useSafeAreaInsets()
+         |                                   ^
+      51 |   return (
+      52 |     <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: white ? t.page : t.bg }}>
+      53 |       <View
+
+      at useSafeAreaInsets (example/node_modules/react-native-safe-area-context/src/SafeAreaContext.tsx:253:11)
+      at ProductPage (example/features/im/ui/ProductPage.tsx:50:35)
+      at Object.Component [as react_stack_bottom_frame] (node_modules/react-reconciler/cjs/react-reconciler.development.js:19204:20)
+      at callComponentInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:5549:22)
+      at renderWithHooks (node_modules/react-reconciler/cjs/react-reconciler.development.js:7969:19)
+      at updateFunctionComponent (node_modules/react-reconciler/cjs/react-reconciler.development.js:9591:18)
+      at callback (node_modules/react-reconciler/cjs/react-reconciler.development.js:2663:13)
+      at runWithFiberInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:16674:22)
+      at performUnitOfWork (node_modules/react-reconciler/cjs/react-reconciler.development.js:16500:41)
+      at workLoopSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:16481:11)
+      at renderRootSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:15620:35)
+      at performWorkOnRoot (node_modules/react-reconciler/cjs/react-reconciler.development.js:3520:7)
+      at callback (node_modules/react/cjs/react.development.js:664:34)
+      at flushActQueue (node_modules/react/cjs/react.development.js:923:21)
+
+  ● highlights matching search text with the prototype danger color
+
+    No safe area value available. Make sure you are rendering `<SafeAreaProvider>` at the top of your app.
+
+      48 |   // The inset is padded from JS, not by SafeAreaView: a native SafeAreaView applies it a frame after
+      49 |   // it mounts, so a tab opened for the first time drew its title under the status bar, then jumped.
+    > 50 |   const insets = useSafeAreaInsets()
+         |                                   ^
+      51 |   return (
+      52 |     <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: white ? t.page : t.bg }}>
+      53 |       <View
+
+      at useSafeAreaInsets (example/node_modules/react-native-safe-area-context/src/SafeAreaContext.tsx:253:11)
+      at ProductPage (example/features/im/ui/ProductPage.tsx:50:35)
+      at Object.Component [as react_stack_bottom_frame] (node_modules/react-reconciler/cjs/react-reconciler.development.js:19204:20)
+      at callComponentInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:5549:22)
+      at renderWithHooks (node_modules/react-reconciler/cjs/react-reconciler.development.js:7969:19)
+      at updateFunctionComponent (node_modules/react-reconciler/cjs/react-reconciler.development.js:9591:18)
+      at callback (node_modules/react-reconciler/cjs/react-reconciler.development.js:2663:13)
+      at runWithFiberInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:16674:22)
+      at performUnitOfWork (node_modules/react-reconciler/cjs/react-reconciler.development.js:16500:41)
+      at workLoopSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:16481:11)
+      at renderRootSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:15620:35)
+      at performWorkOnRoot (node_modules/react-reconciler/cjs/react-reconciler.development.js:3520:7)
+      at callback (node_modules/react/cjs/react.development.js:664:34)
+      at flushActQueue (node_modules/react/cjs/react.development.js:923:21)
+
+  ● automatically searches a changed query without submitting
+
+    No safe area value available. Make sure you are rendering `<SafeAreaProvider>` at the top of your app.
+
+      48 |   // The inset is padded from JS, not by SafeAreaView: a native SafeAreaView applies it a frame after
+      49 |   // it mounts, so a tab opened for the first time drew its title under the status bar, then jumped.
+    > 50 |   const insets = useSafeAreaInsets()
+         |                                   ^
+      51 |   return (
+      52 |     <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: white ? t.page : t.bg }}>
+      53 |       <View
+
+      at useSafeAreaInsets (example/node_modules/react-native-safe-area-context/src/SafeAreaContext.tsx:253:11)
+      at ProductPage (example/features/im/ui/ProductPage.tsx:50:35)
+      at Object.Component [as react_stack_bottom_frame] (node_modules/react-reconciler/cjs/react-reconciler.development.js:19204:20)
+      at callComponentInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:5549:22)
+      at renderWithHooks (node_modules/react-reconciler/cjs/react-reconciler.development.js:7969:19)
+      at updateFunctionComponent (node_modules/react-reconciler/cjs/react-reconciler.development.js:9591:18)
+      at callback (node_modules/react-reconciler/cjs/react-reconciler.development.js:2663:13)
+      at runWithFiberInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:16674:22)
+      at performUnitOfWork (node_modules/react-reconciler/cjs/react-reconciler.development.js:16500:41)
+      at workLoopSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:16481:11)
+      at renderRootSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:15620:35)
+      at performWorkOnRoot (node_modules/react-reconciler/cjs/react-reconciler.development.js:3520:7)
+      at callback (node_modules/react/cjs/react.development.js:664:34)
+      at flushActQueue (node_modules/react/cjs/react.development.js:923:21)
+
+  ● ignores an older response after a query edit and keeps server pagination
+
+    No safe area value available. Make sure you are rendering `<SafeAreaProvider>` at the top of your app.
+
+      48 |   // The inset is padded from JS, not by SafeAreaView: a native SafeAreaView applies it a frame after
+      49 |   // it mounts, so a tab opened for the first time drew its title under the status bar, then jumped.
+    > 50 |   const insets = useSafeAreaInsets()
+         |                                   ^
+      51 |   return (
+      52 |     <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: white ? t.page : t.bg }}>
+      53 |       <View
+
+      at useSafeAreaInsets (example/node_modules/react-native-safe-area-context/src/SafeAreaContext.tsx:253:11)
+      at ProductPage (example/features/im/ui/ProductPage.tsx:50:35)
+      at Object.Component [as react_stack_bottom_frame] (node_modules/react-reconciler/cjs/react-reconciler.development.js:19204:20)
+      at callComponentInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:5549:22)
+      at renderWithHooks (node_modules/react-reconciler/cjs/react-reconciler.development.js:7969:19)
+      at updateFunctionComponent (node_modules/react-reconciler/cjs/react-reconciler.development.js:9591:18)
+      at callback (node_modules/react-reconciler/cjs/react-reconciler.development.js:2663:13)
+      at runWithFiberInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:16674:22)
+      at performUnitOfWork (node_modules/react-reconciler/cjs/react-reconciler.development.js:16500:41)
+      at workLoopSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:16481:11)
+      at renderRootSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:15620:35)
+      at performWorkOnRoot (node_modules/react-reconciler/cjs/react-reconciler.development.js:3520:7)
+      at callback (node_modules/react/cjs/react.development.js:664:34)
+      at flushActQueue (node_modules/react/cjs/react.development.js:923:21)
+
+  ● shows server failures and allows retry of the same query
+
+    No safe area value available. Make sure you are rendering `<SafeAreaProvider>` at the top of your app.
+
+      48 |   // The inset is padded from JS, not by SafeAreaView: a native SafeAreaView applies it a frame after
+      49 |   // it mounts, so a tab opened for the first time drew its title under the status bar, then jumped.
+    > 50 |   const insets = useSafeAreaInsets()
+         |                                   ^
+      51 |   return (
+      52 |     <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: white ? t.page : t.bg }}>
+      53 |       <View
+
+      at useSafeAreaInsets (example/node_modules/react-native-safe-area-context/src/SafeAreaContext.tsx:253:11)
+      at ProductPage (example/features/im/ui/ProductPage.tsx:50:35)
+      at Object.Component [as react_stack_bottom_frame] (node_modules/react-reconciler/cjs/react-reconciler.development.js:19204:20)
+      at callComponentInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:5549:22)
+      at renderWithHooks (node_modules/react-reconciler/cjs/react-reconciler.development.js:7969:19)
+      at updateFunctionComponent (node_modules/react-reconciler/cjs/react-reconciler.development.js:9591:18)
+      at callback (node_modules/react-reconciler/cjs/react-reconciler.development.js:2663:13)
+      at runWithFiberInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:16674:22)
+      at performUnitOfWork (node_modules/react-reconciler/cjs/react-reconciler.development.js:16500:41)
+      at workLoopSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:16481:11)
+      at renderRootSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:15620:35)
+      at performWorkOnRoot (node_modules/react-reconciler/cjs/react-reconciler.development.js:3520:7)
+      at callback (node_modules/react/cjs/react.development.js:664:34)
+      at flushActQueue (node_modules/react/cjs/react.development.js:923:21)
+
+FAIL example/features/im/profile/SettingsNavigation.ui.test.tsx
+  ● replaces to the profile tab after saving when there is no navigation history
+
+    No safe area value available. Make sure you are rendering `<SafeAreaProvider>` at the top of your app.
+
+      48 |   // The inset is padded from JS, not by SafeAreaView: a native SafeAreaView applies it a frame after
+      49 |   // it mounts, so a tab opened for the first time drew its title under the status bar, then jumped.
+    > 50 |   const insets = useSafeAreaInsets()
+         |                                   ^
+      51 |   return (
+      52 |     <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: white ? t.page : t.bg }}>
+      53 |       <View
+
+      at useSafeAreaInsets (example/node_modules/react-native-safe-area-context/src/SafeAreaContext.tsx:253:11)
+      at ProductPage (example/features/im/ui/ProductPage.tsx:50:35)
+      at Object.Component [as react_stack_bottom_frame] (node_modules/react-reconciler/cjs/react-reconciler.development.js:19204:20)
+      at callComponentInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:5549:22)
+      at renderWithHooks (node_modules/react-reconciler/cjs/react-reconciler.development.js:7969:19)
+      at updateFunctionComponent (node_modules/react-reconciler/cjs/react-reconciler.development.js:9591:18)
+      at callback (node_modules/react-reconciler/cjs/react-reconciler.development.js:2663:13)
+      at runWithFiberInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:16674:22)
+      at performUnitOfWork (node_modules/react-reconciler/cjs/react-reconciler.development.js:16500:41)
+      at workLoopSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:16481:11)
+      at renderRootSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:15620:35)
+      at performWorkOnRoot (node_modules/react-reconciler/cjs/react-reconciler.development.js:3520:7)
+      at callback (node_modules/react/cjs/react.development.js:664:34)
+      at flushActQueue (node_modules/react/cjs/react.development.js:923:21)
+
+  ● returns with back navigation after saving when history exists
+
+    No safe area value available. Make sure you are rendering `<SafeAreaProvider>` at the top of your app.
+
+      48 |   // The inset is padded from JS, not by SafeAreaView: a native SafeAreaView applies it a frame after
+      49 |   // it mounts, so a tab opened for the first time drew its title under the status bar, then jumped.
+    > 50 |   const insets = useSafeAreaInsets()
+         |                                   ^
+      51 |   return (
+      52 |     <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: white ? t.page : t.bg }}>
+      53 |       <View
+
+      at useSafeAreaInsets (example/node_modules/react-native-safe-area-context/src/SafeAreaContext.tsx:253:11)
+      at ProductPage (example/features/im/ui/ProductPage.tsx:50:35)
+      at Object.Component [as react_stack_bottom_frame] (node_modules/react-reconciler/cjs/react-reconciler.development.js:19204:20)
+      at callComponentInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:5549:22)
+      at renderWithHooks (node_modules/react-reconciler/cjs/react-reconciler.development.js:7969:19)
+      at updateFunctionComponent (node_modules/react-reconciler/cjs/react-reconciler.development.js:9591:18)
+      at callback (node_modules/react-reconciler/cjs/react-reconciler.development.js:2663:13)
+      at runWithFiberInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:16674:22)
+      at performUnitOfWork (node_modules/react-reconciler/cjs/react-reconciler.development.js:16500:41)
+      at workLoopSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:16481:11)
+      at renderRootSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:15620:35)
+      at performWorkOnRoot (node_modules/react-reconciler/cjs/react-reconciler.development.js:3520:7)
+      at callback (node_modules/react/cjs/react.development.js:664:34)
+      at flushActQueue (node_modules/react/cjs/react.development.js:923:21)
+
+  ● loads the self email with the active ChatServer session and displays it
+
+    No safe area value available. Make sure you are rendering `<SafeAreaProvider>` at the top of your app.
+
+      48 |   // The inset is padded from JS, not by SafeAreaView: a native SafeAreaView applies it a frame after
+      49 |   // it mounts, so a tab opened for the first time drew its title under the status bar, then jumped.
+    > 50 |   const insets = useSafeAreaInsets()
+         |                                   ^
+      51 |   return (
+      52 |     <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: white ? t.page : t.bg }}>
+      53 |       <View
+
+      at useSafeAreaInsets (example/node_modules/react-native-safe-area-context/src/SafeAreaContext.tsx:253:11)
+      at ProductPage (example/features/im/ui/ProductPage.tsx:50:35)
+      at Object.Component [as react_stack_bottom_frame] (node_modules/react-reconciler/cjs/react-reconciler.development.js:19204:20)
+      at callComponentInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:5549:22)
+      at renderWithHooks (node_modules/react-reconciler/cjs/react-reconciler.development.js:7969:19)
+      at updateFunctionComponent (node_modules/react-reconciler/cjs/react-reconciler.development.js:9591:18)
+      at callback (node_modules/react-reconciler/cjs/react-reconciler.development.js:2663:13)
+      at runWithFiberInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:16674:22)
+      at performUnitOfWork (node_modules/react-reconciler/cjs/react-reconciler.development.js:16500:41)
+      at workLoopSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:16481:11)
+      at renderRootSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:15620:35)
+      at performWorkOnRoot (node_modules/react-reconciler/cjs/react-reconciler.development.js:3520:7)
+      at callback (node_modules/react/cjs/react.development.js:664:34)
+      at flushActQueue (node_modules/react/cjs/react.development.js:923:21)
+
+FAIL example/features/im/contacts/Contacts.ui.test.tsx
+  ● filters loaded friends by nickname and keeps actions on separate routes
+
+    No safe area value available. Make sure you are rendering `<SafeAreaProvider>` at the top of your app.
+
+      48 |   // The inset is padded from JS, not by SafeAreaView: a native SafeAreaView applies it a frame after
+      49 |   // it mounts, so a tab opened for the first time drew its title under the status bar, then jumped.
+    > 50 |   const insets = useSafeAreaInsets()
+         |                                   ^
+      51 |   return (
+      52 |     <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: white ? t.page : t.bg }}>
+      53 |       <View
+
+      at useSafeAreaInsets (example/node_modules/react-native-safe-area-context/src/SafeAreaContext.tsx:253:11)
+      at ProductPage (example/features/im/ui/ProductPage.tsx:50:35)
+      at Object.Component [as react_stack_bottom_frame] (node_modules/react-reconciler/cjs/react-reconciler.development.js:19204:20)
+      at callComponentInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:5549:22)
+      at renderWithHooks (node_modules/react-reconciler/cjs/react-reconciler.development.js:7969:19)
+      at updateFunctionComponent (node_modules/react-reconciler/cjs/react-reconciler.development.js:9591:18)
+      at callback (node_modules/react-reconciler/cjs/react-reconciler.development.js:2663:13)
+      at runWithFiberInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:16674:22)
+      at performUnitOfWork (node_modules/react-reconciler/cjs/react-reconciler.development.js:16500:41)
+      at workLoopSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:16481:11)
+      at renderRootSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:15620:35)
+      at performWorkOnRoot (node_modules/react-reconciler/cjs/react-reconciler.development.js:3520:7)
+      at callback (node_modules/react/cjs/react.development.js:664:34)
+      at flushActQueue (node_modules/react/cjs/react.development.js:923:21)
+
+  ● does not empty requests when tapping the selected segment and routes outgoing requests correctly
+
+    No safe area value available. Make sure you are rendering `<SafeAreaProvider>` at the top of your app.
+
+      48 |   // The inset is padded from JS, not by SafeAreaView: a native SafeAreaView applies it a frame after
+      49 |   // it mounts, so a tab opened for the first time drew its title under the status bar, then jumped.
+    > 50 |   const insets = useSafeAreaInsets()
+         |                                   ^
+      51 |   return (
+      52 |     <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: white ? t.page : t.bg }}>
+      53 |       <View
+
+      at useSafeAreaInsets (example/node_modules/react-native-safe-area-context/src/SafeAreaContext.tsx:253:11)
+      at ProductPage (example/features/im/ui/ProductPage.tsx:50:35)
+      at Object.Component [as react_stack_bottom_frame] (node_modules/react-reconciler/cjs/react-reconciler.development.js:19204:20)
+      at callComponentInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:5549:22)
+      at renderWithHooks (node_modules/react-reconciler/cjs/react-reconciler.development.js:7969:19)
+      at updateFunctionComponent (node_modules/react-reconciler/cjs/react-reconciler.development.js:9591:18)
+      at callback (node_modules/react-reconciler/cjs/react-reconciler.development.js:2663:13)
+      at runWithFiberInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:16674:22)
+      at performUnitOfWork (node_modules/react-reconciler/cjs/react-reconciler.development.js:16500:41)
+      at workLoopSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:16481:11)
+      at renderRootSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:15620:35)
+      at performWorkOnRoot (node_modules/react-reconciler/cjs/react-reconciler.development.js:3520:7)
+      at callback (node_modules/react/cjs/react.development.js:664:34)
+      at flushActQueue (node_modules/react/cjs/react.development.js:923:21)
+
+  ● keeps accept and reject buttons outside the profile navigation button
+
+    No safe area value available. Make sure you are rendering `<SafeAreaProvider>` at the top of your app.
+
+      48 |   // The inset is padded from JS, not by SafeAreaView: a native SafeAreaView applies it a frame after
+      49 |   // it mounts, so a tab opened for the first time drew its title under the status bar, then jumped.
+    > 50 |   const insets = useSafeAreaInsets()
+         |                                   ^
+      51 |   return (
+      52 |     <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: white ? t.page : t.bg }}>
+      53 |       <View
+
+      at useSafeAreaInsets (example/node_modules/react-native-safe-area-context/src/SafeAreaContext.tsx:253:11)
+      at ProductPage (example/features/im/ui/ProductPage.tsx:50:35)
+      at Object.Component [as react_stack_bottom_frame] (node_modules/react-reconciler/cjs/react-reconciler.development.js:19204:20)
+      at callComponentInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:5549:22)
+      at renderWithHooks (node_modules/react-reconciler/cjs/react-reconciler.development.js:7969:19)
+      at updateFunctionComponent (node_modules/react-reconciler/cjs/react-reconciler.development.js:9591:18)
+      at callback (node_modules/react-reconciler/cjs/react-reconciler.development.js:2663:13)
+      at runWithFiberInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:16674:22)
+      at performUnitOfWork (node_modules/react-reconciler/cjs/react-reconciler.development.js:16500:41)
+      at workLoopSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:16481:11)
+      at renderRootSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:15620:35)
+      at performWorkOnRoot (node_modules/react-reconciler/cjs/react-reconciler.development.js:3520:7)
+      at callback (node_modules/react/cjs/react.development.js:664:34)
+      at flushActQueue (node_modules/react/cjs/react.development.js:923:21)
+
+  ● keeps request actions available after a real service error
+
+    No safe area value available. Make sure you are rendering `<SafeAreaProvider>` at the top of your app.
+
+      48 |   // The inset is padded from JS, not by SafeAreaView: a native SafeAreaView applies it a frame after
+      49 |   // it mounts, so a tab opened for the first time drew its title under the status bar, then jumped.
+    > 50 |   const insets = useSafeAreaInsets()
+         |                                   ^
+      51 |   return (
+      52 |     <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: white ? t.page : t.bg }}>
+      53 |       <View
+
+      at useSafeAreaInsets (example/node_modules/react-native-safe-area-context/src/SafeAreaContext.tsx:253:11)
+      at ProductPage (example/features/im/ui/ProductPage.tsx:50:35)
+      at Object.Component [as react_stack_bottom_frame] (node_modules/react-reconciler/cjs/react-reconciler.development.js:19204:20)
+      at callComponentInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:5549:22)
+      at renderWithHooks (node_modules/react-reconciler/cjs/react-reconciler.development.js:7969:19)
+      at updateFunctionComponent (node_modules/react-reconciler/cjs/react-reconciler.development.js:9591:18)
+      at callback (node_modules/react-reconciler/cjs/react-reconciler.development.js:2663:13)
+      at runWithFiberInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:16674:22)
+      at performUnitOfWork (node_modules/react-reconciler/cjs/react-reconciler.development.js:16500:41)
+      at workLoopSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:16481:11)
+      at renderRootSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:15620:35)
+      at performWorkOnRoot (node_modules/react-reconciler/cjs/react-reconciler.development.js:3520:7)
+      at callback (node_modules/react/cjs/react.development.js:664:34)
+      at flushActQueue (node_modules/react/cjs/react.development.js:923:21)
+
+  ● checks all outgoing request pages and disables duplicate pending applications
+
+    No safe area value available. Make sure you are rendering `<SafeAreaProvider>` at the top of your app.
+
+      48 |   // The inset is padded from JS, not by SafeAreaView: a native SafeAreaView applies it a frame after
+      49 |   // it mounts, so a tab opened for the first time drew its title under the status bar, then jumped.
+    > 50 |   const insets = useSafeAreaInsets()
+         |                                   ^
+      51 |   return (
+      52 |     <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: white ? t.page : t.bg }}>
+      53 |       <View
+
+      at useSafeAreaInsets (example/node_modules/react-native-safe-area-context/src/SafeAreaContext.tsx:253:11)
+      at ProductPage (example/features/im/ui/ProductPage.tsx:50:35)
+      at Object.Component [as react_stack_bottom_frame] (node_modules/react-reconciler/cjs/react-reconciler.development.js:19204:20)
+      at callComponentInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:5549:22)
+      at renderWithHooks (node_modules/react-reconciler/cjs/react-reconciler.development.js:7969:19)
+      at updateFunctionComponent (node_modules/react-reconciler/cjs/react-reconciler.development.js:9591:18)
+      at callback (node_modules/react-reconciler/cjs/react-reconciler.development.js:2663:13)
+      at runWithFiberInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:16674:22)
+      at performUnitOfWork (node_modules/react-reconciler/cjs/react-reconciler.development.js:16500:41)
+      at workLoopSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:16481:11)
+      at renderRootSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:15620:35)
+      at performWorkOnRoot (node_modules/react-reconciler/cjs/react-reconciler.development.js:3520:7)
+      at callback (node_modules/react/cjs/react.development.js:664:34)
+      at flushActQueue (node_modules/react/cjs/react.development.js:923:21)
+
+  ● shows a real-ID instruction while the add-friend form is empty
+
+    No safe area value available. Make sure you are rendering `<SafeAreaProvider>` at the top of your app.
+
+      48 |   // The inset is padded from JS, not by SafeAreaView: a native SafeAreaView applies it a frame after
+      49 |   // it mounts, so a tab opened for the first time drew its title under the status bar, then jumped.
+    > 50 |   const insets = useSafeAreaInsets()
+         |                                   ^
+      51 |   return (
+      52 |     <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: white ? t.page : t.bg }}>
+      53 |       <View
+
+      at useSafeAreaInsets (example/node_modules/react-native-safe-area-context/src/SafeAreaContext.tsx:253:11)
+      at ProductPage (example/features/im/ui/ProductPage.tsx:50:35)
+      at Object.Component [as react_stack_bottom_frame] (node_modules/react-reconciler/cjs/react-reconciler.development.js:19204:20)
+      at callComponentInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:5549:22)
+      at renderWithHooks (node_modules/react-reconciler/cjs/react-reconciler.development.js:7969:19)
+      at updateFunctionComponent (node_modules/react-reconciler/cjs/react-reconciler.development.js:9591:18)
+      at callback (node_modules/react-reconciler/cjs/react-reconciler.development.js:2663:13)
+      at runWithFiberInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:16674:22)
+      at performUnitOfWork (node_modules/react-reconciler/cjs/react-reconciler.development.js:16500:41)
+      at workLoopSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:16481:11)
+      at renderRootSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:15620:35)
+      at performWorkOnRoot (node_modules/react-reconciler/cjs/react-reconciler.development.js:3520:7)
+      at callback (node_modules/react/cjs/react.development.js:664:34)
+      at flushActQueue (node_modules/react/cjs/react.development.js:923:21)
+
+  ● loads a supplied person ID without an extra search tap
+
+    No safe area value available. Make sure you are rendering `<SafeAreaProvider>` at the top of your app.
+
+      48 |   // The inset is padded from JS, not by SafeAreaView: a native SafeAreaView applies it a frame after
+      49 |   // it mounts, so a tab opened for the first time drew its title under the status bar, then jumped.
+    > 50 |   const insets = useSafeAreaInsets()
+         |                                   ^
+      51 |   return (
+      52 |     <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: white ? t.page : t.bg }}>
+      53 |       <View
+
+      at useSafeAreaInsets (example/node_modules/react-native-safe-area-context/src/SafeAreaContext.tsx:253:11)
+      at ProductPage (example/features/im/ui/ProductPage.tsx:50:35)
+      at Object.Component [as react_stack_bottom_frame] (node_modules/react-reconciler/cjs/react-reconciler.development.js:19204:20)
+      at callComponentInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:5549:22)
+      at renderWithHooks (node_modules/react-reconciler/cjs/react-reconciler.development.js:7969:19)
+      at updateFunctionComponent (node_modules/react-reconciler/cjs/react-reconciler.development.js:9591:18)
+      at callback (node_modules/react-reconciler/cjs/react-reconciler.development.js:2663:13)
+      at runWithFiberInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:16674:22)
+      at performUnitOfWork (node_modules/react-reconciler/cjs/react-reconciler.development.js:16500:41)
+      at workLoopSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:16481:11)
+      at renderRootSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:15620:35)
+      at performWorkOnRoot (node_modules/react-reconciler/cjs/react-reconciler.development.js:3520:7)
+      at callback (node_modules/react/cjs/react.development.js:664:34)
+      at flushActQueue (node_modules/react/cjs/react.development.js:923:21)
+
+A worker process has failed to exit gracefully and has been force exited. This is likely caused by tests leaking due to improper teardown. Try running with --detectOpenHandles to find leaks. Active timers can also cause this, ensure that .unref() was called on them.
+
+Summary of all failing tests
+FAIL example/features/im/ui/ProductPage.navigation.ui.test.tsx
+  ● shows the default back control for desktop=true deeper=false: false
+
+    No safe area value available. Make sure you are rendering `<SafeAreaProvider>` at the top of your app.
+
+      48 |   // The inset is padded from JS, not by SafeAreaView: a native SafeAreaView applies it a frame after
+      49 |   // it mounts, so a tab opened for the first time drew its title under the status bar, then jumped.
+    > 50 |   const insets = useSafeAreaInsets()
+         |                                   ^
+      51 |   return (
+      52 |     <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: white ? t.page : t.bg }}>
+      53 |       <View
+
+      at useSafeAreaInsets (example/node_modules/react-native-safe-area-context/src/SafeAreaContext.tsx:253:11)
+      at ProductPage (example/features/im/ui/ProductPage.tsx:50:35)
+      at Object.Component [as react_stack_bottom_frame] (node_modules/react-reconciler/cjs/react-reconciler.development.js:19204:20)
+      at callComponentInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:5549:22)
+      at renderWithHooks (node_modules/react-reconciler/cjs/react-reconciler.development.js:7969:19)
+      at updateFunctionComponent (node_modules/react-reconciler/cjs/react-reconciler.development.js:9591:18)
+      at callback (node_modules/react-reconciler/cjs/react-reconciler.development.js:2663:13)
+      at runWithFiberInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:16674:22)
+      at performUnitOfWork (node_modules/react-reconciler/cjs/react-reconciler.development.js:16500:41)
+      at workLoopSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:16481:11)
+      at renderRootSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:15620:35)
+      at performWorkOnRoot (node_modules/react-reconciler/cjs/react-reconciler.development.js:3520:7)
+      at callback (node_modules/react/cjs/react.development.js:664:34)
+      at flushActQueue (node_modules/react/cjs/react.development.js:923:21)
+
+  ● shows the default back control for desktop=true deeper=true: true
+
+    No safe area value available. Make sure you are rendering `<SafeAreaProvider>` at the top of your app.
+
+      48 |   // The inset is padded from JS, not by SafeAreaView: a native SafeAreaView applies it a frame after
+      49 |   // it mounts, so a tab opened for the first time drew its title under the status bar, then jumped.
+    > 50 |   const insets = useSafeAreaInsets()
+         |                                   ^
+      51 |   return (
+      52 |     <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: white ? t.page : t.bg }}>
+      53 |       <View
+
+      at useSafeAreaInsets (example/node_modules/react-native-safe-area-context/src/SafeAreaContext.tsx:253:11)
+      at ProductPage (example/features/im/ui/ProductPage.tsx:50:35)
+      at Object.Component [as react_stack_bottom_frame] (node_modules/react-reconciler/cjs/react-reconciler.development.js:19204:20)
+      at callComponentInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:5549:22)
+      at renderWithHooks (node_modules/react-reconciler/cjs/react-reconciler.development.js:7969:19)
+      at updateFunctionComponent (node_modules/react-reconciler/cjs/react-reconciler.development.js:9591:18)
+      at callback (node_modules/react-reconciler/cjs/react-reconciler.development.js:2663:13)
+      at runWithFiberInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:16674:22)
+      at performUnitOfWork (node_modules/react-reconciler/cjs/react-reconciler.development.js:16500:41)
+      at workLoopSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:16481:11)
+      at renderRootSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:15620:35)
+      at performWorkOnRoot (node_modules/react-reconciler/cjs/react-reconciler.development.js:3520:7)
+      at callback (node_modules/react/cjs/react.development.js:664:34)
+      at flushActQueue (node_modules/react/cjs/react.development.js:923:21)
+
+  ● shows the default back control for desktop=false deeper=false: true
+
+    No safe area value available. Make sure you are rendering `<SafeAreaProvider>` at the top of your app.
+
+      48 |   // The inset is padded from JS, not by SafeAreaView: a native SafeAreaView applies it a frame after
+      49 |   // it mounts, so a tab opened for the first time drew its title under the status bar, then jumped.
+    > 50 |   const insets = useSafeAreaInsets()
+         |                                   ^
+      51 |   return (
+      52 |     <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: white ? t.page : t.bg }}>
+      53 |       <View
+
+      at useSafeAreaInsets (example/node_modules/react-native-safe-area-context/src/SafeAreaContext.tsx:253:11)
+      at ProductPage (example/features/im/ui/ProductPage.tsx:50:35)
+      at Object.Component [as react_stack_bottom_frame] (node_modules/react-reconciler/cjs/react-reconciler.development.js:19204:20)
+      at callComponentInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:5549:22)
+      at renderWithHooks (node_modules/react-reconciler/cjs/react-reconciler.development.js:7969:19)
+      at updateFunctionComponent (node_modules/react-reconciler/cjs/react-reconciler.development.js:9591:18)
+      at callback (node_modules/react-reconciler/cjs/react-reconciler.development.js:2663:13)
+      at runWithFiberInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:16674:22)
+      at performUnitOfWork (node_modules/react-reconciler/cjs/react-reconciler.development.js:16500:41)
+      at workLoopSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:16481:11)
+      at renderRootSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:15620:35)
+      at performWorkOnRoot (node_modules/react-reconciler/cjs/react-reconciler.development.js:3520:7)
+      at callback (node_modules/react/cjs/react.development.js:664:34)
+      at flushActQueue (node_modules/react/cjs/react.development.js:923:21)
+
+  ● keeps a long service error accessible while the page is busy
+
+    No safe area value available. Make sure you are rendering `<SafeAreaProvider>` at the top of your app.
+
+      48 |   // The inset is padded from JS, not by SafeAreaView: a native SafeAreaView applies it a frame after
+      49 |   // it mounts, so a tab opened for the first time drew its title under the status bar, then jumped.
+    > 50 |   const insets = useSafeAreaInsets()
+         |                                   ^
+      51 |   return (
+      52 |     <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: white ? t.page : t.bg }}>
+      53 |       <View
+
+      at useSafeAreaInsets (example/node_modules/react-native-safe-area-context/src/SafeAreaContext.tsx:253:11)
+      at ProductPage (example/features/im/ui/ProductPage.tsx:50:35)
+      at Object.Component [as react_stack_bottom_frame] (node_modules/react-reconciler/cjs/react-reconciler.development.js:19204:20)
+      at callComponentInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:5549:22)
+      at renderWithHooks (node_modules/react-reconciler/cjs/react-reconciler.development.js:7969:19)
+      at updateFunctionComponent (node_modules/react-reconciler/cjs/react-reconciler.development.js:9591:18)
+      at callback (node_modules/react-reconciler/cjs/react-reconciler.development.js:2663:13)
+      at runWithFiberInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:16674:22)
+      at performUnitOfWork (node_modules/react-reconciler/cjs/react-reconciler.development.js:16500:41)
+      at workLoopSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:16481:11)
+      at renderRootSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:15620:35)
+      at performWorkOnRoot (node_modules/react-reconciler/cjs/react-reconciler.development.js:3520:7)
+      at callback (node_modules/react/cjs/react.development.js:664:34)
+      at flushActQueue (node_modules/react/cjs/react.development.js:923:21)
+
+  ● keeps an explicit back control on desktop root pages and falls back to its route
+
+    No safe area value available. Make sure you are rendering `<SafeAreaProvider>` at the top of your app.
+
+      48 |   // The inset is padded from JS, not by SafeAreaView: a native SafeAreaView applies it a frame after
+      49 |   // it mounts, so a tab opened for the first time drew its title under the status bar, then jumped.
+    > 50 |   const insets = useSafeAreaInsets()
+         |                                   ^
+      51 |   return (
+      52 |     <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: white ? t.page : t.bg }}>
+      53 |       <View
+
+      at useSafeAreaInsets (example/node_modules/react-native-safe-area-context/src/SafeAreaContext.tsx:253:11)
+      at ProductPage (example/features/im/ui/ProductPage.tsx:50:35)
+      at Object.Component [as react_stack_bottom_frame] (node_modules/react-reconciler/cjs/react-reconciler.development.js:19204:20)
+      at callComponentInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:5549:22)
+      at renderWithHooks (node_modules/react-reconciler/cjs/react-reconciler.development.js:7969:19)
+      at updateFunctionComponent (node_modules/react-reconciler/cjs/react-reconciler.development.js:9591:18)
+      at callback (node_modules/react-reconciler/cjs/react-reconciler.development.js:2663:13)
+      at runWithFiberInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:16674:22)
+      at performUnitOfWork (node_modules/react-reconciler/cjs/react-reconciler.development.js:16500:41)
+      at workLoopSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:16481:11)
+      at renderRootSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:15620:35)
+      at performWorkOnRoot (node_modules/react-reconciler/cjs/react-reconciler.development.js:3520:7)
+      at callback (node_modules/react/cjs/react.development.js:664:34)
+      at flushActQueue (node_modules/react/cjs/react.development.js:923:21)
+
+  ● shows a content skeleton before first data and keeps the page title
+
+    No safe area value available. Make sure you are rendering `<SafeAreaProvider>` at the top of your app.
+
+      48 |   // The inset is padded from JS, not by SafeAreaView: a native SafeAreaView applies it a frame after
+      49 |   // it mounts, so a tab opened for the first time drew its title under the status bar, then jumped.
+    > 50 |   const insets = useSafeAreaInsets()
+         |                                   ^
+      51 |   return (
+      52 |     <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: white ? t.page : t.bg }}>
+      53 |       <View
+
+      at useSafeAreaInsets (example/node_modules/react-native-safe-area-context/src/SafeAreaContext.tsx:253:11)
+      at ProductPage (example/features/im/ui/ProductPage.tsx:50:35)
+      at Object.Component [as react_stack_bottom_frame] (node_modules/react-reconciler/cjs/react-reconciler.development.js:19204:20)
+      at callComponentInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:5549:22)
+      at renderWithHooks (node_modules/react-reconciler/cjs/react-reconciler.development.js:7969:19)
+      at updateFunctionComponent (node_modules/react-reconciler/cjs/react-reconciler.development.js:9591:18)
+      at callback (node_modules/react-reconciler/cjs/react-reconciler.development.js:2663:13)
+      at runWithFiberInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:16674:22)
+      at performUnitOfWork (node_modules/react-reconciler/cjs/react-reconciler.development.js:16500:41)
+      at workLoopSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:16481:11)
+      at renderRootSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:15620:35)
+      at performWorkOnRoot (node_modules/react-reconciler/cjs/react-reconciler.development.js:3520:7)
+      at callback (node_modules/react/cjs/react.development.js:664:34)
+      at flushActQueue (node_modules/react/cjs/react.development.js:923:21)
+
+  ● shows a retry instead of skeleton or false empty content after initial failure
+
+    No safe area value available. Make sure you are rendering `<SafeAreaProvider>` at the top of your app.
+
+      48 |   // The inset is padded from JS, not by SafeAreaView: a native SafeAreaView applies it a frame after
+      49 |   // it mounts, so a tab opened for the first time drew its title under the status bar, then jumped.
+    > 50 |   const insets = useSafeAreaInsets()
+         |                                   ^
+      51 |   return (
+      52 |     <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: white ? t.page : t.bg }}>
+      53 |       <View
+
+      at useSafeAreaInsets (example/node_modules/react-native-safe-area-context/src/SafeAreaContext.tsx:253:11)
+      at ProductPage (example/features/im/ui/ProductPage.tsx:50:35)
+      at Object.Component [as react_stack_bottom_frame] (node_modules/react-reconciler/cjs/react-reconciler.development.js:19204:20)
+      at callComponentInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:5549:22)
+      at renderWithHooks (node_modules/react-reconciler/cjs/react-reconciler.development.js:7969:19)
+      at updateFunctionComponent (node_modules/react-reconciler/cjs/react-reconciler.development.js:9591:18)
+      at callback (node_modules/react-reconciler/cjs/react-reconciler.development.js:2663:13)
+      at runWithFiberInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:16674:22)
+      at performUnitOfWork (node_modules/react-reconciler/cjs/react-reconciler.development.js:16500:41)
+      at workLoopSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:16481:11)
+      at renderRootSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:15620:35)
+      at performWorkOnRoot (node_modules/react-reconciler/cjs/react-reconciler.development.js:3520:7)
+      at callback (node_modules/react/cjs/react.development.js:664:34)
+      at flushActQueue (node_modules/react/cjs/react.development.js:923:21)
+
+  ● preserves loaded content during background refresh
+
+    No safe area value available. Make sure you are rendering `<SafeAreaProvider>` at the top of your app.
+
+      48 |   // The inset is padded from JS, not by SafeAreaView: a native SafeAreaView applies it a frame after
+      49 |   // it mounts, so a tab opened for the first time drew its title under the status bar, then jumped.
+    > 50 |   const insets = useSafeAreaInsets()
+         |                                   ^
+      51 |   return (
+      52 |     <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: white ? t.page : t.bg }}>
+      53 |       <View
+
+      at useSafeAreaInsets (example/node_modules/react-native-safe-area-context/src/SafeAreaContext.tsx:253:11)
+      at ProductPage (example/features/im/ui/ProductPage.tsx:50:35)
+      at Object.Component [as react_stack_bottom_frame] (node_modules/react-reconciler/cjs/react-reconciler.development.js:19204:20)
+      at callComponentInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:5549:22)
+      at renderWithHooks (node_modules/react-reconciler/cjs/react-reconciler.development.js:7969:19)
+      at updateFunctionComponent (node_modules/react-reconciler/cjs/react-reconciler.development.js:9591:18)
+      at callback (node_modules/react-reconciler/cjs/react-reconciler.development.js:2663:13)
+      at runWithFiberInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:16674:22)
+      at performUnitOfWork (node_modules/react-reconciler/cjs/react-reconciler.development.js:16500:41)
+      at workLoopSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:16481:11)
+      at renderRootSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:15620:35)
+      at performWorkOnRoot (node_modules/react-reconciler/cjs/react-reconciler.development.js:3520:7)
+      at callback (node_modules/react/cjs/react.development.js:664:34)
+      at flushActQueue (node_modules/react/cjs/react.development.js:923:21)
+
+FAIL example/features/im/messages/HistorySearchScreen.ui.test.tsx
+  ● shows search result rows and navigates to the exact message
+
+    No safe area value available. Make sure you are rendering `<SafeAreaProvider>` at the top of your app.
+
+      48 |   // The inset is padded from JS, not by SafeAreaView: a native SafeAreaView applies it a frame after
+      49 |   // it mounts, so a tab opened for the first time drew its title under the status bar, then jumped.
+    > 50 |   const insets = useSafeAreaInsets()
+         |                                   ^
+      51 |   return (
+      52 |     <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: white ? t.page : t.bg }}>
+      53 |       <View
+
+      at useSafeAreaInsets (example/node_modules/react-native-safe-area-context/src/SafeAreaContext.tsx:253:11)
+      at ProductPage (example/features/im/ui/ProductPage.tsx:50:35)
+      at Object.Component [as react_stack_bottom_frame] (node_modules/react-reconciler/cjs/react-reconciler.development.js:19204:20)
+      at callComponentInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:5549:22)
+      at renderWithHooks (node_modules/react-reconciler/cjs/react-reconciler.development.js:7969:19)
+      at updateFunctionComponent (node_modules/react-reconciler/cjs/react-reconciler.development.js:9591:18)
+      at callback (node_modules/react-reconciler/cjs/react-reconciler.development.js:2663:13)
+      at runWithFiberInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:16674:22)
+      at performUnitOfWork (node_modules/react-reconciler/cjs/react-reconciler.development.js:16500:41)
+      at workLoopSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:16481:11)
+      at renderRootSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:15620:35)
+      at performWorkOnRoot (node_modules/react-reconciler/cjs/react-reconciler.development.js:3520:7)
+      at callback (node_modules/react/cjs/react.development.js:664:34)
+      at flushActQueue (node_modules/react/cjs/react.development.js:923:21)
+
+  ● highlights matching search text with the prototype danger color
+
+    No safe area value available. Make sure you are rendering `<SafeAreaProvider>` at the top of your app.
+
+      48 |   // The inset is padded from JS, not by SafeAreaView: a native SafeAreaView applies it a frame after
+      49 |   // it mounts, so a tab opened for the first time drew its title under the status bar, then jumped.
+    > 50 |   const insets = useSafeAreaInsets()
+         |                                   ^
+      51 |   return (
+      52 |     <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: white ? t.page : t.bg }}>
+      53 |       <View
+
+      at useSafeAreaInsets (example/node_modules/react-native-safe-area-context/src/SafeAreaContext.tsx:253:11)
+      at ProductPage (example/features/im/ui/ProductPage.tsx:50:35)
+      at Object.Component [as react_stack_bottom_frame] (node_modules/react-reconciler/cjs/react-reconciler.development.js:19204:20)
+      at callComponentInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:5549:22)
+      at renderWithHooks (node_modules/react-reconciler/cjs/react-reconciler.development.js:7969:19)
+      at updateFunctionComponent (node_modules/react-reconciler/cjs/react-reconciler.development.js:9591:18)
+      at callback (node_modules/react-reconciler/cjs/react-reconciler.development.js:2663:13)
+      at runWithFiberInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:16674:22)
+      at performUnitOfWork (node_modules/react-reconciler/cjs/react-reconciler.development.js:16500:41)
+      at workLoopSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:16481:11)
+      at renderRootSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:15620:35)
+      at performWorkOnRoot (node_modules/react-reconciler/cjs/react-reconciler.development.js:3520:7)
+      at callback (node_modules/react/cjs/react.development.js:664:34)
+      at flushActQueue (node_modules/react/cjs/react.development.js:923:21)
+
+  ● automatically searches a changed query without submitting
+
+    No safe area value available. Make sure you are rendering `<SafeAreaProvider>` at the top of your app.
+
+      48 |   // The inset is padded from JS, not by SafeAreaView: a native SafeAreaView applies it a frame after
+      49 |   // it mounts, so a tab opened for the first time drew its title under the status bar, then jumped.
+    > 50 |   const insets = useSafeAreaInsets()
+         |                                   ^
+      51 |   return (
+      52 |     <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: white ? t.page : t.bg }}>
+      53 |       <View
+
+      at useSafeAreaInsets (example/node_modules/react-native-safe-area-context/src/SafeAreaContext.tsx:253:11)
+      at ProductPage (example/features/im/ui/ProductPage.tsx:50:35)
+      at Object.Component [as react_stack_bottom_frame] (node_modules/react-reconciler/cjs/react-reconciler.development.js:19204:20)
+      at callComponentInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:5549:22)
+      at renderWithHooks (node_modules/react-reconciler/cjs/react-reconciler.development.js:7969:19)
+      at updateFunctionComponent (node_modules/react-reconciler/cjs/react-reconciler.development.js:9591:18)
+      at callback (node_modules/react-reconciler/cjs/react-reconciler.development.js:2663:13)
+      at runWithFiberInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:16674:22)
+      at performUnitOfWork (node_modules/react-reconciler/cjs/react-reconciler.development.js:16500:41)
+      at workLoopSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:16481:11)
+      at renderRootSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:15620:35)
+      at performWorkOnRoot (node_modules/react-reconciler/cjs/react-reconciler.development.js:3520:7)
+      at callback (node_modules/react/cjs/react.development.js:664:34)
+      at flushActQueue (node_modules/react/cjs/react.development.js:923:21)
+
+  ● ignores an older response after a query edit and keeps server pagination
+
+    No safe area value available. Make sure you are rendering `<SafeAreaProvider>` at the top of your app.
+
+      48 |   // The inset is padded from JS, not by SafeAreaView: a native SafeAreaView applies it a frame after
+      49 |   // it mounts, so a tab opened for the first time drew its title under the status bar, then jumped.
+    > 50 |   const insets = useSafeAreaInsets()
+         |                                   ^
+      51 |   return (
+      52 |     <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: white ? t.page : t.bg }}>
+      53 |       <View
+
+      at useSafeAreaInsets (example/node_modules/react-native-safe-area-context/src/SafeAreaContext.tsx:253:11)
+      at ProductPage (example/features/im/ui/ProductPage.tsx:50:35)
+      at Object.Component [as react_stack_bottom_frame] (node_modules/react-reconciler/cjs/react-reconciler.development.js:19204:20)
+      at callComponentInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:5549:22)
+      at renderWithHooks (node_modules/react-reconciler/cjs/react-reconciler.development.js:7969:19)
+      at updateFunctionComponent (node_modules/react-reconciler/cjs/react-reconciler.development.js:9591:18)
+      at callback (node_modules/react-reconciler/cjs/react-reconciler.development.js:2663:13)
+      at runWithFiberInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:16674:22)
+      at performUnitOfWork (node_modules/react-reconciler/cjs/react-reconciler.development.js:16500:41)
+      at workLoopSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:16481:11)
+      at renderRootSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:15620:35)
+      at performWorkOnRoot (node_modules/react-reconciler/cjs/react-reconciler.development.js:3520:7)
+      at callback (node_modules/react/cjs/react.development.js:664:34)
+      at flushActQueue (node_modules/react/cjs/react.development.js:923:21)
+
+  ● shows server failures and allows retry of the same query
+
+    No safe area value available. Make sure you are rendering `<SafeAreaProvider>` at the top of your app.
+
+      48 |   // The inset is padded from JS, not by SafeAreaView: a native SafeAreaView applies it a frame after
+      49 |   // it mounts, so a tab opened for the first time drew its title under the status bar, then jumped.
+    > 50 |   const insets = useSafeAreaInsets()
+         |                                   ^
+      51 |   return (
+      52 |     <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: white ? t.page : t.bg }}>
+      53 |       <View
+
+      at useSafeAreaInsets (example/node_modules/react-native-safe-area-context/src/SafeAreaContext.tsx:253:11)
+      at ProductPage (example/features/im/ui/ProductPage.tsx:50:35)
+      at Object.Component [as react_stack_bottom_frame] (node_modules/react-reconciler/cjs/react-reconciler.development.js:19204:20)
+      at callComponentInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:5549:22)
+      at renderWithHooks (node_modules/react-reconciler/cjs/react-reconciler.development.js:7969:19)
+      at updateFunctionComponent (node_modules/react-reconciler/cjs/react-reconciler.development.js:9591:18)
+      at callback (node_modules/react-reconciler/cjs/react-reconciler.development.js:2663:13)
+      at runWithFiberInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:16674:22)
+      at performUnitOfWork (node_modules/react-reconciler/cjs/react-reconciler.development.js:16500:41)
+      at workLoopSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:16481:11)
+      at renderRootSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:15620:35)
+      at performWorkOnRoot (node_modules/react-reconciler/cjs/react-reconciler.development.js:3520:7)
+      at callback (node_modules/react/cjs/react.development.js:664:34)
+      at flushActQueue (node_modules/react/cjs/react.development.js:923:21)
+
+FAIL example/features/im/profile/SettingsNavigation.ui.test.tsx
+  ● replaces to the profile tab after saving when there is no navigation history
+
+    No safe area value available. Make sure you are rendering `<SafeAreaProvider>` at the top of your app.
+
+      48 |   // The inset is padded from JS, not by SafeAreaView: a native SafeAreaView applies it a frame after
+      49 |   // it mounts, so a tab opened for the first time drew its title under the status bar, then jumped.
+    > 50 |   const insets = useSafeAreaInsets()
+         |                                   ^
+      51 |   return (
+      52 |     <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: white ? t.page : t.bg }}>
+      53 |       <View
+
+      at useSafeAreaInsets (example/node_modules/react-native-safe-area-context/src/SafeAreaContext.tsx:253:11)
+      at ProductPage (example/features/im/ui/ProductPage.tsx:50:35)
+      at Object.Component [as react_stack_bottom_frame] (node_modules/react-reconciler/cjs/react-reconciler.development.js:19204:20)
+      at callComponentInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:5549:22)
+      at renderWithHooks (node_modules/react-reconciler/cjs/react-reconciler.development.js:7969:19)
+      at updateFunctionComponent (node_modules/react-reconciler/cjs/react-reconciler.development.js:9591:18)
+      at callback (node_modules/react-reconciler/cjs/react-reconciler.development.js:2663:13)
+      at runWithFiberInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:16674:22)
+      at performUnitOfWork (node_modules/react-reconciler/cjs/react-reconciler.development.js:16500:41)
+      at workLoopSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:16481:11)
+      at renderRootSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:15620:35)
+      at performWorkOnRoot (node_modules/react-reconciler/cjs/react-reconciler.development.js:3520:7)
+      at callback (node_modules/react/cjs/react.development.js:664:34)
+      at flushActQueue (node_modules/react/cjs/react.development.js:923:21)
+
+  ● returns with back navigation after saving when history exists
+
+    No safe area value available. Make sure you are rendering `<SafeAreaProvider>` at the top of your app.
+
+      48 |   // The inset is padded from JS, not by SafeAreaView: a native SafeAreaView applies it a frame after
+      49 |   // it mounts, so a tab opened for the first time drew its title under the status bar, then jumped.
+    > 50 |   const insets = useSafeAreaInsets()
+         |                                   ^
+      51 |   return (
+      52 |     <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: white ? t.page : t.bg }}>
+      53 |       <View
+
+      at useSafeAreaInsets (example/node_modules/react-native-safe-area-context/src/SafeAreaContext.tsx:253:11)
+      at ProductPage (example/features/im/ui/ProductPage.tsx:50:35)
+      at Object.Component [as react_stack_bottom_frame] (node_modules/react-reconciler/cjs/react-reconciler.development.js:19204:20)
+      at callComponentInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:5549:22)
+      at renderWithHooks (node_modules/react-reconciler/cjs/react-reconciler.development.js:7969:19)
+      at updateFunctionComponent (node_modules/react-reconciler/cjs/react-reconciler.development.js:9591:18)
+      at callback (node_modules/react-reconciler/cjs/react-reconciler.development.js:2663:13)
+      at runWithFiberInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:16674:22)
+      at performUnitOfWork (node_modules/react-reconciler/cjs/react-reconciler.development.js:16500:41)
+      at workLoopSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:16481:11)
+      at renderRootSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:15620:35)
+      at performWorkOnRoot (node_modules/react-reconciler/cjs/react-reconciler.development.js:3520:7)
+      at callback (node_modules/react/cjs/react.development.js:664:34)
+      at flushActQueue (node_modules/react/cjs/react.development.js:923:21)
+
+  ● loads the self email with the active ChatServer session and displays it
+
+    No safe area value available. Make sure you are rendering `<SafeAreaProvider>` at the top of your app.
+
+      48 |   // The inset is padded from JS, not by SafeAreaView: a native SafeAreaView applies it a frame after
+      49 |   // it mounts, so a tab opened for the first time drew its title under the status bar, then jumped.
+    > 50 |   const insets = useSafeAreaInsets()
+         |                                   ^
+      51 |   return (
+      52 |     <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: white ? t.page : t.bg }}>
+      53 |       <View
+
+      at useSafeAreaInsets (example/node_modules/react-native-safe-area-context/src/SafeAreaContext.tsx:253:11)
+      at ProductPage (example/features/im/ui/ProductPage.tsx:50:35)
+      at Object.Component [as react_stack_bottom_frame] (node_modules/react-reconciler/cjs/react-reconciler.development.js:19204:20)
+      at callComponentInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:5549:22)
+      at renderWithHooks (node_modules/react-reconciler/cjs/react-reconciler.development.js:7969:19)
+      at updateFunctionComponent (node_modules/react-reconciler/cjs/react-reconciler.development.js:9591:18)
+      at callback (node_modules/react-reconciler/cjs/react-reconciler.development.js:2663:13)
+      at runWithFiberInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:16674:22)
+      at performUnitOfWork (node_modules/react-reconciler/cjs/react-reconciler.development.js:16500:41)
+      at workLoopSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:16481:11)
+      at renderRootSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:15620:35)
+      at performWorkOnRoot (node_modules/react-reconciler/cjs/react-reconciler.development.js:3520:7)
+      at callback (node_modules/react/cjs/react.development.js:664:34)
+      at flushActQueue (node_modules/react/cjs/react.development.js:923:21)
+
+FAIL example/features/im/contacts/Contacts.ui.test.tsx
+  ● filters loaded friends by nickname and keeps actions on separate routes
+
+    No safe area value available. Make sure you are rendering `<SafeAreaProvider>` at the top of your app.
+
+      48 |   // The inset is padded from JS, not by SafeAreaView: a native SafeAreaView applies it a frame after
+      49 |   // it mounts, so a tab opened for the first time drew its title under the status bar, then jumped.
+    > 50 |   const insets = useSafeAreaInsets()
+         |                                   ^
+      51 |   return (
+      52 |     <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: white ? t.page : t.bg }}>
+      53 |       <View
+
+      at useSafeAreaInsets (example/node_modules/react-native-safe-area-context/src/SafeAreaContext.tsx:253:11)
+      at ProductPage (example/features/im/ui/ProductPage.tsx:50:35)
+      at Object.Component [as react_stack_bottom_frame] (node_modules/react-reconciler/cjs/react-reconciler.development.js:19204:20)
+      at callComponentInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:5549:22)
+      at renderWithHooks (node_modules/react-reconciler/cjs/react-reconciler.development.js:7969:19)
+      at updateFunctionComponent (node_modules/react-reconciler/cjs/react-reconciler.development.js:9591:18)
+      at callback (node_modules/react-reconciler/cjs/react-reconciler.development.js:2663:13)
+      at runWithFiberInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:16674:22)
+      at performUnitOfWork (node_modules/react-reconciler/cjs/react-reconciler.development.js:16500:41)
+      at workLoopSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:16481:11)
+      at renderRootSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:15620:35)
+      at performWorkOnRoot (node_modules/react-reconciler/cjs/react-reconciler.development.js:3520:7)
+      at callback (node_modules/react/cjs/react.development.js:664:34)
+      at flushActQueue (node_modules/react/cjs/react.development.js:923:21)
+
+  ● does not empty requests when tapping the selected segment and routes outgoing requests correctly
+
+    No safe area value available. Make sure you are rendering `<SafeAreaProvider>` at the top of your app.
+
+      48 |   // The inset is padded from JS, not by SafeAreaView: a native SafeAreaView applies it a frame after
+      49 |   // it mounts, so a tab opened for the first time drew its title under the status bar, then jumped.
+    > 50 |   const insets = useSafeAreaInsets()
+         |                                   ^
+      51 |   return (
+      52 |     <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: white ? t.page : t.bg }}>
+      53 |       <View
+
+      at useSafeAreaInsets (example/node_modules/react-native-safe-area-context/src/SafeAreaContext.tsx:253:11)
+      at ProductPage (example/features/im/ui/ProductPage.tsx:50:35)
+      at Object.Component [as react_stack_bottom_frame] (node_modules/react-reconciler/cjs/react-reconciler.development.js:19204:20)
+      at callComponentInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:5549:22)
+      at renderWithHooks (node_modules/react-reconciler/cjs/react-reconciler.development.js:7969:19)
+      at updateFunctionComponent (node_modules/react-reconciler/cjs/react-reconciler.development.js:9591:18)
+      at callback (node_modules/react-reconciler/cjs/react-reconciler.development.js:2663:13)
+      at runWithFiberInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:16674:22)
+      at performUnitOfWork (node_modules/react-reconciler/cjs/react-reconciler.development.js:16500:41)
+      at workLoopSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:16481:11)
+      at renderRootSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:15620:35)
+      at performWorkOnRoot (node_modules/react-reconciler/cjs/react-reconciler.development.js:3520:7)
+      at callback (node_modules/react/cjs/react.development.js:664:34)
+      at flushActQueue (node_modules/react/cjs/react.development.js:923:21)
+
+  ● keeps accept and reject buttons outside the profile navigation button
+
+    No safe area value available. Make sure you are rendering `<SafeAreaProvider>` at the top of your app.
+
+      48 |   // The inset is padded from JS, not by SafeAreaView: a native SafeAreaView applies it a frame after
+      49 |   // it mounts, so a tab opened for the first time drew its title under the status bar, then jumped.
+    > 50 |   const insets = useSafeAreaInsets()
+         |                                   ^
+      51 |   return (
+      52 |     <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: white ? t.page : t.bg }}>
+      53 |       <View
+
+      at useSafeAreaInsets (example/node_modules/react-native-safe-area-context/src/SafeAreaContext.tsx:253:11)
+      at ProductPage (example/features/im/ui/ProductPage.tsx:50:35)
+      at Object.Component [as react_stack_bottom_frame] (node_modules/react-reconciler/cjs/react-reconciler.development.js:19204:20)
+      at callComponentInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:5549:22)
+      at renderWithHooks (node_modules/react-reconciler/cjs/react-reconciler.development.js:7969:19)
+      at updateFunctionComponent (node_modules/react-reconciler/cjs/react-reconciler.development.js:9591:18)
+      at callback (node_modules/react-reconciler/cjs/react-reconciler.development.js:2663:13)
+      at runWithFiberInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:16674:22)
+      at performUnitOfWork (node_modules/react-reconciler/cjs/react-reconciler.development.js:16500:41)
+      at workLoopSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:16481:11)
+      at renderRootSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:15620:35)
+      at performWorkOnRoot (node_modules/react-reconciler/cjs/react-reconciler.development.js:3520:7)
+      at callback (node_modules/react/cjs/react.development.js:664:34)
+      at flushActQueue (node_modules/react/cjs/react.development.js:923:21)
+
+  ● keeps request actions available after a real service error
+
+    No safe area value available. Make sure you are rendering `<SafeAreaProvider>` at the top of your app.
+
+      48 |   // The inset is padded from JS, not by SafeAreaView: a native SafeAreaView applies it a frame after
+      49 |   // it mounts, so a tab opened for the first time drew its title under the status bar, then jumped.
+    > 50 |   const insets = useSafeAreaInsets()
+         |                                   ^
+      51 |   return (
+      52 |     <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: white ? t.page : t.bg }}>
+      53 |       <View
+
+      at useSafeAreaInsets (example/node_modules/react-native-safe-area-context/src/SafeAreaContext.tsx:253:11)
+      at ProductPage (example/features/im/ui/ProductPage.tsx:50:35)
+      at Object.Component [as react_stack_bottom_frame] (node_modules/react-reconciler/cjs/react-reconciler.development.js:19204:20)
+      at callComponentInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:5549:22)
+      at renderWithHooks (node_modules/react-reconciler/cjs/react-reconciler.development.js:7969:19)
+      at updateFunctionComponent (node_modules/react-reconciler/cjs/react-reconciler.development.js:9591:18)
+      at callback (node_modules/react-reconciler/cjs/react-reconciler.development.js:2663:13)
+      at runWithFiberInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:16674:22)
+      at performUnitOfWork (node_modules/react-reconciler/cjs/react-reconciler.development.js:16500:41)
+      at workLoopSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:16481:11)
+      at renderRootSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:15620:35)
+      at performWorkOnRoot (node_modules/react-reconciler/cjs/react-reconciler.development.js:3520:7)
+      at callback (node_modules/react/cjs/react.development.js:664:34)
+      at flushActQueue (node_modules/react/cjs/react.development.js:923:21)
+
+  ● checks all outgoing request pages and disables duplicate pending applications
+
+    No safe area value available. Make sure you are rendering `<SafeAreaProvider>` at the top of your app.
+
+      48 |   // The inset is padded from JS, not by SafeAreaView: a native SafeAreaView applies it a frame after
+      49 |   // it mounts, so a tab opened for the first time drew its title under the status bar, then jumped.
+    > 50 |   const insets = useSafeAreaInsets()
+         |                                   ^
+      51 |   return (
+      52 |     <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: white ? t.page : t.bg }}>
+      53 |       <View
+
+      at useSafeAreaInsets (example/node_modules/react-native-safe-area-context/src/SafeAreaContext.tsx:253:11)
+      at ProductPage (example/features/im/ui/ProductPage.tsx:50:35)
+      at Object.Component [as react_stack_bottom_frame] (node_modules/react-reconciler/cjs/react-reconciler.development.js:19204:20)
+      at callComponentInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:5549:22)
+      at renderWithHooks (node_modules/react-reconciler/cjs/react-reconciler.development.js:7969:19)
+      at updateFunctionComponent (node_modules/react-reconciler/cjs/react-reconciler.development.js:9591:18)
+      at callback (node_modules/react-reconciler/cjs/react-reconciler.development.js:2663:13)
+      at runWithFiberInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:16674:22)
+      at performUnitOfWork (node_modules/react-reconciler/cjs/react-reconciler.development.js:16500:41)
+      at workLoopSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:16481:11)
+      at renderRootSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:15620:35)
+      at performWorkOnRoot (node_modules/react-reconciler/cjs/react-reconciler.development.js:3520:7)
+      at callback (node_modules/react/cjs/react.development.js:664:34)
+      at flushActQueue (node_modules/react/cjs/react.development.js:923:21)
+
+  ● shows a real-ID instruction while the add-friend form is empty
+
+    No safe area value available. Make sure you are rendering `<SafeAreaProvider>` at the top of your app.
+
+      48 |   // The inset is padded from JS, not by SafeAreaView: a native SafeAreaView applies it a frame after
+      49 |   // it mounts, so a tab opened for the first time drew its title under the status bar, then jumped.
+    > 50 |   const insets = useSafeAreaInsets()
+         |                                   ^
+      51 |   return (
+      52 |     <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: white ? t.page : t.bg }}>
+      53 |       <View
+
+      at useSafeAreaInsets (example/node_modules/react-native-safe-area-context/src/SafeAreaContext.tsx:253:11)
+      at ProductPage (example/features/im/ui/ProductPage.tsx:50:35)
+      at Object.Component [as react_stack_bottom_frame] (node_modules/react-reconciler/cjs/react-reconciler.development.js:19204:20)
+      at callComponentInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:5549:22)
+      at renderWithHooks (node_modules/react-reconciler/cjs/react-reconciler.development.js:7969:19)
+      at updateFunctionComponent (node_modules/react-reconciler/cjs/react-reconciler.development.js:9591:18)
+      at callback (node_modules/react-reconciler/cjs/react-reconciler.development.js:2663:13)
+      at runWithFiberInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:16674:22)
+      at performUnitOfWork (node_modules/react-reconciler/cjs/react-reconciler.development.js:16500:41)
+      at workLoopSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:16481:11)
+      at renderRootSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:15620:35)
+      at performWorkOnRoot (node_modules/react-reconciler/cjs/react-reconciler.development.js:3520:7)
+      at callback (node_modules/react/cjs/react.development.js:664:34)
+      at flushActQueue (node_modules/react/cjs/react.development.js:923:21)
+
+  ● loads a supplied person ID without an extra search tap
+
+    No safe area value available. Make sure you are rendering `<SafeAreaProvider>` at the top of your app.
+
+      48 |   // The inset is padded from JS, not by SafeAreaView: a native SafeAreaView applies it a frame after
+      49 |   // it mounts, so a tab opened for the first time drew its title under the status bar, then jumped.
+    > 50 |   const insets = useSafeAreaInsets()
+         |                                   ^
+      51 |   return (
+      52 |     <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: white ? t.page : t.bg }}>
+      53 |       <View
+
+      at useSafeAreaInsets (example/node_modules/react-native-safe-area-context/src/SafeAreaContext.tsx:253:11)
+      at ProductPage (example/features/im/ui/ProductPage.tsx:50:35)
+      at Object.Component [as react_stack_bottom_frame] (node_modules/react-reconciler/cjs/react-reconciler.development.js:19204:20)
+      at callComponentInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:5549:22)
+      at renderWithHooks (node_modules/react-reconciler/cjs/react-reconciler.development.js:7969:19)
+      at updateFunctionComponent (node_modules/react-reconciler/cjs/react-reconciler.development.js:9591:18)
+      at callback (node_modules/react-reconciler/cjs/react-reconciler.development.js:2663:13)
+      at runWithFiberInDEV (node_modules/react-reconciler/cjs/react-reconciler.development.js:16674:22)
+      at performUnitOfWork (node_modules/react-reconciler/cjs/react-reconciler.development.js:16500:41)
+      at workLoopSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:16481:11)
+      at renderRootSync (node_modules/react-reconciler/cjs/react-reconciler.development.js:15620:35)
+      at performWorkOnRoot (node_modules/react-reconciler/cjs/react-reconciler.development.js:3520:7)
+      at callback (node_modules/react/cjs/react.development.js:664:34)
+      at flushActQueue (node_modules/react/cjs/react.development.js:923:21)
+
+
+Test Suites: 4 failed, 50 passed, 54 total
+Tests:       23 failed, 225 passed, 248 total
+Snapshots:   0 total
+Time:        6.644 s, estimated 10 s
+Ran all test suites.

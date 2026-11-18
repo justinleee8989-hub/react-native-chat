@@ -110,3 +110,18 @@ RN SDK 事件名已核实：`@openim/rn-client-sdk/src/constants/OpenIMEvents.ts
 `chat` 的 `feat/group-read-push` 已合入 `origin/feature/rtc-terminal-records`（`d5f9db7`），合并提交为 `054fd9a`。合并后相对 `d5f9db7` 只多 4 个文件：`group_read_webhook.go`、`group_read_webhook_test.go`、`chat.go`（Api 结构体多两个字段）和 `start.go`（多一条路由），**可见性、消息准入、通话记录等现有能力全部保留**。合并后 `go build ./...`、`go vet`、`go test ./internal/api/chat/ ./pkg/common/...` 均已通过。
 
 `open-im-server` 的 `feat/group-read-webhook-context` 本来就基于当前部署的 `e089f78`，只多 2 个文件，无需处理。现在两个后端都可以在当前服务的基础上构建部署，测试方法见 [第五轮 V3](entry-perf-2026-11-18/TEST_5.md)。
+
+## 2026-11-18 第五轮部署及联调实测
+
+详见 [第五轮 V3](entry-perf-2026-11-18/RESULTS_5.md#v3-推送部署和两轮真实阅读)。已使用 chat 054fd9a、OpenIM 280d0a23d 构建；测试机旧镜像依赖和配置结构与分支有差异，必须使用同分支完整二进制、RPC 服务名映射，并将既有管理员字段映射到新结构，保留原密钥与策略。仅替换消息RPC会造成发现协议混用，不能照搬。
+
+最终服务健康且真实消息/历史/已读明细可用，但**实时更新两次均未通过**：伙伴真实H5阅读后，Android当前页分别至少22.7s、47.0s仍0，打开明细均为1。配置加载器确认开关及URL生效；未证实 webhook 实际到达和 RN 事件实际收到，WARN级别无成功日志不能作缺请求的证据。没有改实现或加轮询兜底。群里只新增两条本轮QA文本，未见额外通知气泡。
+
+| 第五轮复核项 | 结果 |
+|---|---|
+| 配套部署和配置加载 | 完成，真实业务可用 |
+| webhook 实际到达 / RN事件 | 未确认，不声称通过 |
+| 真实阅读后当前页人数 | 两轮均未通过 |
+| 已读明细 | 两轮已读1/未读0，正确 |
+| 新增可见系统消息 | 未见；新范围只有两条QA文本 |
+| UI / 类型 / lint / 业务 / SDK / Go | UI23失败；其余指定检查通过，见报告 |

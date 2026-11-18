@@ -1,0 +1,272 @@
+[
+  {
+    "seq": 2,
+    "label": "QA-scroll-001",
+    "status": 1
+  },
+  {
+    "seq": 3,
+    "label": "QA-scroll-002QA-scroll-003",
+    "status": 1
+  },
+  {
+    "seq": 4,
+    "label": "QA-history-004",
+    "status": 1
+  },
+  {
+    "seq": 5,
+    "label": "QA-history-005-long-message-layout-check-long-message-layout-check-long-message-layout-check",
+    "status": 1
+  },
+  {
+    "seq": 6,
+    "label": "QA-history-006",
+    "status": 1
+  },
+  {
+    "seq": 7,
+    "label": "QA-history-007",
+    "status": 1
+  },
+  {
+    "seq": 8,
+    "label": "QA-history-008",
+    "status": 1
+  },
+  {
+    "seq": 9,
+    "label": "QA-history-009",
+    "status": 1
+  },
+  {
+    "seq": 10,
+    "label": "QA-history-010-long-message-layout-check-long-message-layout-check-long-message-layout-check",
+    "status": 1
+  },
+  {
+    "seq": 11,
+    "label": "QA-history-011",
+    "status": 1
+  },
+  {
+    "seq": 12,
+    "label": "QA-history-012",
+    "status": 1
+  },
+  {
+    "seq": 13,
+    "label": "QA-history-013",
+    "status": 1
+  },
+  {
+    "seq": 14,
+    "label": "QA-history-014",
+    "status": 1
+  },
+  {
+    "seq": 15,
+    "label": "QA-history-015-long-message-layout-check-long-message-layout-check-long-message-layout-check",
+    "status": 1
+  },
+  {
+    "seq": 16,
+    "label": "QA-history-016",
+    "status": 1
+  },
+  {
+    "seq": 17,
+    "label": "QA-history-017",
+    "status": 1
+  },
+  {
+    "seq": 18,
+    "label": "QA-history-018",
+    "status": 1
+  },
+  {
+    "seq": 19,
+    "label": "QA-history-019",
+    "status": 1
+  },
+  {
+    "seq": 20,
+    "label": "QA-history-020-long-message-layout-check-long-message-layout-check-long-message-layout-check",
+    "status": 1
+  },
+  {
+    "seq": 21,
+    "label": "QA-history-021",
+    "status": 1
+  },
+  {
+    "seq": 22,
+    "label": "QA-history-022",
+    "status": 1
+  },
+  {
+    "seq": 23,
+    "label": "QA-history-023",
+    "status": 1
+  },
+  {
+    "seq": 24,
+    "label": "QA-history-024",
+    "status": 1
+  },
+  {
+    "seq": 25,
+    "label": "QA-history-025-long-message-layout-check-long-message-layout-check-long-message-layout-check",
+    "status": 1
+  },
+  {
+    "seq": 26,
+    "label": "QA-history-026",
+    "status": 1
+  },
+  {
+    "seq": 27,
+    "label": "QA-history-027",
+    "status": 1
+  },
+  {
+    "seq": 28,
+    "label": "QA-history-028",
+    "status": 1
+  },
+  {
+    "seq": 29,
+    "label": "QA-history-029",
+    "status": 1
+  },
+  {
+    "seq": 30,
+    "label": "QA-history-030-long-message-layout-check-long-message-layout-check-long-message-layout-check",
+    "status": 1
+  },
+  {
+    "seq": 31,
+    "label": "QA-history-031",
+    "status": 1
+  },
+  {
+    "seq": 32,
+    "label": "QA-history-032",
+    "status": 1
+  },
+  {
+    "seq": 33,
+    "label": "QA-history-033",
+    "status": 1
+  },
+  {
+    "seq": 34,
+    "label": "QA-history-034",
+    "status": 1
+  },
+  {
+    "seq": 35,
+    "label": "QA-history-035-long-message-layout-check-long-message-layout-check-long-message-layout-check",
+    "status": 1
+  },
+  {
+    "seq": 36,
+    "label": "QA-history-036",
+    "status": 1
+  },
+  {
+    "seq": 37,
+    "label": "QA-history-037",
+    "status": 1
+  },
+  {
+    "seq": 38,
+    "label": "QA-history-038",
+    "status": 1
+  },
+  {
+    "seq": 39,
+    "label": "QA-draft-fixed-long-text-native-write-coalescing-verification-20261117",
+    "status": 1
+  },
+  {
+    "seq": 40,
+    "label": "QA-release-verified-20261117",
+    "status": 1
+  },
+  {
+    "seq": 41,
+    "label": "QA-jump-Android-20261117",
+    "status": 1
+  },
+  {
+    "seq": 44,
+    "label": "QA-final-release-send-1",
+    "status": 1
+  },
+  {
+    "seq": 45,
+    "label": "QA-final-release-send-2",
+    "status": 1
+  },
+  {
+    "seq": 46,
+    "label": "QA-final-release-send-3",
+    "status": 1
+  },
+  {
+    "seq": 47,
+    "label": "QA-final-multiline-1\nQA-final-multiline-2",
+    "status": 1
+  },
+  {
+    "seq": 48,
+    "label": "QA-final-from-history",
+    "status": 1
+  },
+  {
+    "seq": 51,
+    "label": "QA-perf2-outgoing-20261118",
+    "status": 1
+  },
+  {
+    "seq": 52,
+    "label": "QA-perf2-reply",
+    "status": 1
+  },
+  {
+    "seq": 53,
+    "label": "QA-perf2-edit",
+    "status": 1
+  },
+  {
+    "seq": 55,
+    "label": "QA-perf2-retry",
+    "status": 1
+  },
+  {
+    "seq": 56,
+    "label": "QA-perf2-peer-incoming",
+    "status": 1
+  },
+  {
+    "seq": 59,
+    "label": "QA-perf2-real-retry",
+    "status": 1
+  },
+  {
+    "seq": 60,
+    "label": "QA-perf3-read-direct-20261118",
+    "status": 1
+  },
+  {
+    "seq": 61,
+    "label": "QA-perf3-read-immediate",
+    "status": 1
+  },
+  {
+    "seq": 62,
+    "label": "QA-perf4-direct-read-20261118",
+    "status": 1
+  }
+]

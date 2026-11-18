@@ -1,0 +1,6 @@
+/tmp/im-perf5-original-rpc-msg
+	dep	github.com/openimsdk/protocol	v0.0.73-alpha.19	h1:CvXoDF2U73UcMhLnrtMFks2Aw+bXiDgH8AITEt783/s=
+	dep	github.com/openimsdk/tools	v0.0.50-alpha.122	h1:bKP6hrJ6kGyGUqTGuyqUqPdZxY7mZSsh86aRQJ/6Jt8=
+/tmp/im-perf5-build/openim-rpc-msg
+	dep	github.com/openimsdk/protocol	v0.0.73-alpha.20	h1:9MnACSi6IKv2iqlxHYUJG9mgt9gyPRHxE7Lq8dxAoxI=
+	dep	github.com/openimsdk/tools	v0.0.50-alpha.126	h1:wJ3eIR4Y/ZKz1m+m4osV4K5w5aiHmmA9QqJVkp45nFk=

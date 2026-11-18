@@ -1,0 +1,16 @@
+{
+  "errCode": 0,
+  "rows": [
+    {
+      "seq": 63,
+      "contentType": 101,
+      "status": 1
+    },
+    {
+      "seq": 64,
+      "contentType": 101,
+      "status": 1
+    }
+  ],
+  "observedHighestReturnedSeq": 64
+}
