@@ -2,6 +2,7 @@ import React from 'react'
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { type Href, useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { offlineStatus, useConnectionStatus } from '../application/connection-status'
 import { useDesktopNavigation } from '../navigation/DesktopNavigation'
 import { ProductToast } from '../shared/ProductToast'
 import { useProductLayout } from './preferences'
@@ -58,6 +59,10 @@ export function ProductPage ({
   // The inset is padded from JS, not by SafeAreaView: a native SafeAreaView applies it a frame after
   // it mounts, so a tab opened for the first time drew its title under the status bar, then jumped.
   const insets = useSafeAreaInsets()
+  // Offline, every page's requests fail with whatever the SDK says (often 操作失败); the page says
+  // only that the network is down, the same as the chat list.
+  const connection = useConnectionStatus()
+  const shownError = error && connection === offlineStatus ? offlineStatus : error
   return (
     <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: white ? t.page : t.bg }}>
       <View
@@ -95,7 +100,7 @@ export function ProductPage ({
           >
             {!!error && (
               <Text accessibilityRole='alert' style={{ padding: 16, color: t.danger }}>
-                {error}
+                {shownError}
               </Text>
             )}
             {(initialLoading || loading) && !!error && onRetry && (

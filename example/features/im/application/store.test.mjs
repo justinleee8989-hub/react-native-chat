@@ -411,20 +411,84 @@ test('retrying a call invitation checks server authority before sending it', asy
   assert.match(h.store.useOpenIM().error, /通话服务不可用/)
 })
 
-test('temporary SDK login failure preserves saved login and can be retried', async () => {
+test('a network failure at SDK login keeps the user in the app and reconnects on retry', async () => {
   const h = harness()
   let attempts = 0
   h.client.login = async () => { if (++attempts === 1) throw new Error('connection refused') }
   await h.store.login('me', 'password', { chat: 'http://test' })
-  assert.equal(h.store.useOpenIM().session, undefined)
-  assert.equal(h.store.useOpenIM().recoveryAvailable, true)
-  assert.match(h.store.useOpenIM().error, /登录信息已保留/)
+  const state = h.store.useOpenIM()
+  assert.equal(state.session.userID, 'me')
+  assert.equal(state.offline, true)
+  assert.equal(state.status, '网络异常，无法连接服务器')
+  assert.equal(state.error, '')
+  assert.equal(state.recoveryAvailable, false)
+  assert.equal(state.busy, false)
   assert.ok(h.savedSession())
   assert.equal(h.removeCount(), 0)
-  await h.store.retryRestore()
+  // A pull or the chat list's sync goes through refresh, which reconnects while offline.
+  await h.store.refresh()
+  assert.equal(attempts, 2)
+  assert.equal(h.store.useOpenIM().offline, false)
+  assert.equal(h.store.useOpenIM().status, '已连接')
   assert.equal(h.store.useOpenIM().session.userID, 'me')
-  assert.equal(h.store.useOpenIM().recoveryAvailable, false)
   assert.equal(h.removeCount(), 0)
+  await h.store.logout()
+})
+
+test('cold restore without a reachable server opens on the cached list and reconnects by itself', async () => {
+  const first = harness()
+  await first.store.login('me', 'password', { chat: 'http://test' })
+  await new Promise(resolve => setTimeout(resolve, 300))
+  const second = harness(undefined, { savedSession: first.savedSession(), snapshotEntries: first.snapshotEntries() })
+  let attempts = 0
+  second.client.login = async () => { if (++attempts === 1) throw new Error('network request failed') }
+  second.mount()
+  await settle()
+  const offline = second.store.useOpenIM()
+  assert.equal(offline.initialized, true)
+  assert.equal(offline.session.userID, 'me')
+  assert.equal(offline.offline, true)
+  assert.equal(offline.conversations[0].conversationID, 'chat-bob')
+  // The first automatic retry is 2s later.
+  await new Promise(resolve => setTimeout(resolve, 2200))
+  assert.equal(attempts, 2)
+  assert.equal(second.store.useOpenIM().offline, false)
+  assert.equal(second.store.useOpenIM().status, '已连接')
+  await second.store.logout()
+})
+
+test('a lost connection says only that the network is down until the SDK connects again', async () => {
+  const h = harness()
+  await h.store.login('me', 'password', { chat: 'http://test' })
+  assert.equal(h.store.useOpenIM().status, '已连接')
+  h.events.get('onConnectFailed')()
+  assert.equal(h.store.useOpenIM().status, '网络异常，无法连接服务器')
+  // The SDK's own retries and a refresh answered from its local database leave it up.
+  h.events.get('onConnecting')()
+  await h.store.refresh()
+  assert.equal(h.store.useOpenIM().status, '网络异常，无法连接服务器')
+  assert.equal(h.store.useOpenIM().session.userID, 'me')
+  // An action failing meanwhile says the same, not its own generic error.
+  h.store.reportError(new Error('sdk not login'))
+  assert.equal(h.store.useOpenIM().error, '网络异常，无法连接服务器')
+  h.events.get('onConnectSuccess')()
+  assert.equal(h.store.useOpenIM().status, '已连接')
+  h.store.reportError(new Error('sdk not login'))
+  assert.equal(h.store.useOpenIM().error, '操作失败，请稍后重试')
+  await h.store.logout()
+})
+
+test('signing out while offline stops reconnecting', async () => {
+  const h = harness()
+  let attempts = 0
+  h.client.login = async () => { attempts++; throw new Error('connection refused') }
+  await h.store.login('me', 'password', { chat: 'http://test' })
+  assert.equal(h.store.useOpenIM().offline, true)
+  await h.store.logout()
+  assert.equal(h.store.useOpenIM().offline, false)
+  await new Promise(resolve => setTimeout(resolve, 2200))
+  assert.equal(attempts, 1)
+  assert.equal(h.store.useOpenIM().session, undefined)
 })
 
 test('explicit expired or invalid OpenIM login tokens clear saved credentials', async () => {

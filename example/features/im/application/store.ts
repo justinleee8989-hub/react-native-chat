@@ -15,6 +15,7 @@ import { createHomeSnapshots } from '../infrastructure/storage/home-snapshot'
 import { storage } from '../infrastructure/storage/storage'
 import { createMessageProjectionService } from '../messages/projection'
 import { fetchServerHistory, type ServerHistoryRequest } from '../messages/server-history'
+import { offlineStatus, provideConnectionStatus } from './connection-status'
 import { createConversationActions } from './conversation-actions'
 import { subscribeEvents } from './events'
 import { createConversationRecovery } from './foreground-recovery'
@@ -31,11 +32,49 @@ const key = 'openim-example-session-v1'
  */
 const signOutReasonKey = 'openim-example-signout-reason-v1'
 const homeSnapshots = createHomeSnapshots(storage)
+// The saved account could not reach the IM server for a reason other than its credentials. The user
+// stays in the app on the cached list and is told only that; the store connects again by itself,
+// waiting 2s, then twice as long each time up to 30s. A pull, the chat list's periodic sync or
+// 重新加载 tries at once.
+let offline: { session: Session, config: ServerConfig } | undefined
+let reconnectTimer: ReturnType<typeof setTimeout> | undefined
+let reconnectDelay = 0
+let reconnecting: Promise<void> | undefined
+function stopReconnecting () {
+  offline = undefined
+  clearTimeout(reconnectTimer)
+  reconnectTimer = undefined
+  reconnectDelay = 0
+}
+function scheduleReconnect () {
+  clearTimeout(reconnectTimer)
+  reconnectDelay = Math.min(reconnectDelay ? reconnectDelay * 2 : 2000, 30000)
+  reconnectTimer = setTimeout(() => {
+    void reconnect()
+  }, reconnectDelay)
+}
+function reconnect () {
+  const target = offline
+  if (!target)
+    return Promise.resolve()
+  if (!reconnecting)
+    reconnecting = connect(target.session, target.config, true).finally(() => {
+      reconnecting = undefined
+    })
+  return reconnecting
+}
 let stopHomeSnapshot = () => {}
 let flushHomeSnapshot = async () => {}
 const runtime = createRuntime(defaultConfig)
-if (typeof module !== 'undefined' && module.hot?.data?.snapshot)
+provideConnectionStatus({ subscribe: runtime.subscribe, status: () => runtime.snapshot().status })
+if (typeof module !== 'undefined' && module.hot?.data?.snapshot) {
   runtime.update({ ...module.hot.data.snapshot, busy: false })
+  const { offline: wasOffline, session, config } = module.hot.data.snapshot
+  if (wasOffline && session) {
+    offline = { session, config }
+    scheduleReconnect()
+  }
+}
 const messaging = createMessaging(runtime, client, async message => {
   const invite = parseCallInvitation(message.textElem?.content || '')
   if (!invite)
@@ -115,12 +154,13 @@ export const {
   getAttachmentBatchesSnapshot,
 } = messaging
 
-async function connect (session: Session, config: ServerConfig) {
+/** `quiet`: a reconnect while the user is already in the app, which keeps the offline status up. */
+async function connect (session: Session, config: ServerConfig, quiet = false) {
   const epoch = ++runtime.generation
   stopHomeSnapshot()
   setDraftStorageScope(JSON.stringify([config.api, config.ws]))
   disposeEvents()
-  runtime.update({ busy: true, error: '', status: '连接中', config, recoveryAvailable: true })
+  runtime.update(quiet ? { config } : { busy: true, error: '', status: '连接中', config, recoveryAvailable: true })
   disposeEvents = subscribeEvents(client, runtime, { ...messaging, refresh }, logout, epoch, message => calls.receive(message))
   let sdkLoggedIn = false
   try {
@@ -128,8 +168,9 @@ async function connect (session: Session, config: ServerConfig) {
     if (epoch !== runtime.generation)
       return
     sdkLoggedIn = true
+    stopReconnecting()
     calls.reset(session.userID)
-    runtime.update({ session, status: '收取中…', initialized: true, startupSnapshot: undefined })
+    runtime.update({ session, offline: false, status: '收取中…', initialized: true, startupSnapshot: undefined })
     stopHomeSnapshot()
     const homePersistence = watchHomeSnapshot(runtime, homeSnapshots, session.userID, config)
     stopHomeSnapshot = homePersistence.stop
@@ -166,15 +207,22 @@ async function connect (session: Session, config: ServerConfig) {
     runtime.activeID = ''
     runtime.pendingMessages = []
     messaging.reset()
-    if (recoveryEpoch === runtime.generation)
-      runtime.update({ session: undefined, busy: false, status: '连接暂时失败', recoveryAvailable: true,
-        error: '暂时无法连接服务，登录信息已保留，可重试恢复登录。' })
+    if (recoveryEpoch === runtime.generation) {
+      // Not a credentials problem: open the app on what it has instead of the login page.
+      offline = { session, config }
+      runtime.update({ session, offline: true, initialized: true, busy: false, status: offlineStatus, error: '', recoveryAvailable: false })
+      scheduleReconnect()
+    }
     return
   }
   if (epoch === runtime.generation)
     runtime.update({ busy: false })
 }
 export async function refresh () {
+  if (offline) {
+    await reconnect()
+    return undefined
+  }
   const epoch = runtime.generation
   const session = runtime.state.session
   const initial = !runtime.state.conversationsLoaded && !runtime.state.conversations.length
@@ -185,8 +233,10 @@ export async function refresh () {
     if (epoch !== runtime.generation || session !== runtime.state.session)
       return
     const projectionWarning = result?.projectionWarning
+    // The SDK answers from its local database while the server is unreachable: a refresh that worked
+    // says nothing about the connection, so it must not replace the failure with 已连接.
     if (session)
-      runtime.update({ status: '已连接', error: projectionWarning || '', recoveryAvailable: !!projectionWarning })
+      runtime.update({ status: runtime.state.status === offlineStatus ? offlineStatus : '已连接', error: projectionWarning || '', recoveryAvailable: !!projectionWarning })
     return projectionWarning ? { projectionWarning } : undefined
   } catch (error) {
     if (epoch !== runtime.generation || session !== runtime.state.session)
@@ -210,6 +260,7 @@ export function resumeConversation (conversationID: string, session: Session) {
 export async function login (account: string, password: string, config: ServerConfig) {
   if (runtime.state.busy)
     return
+  stopReconnecting()
   const epoch = ++runtime.generation
   runtime.update({ busy: true, error: '', startupSnapshot: undefined, conversations: [], conversationsLoaded: false })
   try {
@@ -267,6 +318,10 @@ async function restore (retry = false) {
 export async function retryRestore () {
   if (runtime.state.busy)
     return
+  if (offline) {
+    await reconnect()
+    return
+  }
   if (runtime.state.session) {
     const epoch = runtime.generation
     runtime.update({ busy: true, error: '' })
@@ -288,6 +343,7 @@ export async function retryRestore () {
 export async function logout (error = '') {
   const previousSession = runtime.state.session
   const previousConfig = runtime.state.config
+  stopReconnecting()
   stopHomeSnapshot()
   void calls.finish('end').catch(() => {})
   calls.reset('')
@@ -298,6 +354,7 @@ export async function logout (error = '') {
   messaging.reset()
   runtime.update({
     session: undefined,
+    offline: false,
     startupSnapshot: undefined,
     busy: true,
     status: '未登录',

@@ -1,6 +1,7 @@
 import { mergeMessages } from '../domain/model'
 import type { Conversation, IMClient, IMMessage } from '../domain/types'
 import { diagnostic } from '../shared/diagnostics'
+import { offlineStatus } from './connection-status'
 import { groupReadNotice } from './group-read-notice'
 import type { Messaging } from './messaging'
 import type { Runtime } from './runtime'
@@ -33,9 +34,14 @@ export function subscribeEvents (
         ])
     }
   })
-  on('onConnecting', () => runtime.update({ status: '连接中' }))
+  // While the server is unreachable the SDK keeps retrying; each attempt would flip the bar between
+  // 连接中 and the failure. It says the failure until a connection succeeds.
+  on('onConnecting', () => {
+    if (runtime.state.status !== offlineStatus)
+      runtime.update({ status: '连接中' })
+  })
   on('onConnectSuccess', () => runtime.update({ status: '已连接' }))
-  on('onConnectFailed', () => runtime.update({ status: '连接断开，正在重连' }))
+  on('onConnectFailed', () => runtime.update({ status: offlineStatus }))
   on('onSyncServerStart', () => runtime.update({ status: '同步中' }))
   on('onSyncServerFinish', () => {
     runtime.update({ status: '已连接' })

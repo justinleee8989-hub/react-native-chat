@@ -40,11 +40,11 @@ jest.mock('@kesha-antonov/react-native-chat', () => ({ ChatList: (props: any) =>
 } }))
 jest.mock('../shared/shared', () => ({ Confirm: ({ onConfirm, onCancel }: { onConfirm: () => void, onCancel: () => void }) => <MockView><MockPressable onPress={onConfirm}><MockText>确认删除</MockText></MockPressable><MockPressable onPress={onCancel}><MockText>取消删除</MockText></MockPressable></MockView> }))
 
-it('shows reconnecting status', async () => {
-  mockStatus = '连接断开，正在重连'
+it('shows the network failure status', async () => {
+  mockStatus = '网络异常，无法连接服务器'
   const view = await render(<ChatListScreen autoRefresh={false} />)
   try {
-    expect(view.getByText('连接断开，正在重连')).toBeTruthy()
+    expect(view.getByText('网络异常，无法连接服务器')).toBeTruthy()
   } finally {
     mockStatus = '已连接'
   }

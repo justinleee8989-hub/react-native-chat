@@ -94,3 +94,19 @@ it('floats the refresh spinner over the content instead of taking space above it
   const view = await render(<ProductPage title='我的' busy error=''><Text>已有资料</Text></ProductPage>)
   expect(StyleSheet.flatten(view.getByLabelText('正在处理').props.style)).toMatchObject({ position: 'absolute' })
 })
+
+it('says only that the network is down when a page fails while the app is offline', async () => {
+  const { provideConnectionStatus } = jest.requireActual<typeof import('../application/connection-status')>('../application/connection-status')
+  let status = '网络异常，无法连接服务器'
+  provideConnectionStatus({ subscribe: () => () => {}, status: () => status })
+  try {
+    const offline = await render(<ProductPage title='通讯录' busy={false} error='操作失败，请稍后重试' />)
+    expect(offline.getByRole('alert').props.children).toBe('网络异常，无法连接服务器')
+    offline.unmount()
+    status = '已连接'
+    const online = await render(<ProductPage title='通讯录' busy={false} error='操作失败，请稍后重试' />)
+    expect(online.getByRole('alert').props.children).toBe('操作失败，请稍后重试')
+  } finally {
+    provideConnectionStatus({ subscribe: () => () => {}, status: () => '' })
+  }
+})

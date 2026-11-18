@@ -2,6 +2,7 @@ import { mergeMessages, routeMessages } from '../domain/model'
 import type { Conversation, GroupMessageReadGuard, GroupMessageReadInfo, IMMessage, ServerConfig, Session } from '../domain/types'
 import type { HomeSnapshot } from '../infrastructure/storage/home-snapshot'
 import { errorMessage } from '../shared/error-message'
+import { offlineStatus } from './connection-status'
 import { trimMessageCache } from './message-cache'
 
 interface State {
@@ -13,6 +14,11 @@ interface State {
   busy: boolean
   error: string
   recoveryAvailable: boolean
+  /**
+   * Signed in, but the IM server could not be reached: the app shows what it has while the store
+   * connects again by itself (see `connect` in store.ts).
+   */
+  offline?: boolean
   conversationsLoaded?: boolean
   conversations: Conversation[]
   messages: Record<string, IMMessage[]>
@@ -51,7 +57,8 @@ export function createRuntime (config: ServerConfig) {
     listeners.forEach(listener => listener())
   }
   function reportError (error: unknown) {
-    update({ error: errorMessage(error) })
+    // Offline, every request fails, mostly with a generic SDK error: say why instead.
+    update({ error: state.status === offlineStatus ? offlineStatus : errorMessage(error) })
   }
   function mergeConversations (incoming: Conversation[]) {
     const map = new Map(state.conversations.map(item => [item.conversationID, item]))

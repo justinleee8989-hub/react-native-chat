@@ -3,6 +3,7 @@ import { Pressable, Text, View } from 'react-native'
 import { ChatList, type ChatListItem } from '@kesha-antonov/react-native-chat'
 import { type Href, useFocusEffect, usePathname, useRouter } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import { offlineStatus } from '../application/connection-status'
 import {
   refresh,
   prefetchConversationHistory,
@@ -117,7 +118,9 @@ function SessionChatList ({ archived, autoRefresh }: { archived: boolean, autoRe
         .toLowerCase()
         .includes(query.trim().toLowerCase())
   )
-  const initialLoading = !state.conversationsLoaded && !chats.length && !state.error
+  // Offline with nothing cached: say so instead of a skeleton that would never resolve.
+  const offlineEmpty = !state.conversationsLoaded && !!state.offline
+  const initialLoading = !state.conversationsLoaded && !chats.length && !state.error && !state.offline
   const homeLaidOut = () => {
     if (!archived && !initialLoading && state.session)
       markReady(state.session)
@@ -297,6 +300,8 @@ function SessionChatList ({ archived, autoRefresh }: { archived: boolean, autoRe
                 <Text style={{ color: t.accent }}>重新加载</Text>
               </Pressable>
             </View>
+          ) : offlineEmpty && !query ? (
+            <ProductEmpty title={offlineStatus} subtitle='网络恢复后会自动重新连接' />
           ) : (
             <ProductEmpty
               title={query ? '没有找到相关会话' : archived ? '没有已归档的会话' : '还没有会话'}
