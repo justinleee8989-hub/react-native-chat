@@ -25,6 +25,8 @@
 - `navigation/ProductShell.tsx`：兼容导出；内部 `Frame.tsx` 处理外框，`Rail.tsx` 处理导航栏，`Layout.tsx` 处理主从分栏，固定布局值集中到 `styles.ts`。
 - `ui/primitives.tsx`：公共组件出口；`primitives/` 内拆为 Header/Card/Row/Search/Segment，分隔线 Context 只有一份，共享固定样式集中到 `styles.ts`。
 - `auth/AuthForm.tsx`：公共表单出口；`AuthForm/` 内分别为 Page/Field/Controls/styles。认证逻辑继续在原有业务模块中。
+- `messages/ChatScreen/`：聊天页，`index.tsx` 保留原导入路径和默认导出。消息行渲染在同级 `useChatRows.tsx`；目录内 `useGroupReadCount.ts`（最新自己群消息的已读人数）、`useChatSend.ts`（发送）、`useFocusedConversation.ts`（聚焦与回到前台）、`useOpeningTransition.ts`（推入转场与诊断打点）、`attachments.tsx`（附件菜单）、`history.tsx`（更早历史）、`inputToolbar.tsx`（输入栏或无权限提示）、`ChatNotices.tsx`、`MissingConversation.tsx`、`voice-errors.ts`、`styles.ts`。
+- `shared/diagnostics.ts`：诊断开关（`EXPO_PUBLIC_OPENIM_ENTRY_TRACE=1`）与 `[tag] {json}` 输出，各层共用；不得输出账号或群 ID、令牌、消息内容。
 
 ## 后续改动规则
 

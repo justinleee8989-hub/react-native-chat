@@ -12,7 +12,8 @@ const BUFFER_EXPAND_FALLBACK_MS = 700
 export function useMessageListLayout () {
   const [width, setWidth] = useState<number>()
   // The first build is only the viewport: a chat that was not prepared ahead cannot open until these
-  // rows are built (600 built about twice the rows and opened ~190ms later on Android, round three).
+  // rows are built, and a 600px buffer built about twice the rows and opened ~190ms later on Android
+  // (docs/openim/entry-perf-2026-11-18).
   const [drawDistance, setDrawDistance] = useState(0)
   const ready = useRef(false)
   const expanded = useRef(false)

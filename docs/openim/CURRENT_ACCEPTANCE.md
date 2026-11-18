@@ -1,5 +1,16 @@
 # 当前验收状态 — 2026-11-18
 
+## 2026-11-18 架构与风格整改（`perf` 分支）
+
+按 AGENTS.md 和 FRONTEND_STRUCTURE.md 复查会话进入优化后的整改，不改变功能：
+
+1. 诊断开关统一到 `shared/diagnostics.ts`，`events.ts` 与 `entry-performance.ts` 共用；`[IMReadPush]` 不再输出群会话 ID，改为 `{ shape, parsed, known }`。
+2. 消息行的渲染计数 Hook 在启动时选定：关闭诊断时，消息行不再多跑任何 effect。
+3. 代码注释不再引用测试轮次，改为直接写原因和数据。
+4. `messages/ChatScreen.tsx`（535 行）拆为 `messages/ChatScreen/` 目录，导入路径不变，各部分见 FRONTEND_STRUCTURE.md。
+
+**需要回归**：UI / 业务 / SDK 测试、typecheck、根目录 lint、Release 构建；真机抽查进入长会话、发送文字/语音/附件/@、回复、撤回、转发、加载更早历史、群已读实时刷新（logcat `[IMReadPush]` 的 `known: true`）、回到前台。
+
 ## 当前开发分支：perf（2026-11-18）
 
 按用户最新约定，后续优化、问题修复与验收记录统一在以下三个仓库各自的 `perf` 分支进行：

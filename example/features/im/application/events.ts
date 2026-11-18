@@ -1,5 +1,6 @@
 import { mergeMessages } from '../domain/model'
 import type { Conversation, IMClient, IMMessage } from '../domain/types'
+import { diagnostic } from '../shared/diagnostics'
 import { groupReadNotice } from './group-read-notice'
 import type { Messaging } from './messaging'
 import type { Runtime } from './runtime'
@@ -141,10 +142,8 @@ export function subscribeEvents (
   on('onRecvCustomBusinessMessage', data => {
     const notice = groupReadNotice(data)
     const known = !!notice && runtime.state.conversations.some(item => item.conversationID === notice.conversationID && !!item.groupID)
-    // Diagnostics only (EXPO_PUBLIC_OPENIM_ENTRY_TRACE): shows whether a pushed read notice reaches JS.
-    // `process` is checked first: the store tests run this file in a bare VM context without it.
-    if (typeof process !== 'undefined' && process.env.EXPO_PUBLIC_OPENIM_ENTRY_TRACE === '1')
-      console.info('[IMReadPush]', JSON.stringify({ shape: typeof data, conversationID: notice?.conversationID, known }))
+    // Shows whether a pushed read notice reaches JS and names a group chat this user has.
+    diagnostic('IMReadPush', { shape: typeof data, parsed: !!notice, known })
     if (notice && known)
       runtime.readersChanged(notice.conversationID)
   })

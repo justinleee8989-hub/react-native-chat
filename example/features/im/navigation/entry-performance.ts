@@ -1,8 +1,10 @@
-// Opt-in Release diagnostics. Never include account IDs, tokens or message content.
+import { useLayoutEffect } from 'react'
+import { diagnostic, diagnosticsEnabled } from '../shared/diagnostics'
+
+// Opt-in Release diagnostics (shared/diagnostics.ts). Never include account IDs, tokens or message content.
 // Each line: [IMEntry] {"sample","phase","atMs","sinceMs"?,"detail"?,"rows"?}. `sinceMs` counts from the
 // finger going down on that conversation (`press-in`), or from the press itself (`press-cached` /
 // `press-cold`) when there was no press-in just before. See docs/openim/entry-perf-2026-11-18/TEST_1.md.
-export const entryTraceEnabled = process.env.EXPO_PUBLIC_OPENIM_ENTRY_TRACE === '1'
 
 /** How long after a press long JS frames are reported, and what counts as long. */
 const WATCH_MS = 2500
@@ -51,7 +53,7 @@ function write (sample: Sample, phase: string, detail?: string) {
     line.detail = detail
   if (sample === activeSample && ROW_PHASES.has(phase))
     line.rows = sample.rows
-  console.info('[IMEntry]', JSON.stringify(line))
+  diagnostic('IMEntry', line)
 }
 
 /** Watches the JS thread for long frames after a press, until the next press or WATCH_MS. */
@@ -72,7 +74,7 @@ function watchFrames (sample: Sample) {
 }
 
 export function traceChatEntry (account: string, id: string, phase: string, detail?: string) {
-  if (!entryTraceEnabled)
+  if (!diagnosticsEnabled)
     return
   const sample = sampleFor(account, id)
   const t = now()
@@ -92,7 +94,7 @@ export function traceChatEntry (account: string, id: string, phase: string, deta
 
 /** Like traceChatEntry, but only the first time a phase happens after a press. */
 export function traceChatEntryOnce (account: string, id: string, phase: string, detail?: string) {
-  if (!entryTraceEnabled)
+  if (!diagnosticsEnabled)
     return
   const sample = sampleFor(account, id)
   if (sample.once.has(phase))
@@ -106,7 +108,7 @@ export function traceChatEntryOnce (account: string, id: string, phase: string, 
  * many happen before the page is ready says how much of the wait is re-rendering.
  */
 export function traceChatRender (account: string, id: string) {
-  if (!entryTraceEnabled)
+  if (!diagnosticsEnabled)
     return
   const sample = sampleFor(account, id)
   sample.renders += 1
@@ -116,12 +118,17 @@ export function traceChatRender (account: string, id: string) {
     write(sample, 'page-commit', `more than ${MAX_RENDER_LINES}; further commits not logged`)
 }
 
-/**
- * Counts message-row renders towards the conversation pressed last. Reported as `rows` on the
- * list-ready, navigate and transition lines: how many rows the entry built or rebuilt.
- */
-export function countRowRender () {
-  if (!entryTraceEnabled || !activeSample)
-    return
-  activeSample.rows += 1
+function countRowRender () {
+  if (activeSample)
+    activeSample.rows += 1
 }
+function useCountedRowRender () {
+  useLayoutEffect(countRowRender)
+}
+function useUncountedRowRender () {}
+/**
+ * Counts message-row commits towards the conversation pressed last. Reported as `rows` on the
+ * list-ready, navigate and transition lines: how many rows the entry built or rebuilt. Picked once
+ * at startup, so with diagnostics off a row runs no extra effect.
+ */
+export const useRowRenderCount = diagnosticsEnabled ? useCountedRowRender : useUncountedRowRender
