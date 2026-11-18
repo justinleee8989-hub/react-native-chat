@@ -1,0 +1,17 @@
+➤ YN0000: · Yarn 4.17.0
+➤ YN0000: ┌ Resolution step
+➤ YN0085: │ + @openim/rn-client-sdk@patch:@openim/rn-client-sdk@npm%3A3.8.3-patch.12.4#~/.yarn/patches/@openim-rn-client-sdk-npm-3.8.3-patch.12.4-bac3fad1bc.patch::version=3.8.3-patch.12.4&hash=d3e2f0
+➤ YN0085: │ - @openim/rn-client-sdk@patch:@openim/rn-client-sdk@npm%3A3.8.3-patch.12.4#~/.yarn/patches/@openim-rn-client-sdk-npm-3.8.3-patch.12.4-bac3fad1bc.patch::version=3.8.3-patch.12.4&hash=8efaae
+➤ YN0000: └ Completed
+➤ YN0000: ┌ Post-resolution validation
+➤ YN0060: │ eslint is listed by your project with version 10.14.0 (p8d96e0), which doesn't satisfy what eslint-plugin-import (via eslint-config-expo) and other dependencies request (^8.57.0 || ^9.7.0).
+➤ YN0086: │ Some peer dependencies are incorrectly met by your project; run yarn explain peer-requirements <hash> for details, where <hash> is the six-letter p-prefixed code.
+➤ YN0086: │ Some peer dependencies are incorrectly met by dependencies; run yarn explain peer-requirements for details.
+➤ YN0000: └ Completed
+➤ YN0000: ┌ Fetch step
+➤ YN0013: │ A package was added to the project (+ 543.78 KiB).
+➤ YN0000: └ Completed in 0s 673ms
+➤ YN0000: ┌ Link step
+➤ YN0072: │ The application uses portals and that's why --preserve-symlinks Node option is required for launching it
+➤ YN0000: └ Completed in 0s 498ms
+➤ YN0000: · Done with warnings in 1s 338ms

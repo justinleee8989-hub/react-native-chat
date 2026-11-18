@@ -1,0 +1,14 @@
+[
+  {
+    "service": "openim-server",
+    "image": "local/openim-server:perf5-group-read-ready",
+    "health": "healthy",
+    "logLevel": "3"
+  },
+  {
+    "service": "openim-chat",
+    "image": "local/openim-chat:perf5-group-read-push",
+    "health": "healthy",
+    "logLevel": "3"
+  }
+]

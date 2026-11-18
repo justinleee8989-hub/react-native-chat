@@ -91,13 +91,13 @@ export IMENV_WEBHOOKS_AFTERGROUPMSGREAD_ENABLE=true
 
 | 项目 | 结果 |
 |---|---|
-| 部署后 webhook 正常到达 chat-api | |
-| 已读人数更新延迟（秒） | |
-| 收到 onRecvCustomBusinessMessage | |
-| 群里没有多出消息或通知 | |
-| 快速滚动时正常 | |
-| 回归 | |
-| 自动测试（UI / typecheck / lint / OpenIM 业务 / chat go test） | |
+| 部署后 webhook 正常到达 chat-api | 第六轮INFO证实成功响应，见RESULTS_6 |
+| 已读人数更新延迟（秒） | 第六轮两轮均未观察到刷新，21.4s/22.8s仍0；第二轮169.8s仍0 |
+| 收到 onRecvCustomBusinessMessage | 未直接证实；SDK标准输出关闭，logcat无记录不等于一定没收到 |
+| 群里没有多出消息或通知 | 第六轮新增范围仅两条QA文本，无额外可见通知 |
+| 快速滚动时正常 | 第六轮仍有卡顿/补行基线，实时人数未通过 |
+| 回归 | 第六轮明细、搜索定位高亮、菜单/表情及通讯录通过 |
+| 自动测试（UI / typecheck / lint / OpenIM 业务 / chat go test） | 第六轮UI249/业务287/SDK501及类型lint编译通过；本轮未重跑Go |
 
 ## 2026-11-18 第四轮测试机补充
 
@@ -129,3 +129,9 @@ RN SDK 事件名已核实：`@openim/rn-client-sdk/src/constants/OpenIMEvents.ts
 ## 2026-11-18 第五轮失败的原因
 
 两轮真实阅读后发送者页面都没有刷新。原因在客户端 SDK：`@openim/rn-client-sdk` 3.8.3-patch.12.4 的原生层（Android `OpenImSdkRnModule.initSDK`、iOS `initSDK`）只注册了 6 个监听器，**没有注册业务通知监听器**，所以 `onRecvCustomBusinessMessage` 永远到不了 JS。事件名本身是对的。修复在 `example/.yarn/patches/@openim-rn-client-sdk-npm-3.8.3-patch.12.4-bac3fad1bc.patch`，复测见 [第六轮 V3](entry-perf-2026-11-18/TEST_6.md)。服务端两个分支不用改。
+
+## 2026-11-18 第六轮实测：补注册后仍未实时刷新
+
+SDK patch重新安装成功，lock hash更新d3e2f0，Android源码确认initSDK注册业务监听且Release构建成功。但两轮真实阅读后当前页仍0，明细1，不能把源码补丁应用当作业务通过。完整证据见[RESULTS_6](entry-perf-2026-11-18/RESULTS_6.md#v3-两轮真实阅读与分段证据)。
+
+临时INFO定位已证实：webhook在02:47:15.669 UTC成功返回errCode0；chat-api在02:47:15.689成功调用send_business_notification（目标QA用户6425355272），网关有后续推送成功记录。客户端接收/解析/刷新哪一环未生效尚未确定。当前SDK设置isLogStandardOutput=false，因此logcat无业务行不能证明回调未执行。没有修改实现或加轮询，诊断日志级别已恢复WARN3，镜像及数据不变，所有提交证据已脱敏。

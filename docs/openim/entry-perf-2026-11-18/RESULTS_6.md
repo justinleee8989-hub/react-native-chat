@@ -1,0 +1,121 @@
+# 进入会话测试结果 · 第六轮（Android Release）
+
+2026-11-18；按 [TEST_6.md](TEST_6.md) 执行。[证据目录](../evidence/2026-11-18-entry-perf-6/)。本轮没有修改实现代码或测试源码；仅按文档重新安装依赖、更新 SDK 补丁锁文件，并记录验收。
+
+## 结论
+
+| 项目 | 第六轮结果 |
+|---|---|
+| SDK 补丁及 lock | yarn install 成功；Android initSDK 的业务监听注册已在安装后源码确认，Release 编译成功；锁文件 hash 更新为 d3e2f0 |
+| V3 实时已读 | **未通过**：两次真实 H5 阅读后，Android 当前页分别在点击后21.4s、22.8s仍为0；第二轮169.8s后仍为0，打开明细为已读1/未读0 |
+| V3 分段定位 | **服务端回调及业务通知发送已确认成功**，网关有目标 QA 用户推送成功记录；设备 logcat 无业务事件输出，客户端接收/解析/刷新链路尚未确定 |
+| V4 热进入 | 通过约290ms目标：transition-end 292 / 287 / 285ms |
+| V4 未预热进入 | **未达220–250ms目标**：navigate 368 / 364 / 353ms |
+| V4 全历史缓存后对照 | 单次 navigate 353ms，与本轮未预热区间一致，仍未达目标 |
+| V1 快速滑动基线 | 仍有卡顿和补行：三次最大JS长帧349 / 383 / 232ms；第2、3次明显大面积空带，第1次以停帧/行重叠补齐为主，不写成3次同类空带 |
+| V6 通讯录 | 3/3 首次标题位置稳定；内容骨架短暂出现，但没有标题上移后下落 |
+| V5 搜索定位 | 通过：真实搜索 QA-scroll-001，进入最早消息并看到高亮，随后恢复；未被30条窗口截断 |
+| V5 已读明细 / 菜单 / 表情 | 抽查通过，仅在新增 QA 消息上操作表情，最后取消 |
+| 自动检查 | UI249、业务287、SDK501及34快照、应用/SDK类型、源码lint、SDK编译、Release构建均通过 |
+
+没有把“SDK补丁已应用”“服务端调用成功”或“打开明细后数据正确”当作当前聊天页实时刷新通过。按要求保留失败结果，没有改实现、加轮询或手工刷新来替代修复。
+
+## 环境和依赖
+
+- 前端实现 commit：**6a959a6f98503d117a727c0abcecd89c24b17ab5**，分支 perf/openim-open-chat；报告提交不改变被测实现。
+- Xiaomi 24053PY09C，Android14，1236×2750，系统动画保持原样。
+- Release：EXPO_PUBLIC_OPENIM_ENTRY_TRACE=1、arm64-v8a、JDK17；构建2m，1046任务，73执行/973复用；覆盖安装成功，未清数据。
+- APK SHA-256：8430adf859b3793108db69a83202072398dfca706791c74057ac9ebf8fe19620。构建产物不提交。
+- 按文档执行 example/yarn install（未用immutable）。patch hash从8efaae变为d3e2f0，checksum同步更新；example/yarn.lock仅该依赖4行差异，随报告提交。没有手改node_modules。
+- 安装后 Android 模块源码中已有 SetCustomBusinessListener 导入及 initSDK 内 setCustomBusinessListener 调用。iOS补丁未做本轮构建或真机验收。
+- 后端镜像保持第五轮最终版本：local/openim-server:perf5-group-read-ready、local/openim-chat:perf5-group-read-push，未重建镜像或改源码。
+- 仅QA用户6425355272 / 5379898012；长群1386688880、短群1139200649。新增文本QA-perf6-read-push-01、02，第二条上的👍最终移除。没有清理、删除、解散、转让、改密码或操作原体验数据；录音视频由用户自测。
+
+## V4 进入速度：先测，后翻历史
+
+顺序严格为：冷启动 → 预热长会话一次 → 热进入3次 → 长/短交替3次 → 上翻到最早消息 → 额外长→短→长一次 → 最后才执行V1。
+
+缓存条件：首次打开前是近期一页（约30条）；预热一次后按现有预取策略约两页（约60条）。这是基于源码和操作顺序的页数估算，未添加运行时store/堆探针，不当作精确内存计数。主V4前没有翻到最早消息。
+
+单位ms，均从press-in算起：
+
+| 场景 | 1 | 2 | 3 |
+|---|---|---|---|
+| 热进入navigate | 16 | 8 | 10 |
+| 热进入transition-end | 292 | 287 | 285 |
+| 热进入最大JS长帧 | 69 | 55 | 53 |
+| 未预热navigate | 368 | 364 | 353 |
+| 未预热list-ready | 336 | 355 | 339 |
+| 未预热transition-end | 657 | 609 | 606 |
+| 未预热首屏行提交计数 | 25 | 28 | 28 |
+
+额外对照：上翻8次，到达QA-scroll-001（V4-earliest.png/.xml），保留当前进程；当时群最高seq64，已加载至最早，属于约全群历史的缓存条件，序号数不等于可见消息条数。返回后先打开长、再短、再长，最后一次 navigate=353、list-ready=334、transition-end=633ms。单次结果不能代表所有长历史会话。
+
+结论：热进入维持约290ms；未预热仍未达本轮目标。源码已把开场列表限定30条，不等于实际首屏耗时必然降低。证据V4-*.log及summary.json；行提交计数不是精确消息总数，JS阶段时间也不等同原生帧率。
+
+## V1 快速滑动基线
+
+每次force-stop，打开长会话，观察到navigate后约100ms连续3次100ms上翻。录像时间与sinceMs分开记录；抽帧间隔50ms，不用抽帧估算精确卡帧率。
+
+| 次序 | 视觉观察（录屏时点） | 最大JS长帧及记录时刻 |
+|---|---|---|
+| 1 | 0.65–0.75s附近画面基本停住；0.85–0.95s部分气泡文字重叠后补齐，未捕获与另两次同等大面积空带 | 349ms，sinceMs979 |
+| 2 | 0.65–0.70s上方大面积缺行，0.75s补入更早消息，随后继续上翻 | 383ms，sinceMs928 |
+| 3 | 0.65–0.75s明显缺行，0.80s补入；0.85–0.95s再次大面积缺行，1.00s补齐 | 232ms，sinceMs967 |
+
+三次最终均能继续出现较早消息，未见明确整页回到最新记录的回弹；但仍有停帧/补行/行间重排，**不判“连续无跳动、已丝滑”通过**。本轮文档已说明该项仅作为下一步优化基线，未为消除它修改实现。
+
+证据V1-scroll-1/2/3.mp4、*-sheet.png、*-detail.png。V4的全历史对照也已证明可正常翻到QA-scroll-001。
+
+## V3 两轮真实阅读与分段证据
+
+Android停在群页，伙伴使用真实H5客户端35882端口。第一轮伙伴从列表打开群；第二轮先离开到QA私聊，待新消息发出后再返回群。未用API伪造阅读。
+
+| 轮次 | 阅读后当前页 | 明细/阅读证明 | 结果 |
+|---|---|---|---|
+| 1 | 点击后21.4s截图仍0 | 伙伴群未读清零；第二轮hasReadSeq推进到66亦覆盖第一条65 | 未通过 |
+| 2 | 点击后22.8s仍0，169.8s再次截图仍0 | 明细已读1/未读0，成员QA b | 未通过 |
+
+延时从H5点击算起，不把它说成精确服务端阅读提交时间。没有观察到0→1成功，所以没有填一个成功刷新延迟。第一轮发送准备脚本曾在未停到聊天页时找不到发送按钮，没有发出消息，该准备录像未计入正式样本；确认页面就绪后才执行以上两轮。
+
+### 按文档定位三段
+
+第一轮原日志级别下仍失败后，临时把两个应用容器日志级别从WARN3改为INFO4，镜像、源码和数据不变，采集第二轮证据；诊断后恢复3并验证healthy。以下日志时间为UTC（本地时间+8小时）。
+
+1. **webhook已到达并成功响应**：02:47:15.669，openim-rpc-msg记录webhook success，目标为chat-api的callbackAfterGroupMsgReadCommand，conversationID=sg_1386688880、reader=5379898012、hasReadSeq=66，响应errCode0。凭据路径已遮蔽。证据V3-openim-server-info.log。
+2. **chat-api已调用业务通知接口成功**：02:47:15.689，api caller success resp，API=/msg/send_business_notification，key=group_read_progress，recvUserID=6425355272，sendMsg=false，reliabilityLevel=1，耗时9.141166ms；后续网关响应包含singlePushResult：userID=6425355272、RecvPlatFormID=2、onlinePush=true。证据V3-openim-chat-info.log及V3-openim-server-info.log。网关调用成功不等于已证实设备回调执行。
+3. **设备/JS回调未直接证实**：按business及onRecvCustomBusinessMessage筛logcat没有匹配。当前client.ts初始化SDK时logLevel=1、isLogStandardOutput=false，因此“logcat没有该行”不能等价“设备一定没收到”。新Java注册源码及编译已核对，但接收、解析、readersChanged到页面请求中的哪一环未生效，仍需下一轮定位。本轮未增加实现探针。
+
+SDK补注册尚未让当前页实时更新达标，不能沿用文档推断宣布修复。已将问题从“服务端是否发出未知”收窄到客户端侧待确认链路。
+
+### 无额外消息、恢复状态
+
+- 只读拉取本轮新增范围只有seq65/66两条contentType101文本，见V3-new-message-count.json；没有多出可见业务通知气泡。
+- V3-push-*.mp4、*-after.png、第二轮*-late.png、*-readers.png、*-timing.json保留对照。
+- INFO日志证据已删除JWT形态值并遮蔽webhook secret，不提交原私密配置；日志级别最终均3、镜像不变、服务healthy，见final-services.json。
+- 日志配置重启期间曾出现编辑信息暂时无法同步的横幅，搜索定位录像保留该现象；恢复后冷启动QA首页已无同步警告，见final-home-state.txt。是否需要在原会话内自动清除旧警告可另行复核，不把诊断重启时的提示隐去。
+
+## V6 / V5 抽查
+
+- **通讯录3次通过**：每轮冷启动后首次点通讯录，0–0.23s按约33ms抽帧；标题始终处于正常安全区。仍会短暂显示内容骨架，未见标题上下跳。证据V6-contacts-1/2/3.mp4及*-early.png。
+- **早消息定位/高亮通过**：通过聊天信息→搜索聊天记录，搜索QA-scroll-001，实际找到1条；点击后到最早消息。录像1.2–2.0s可见目标行高亮，之后恢复；V5-search-highlight-sheet.png、V5-search-location.mp4及定位截图。不是只凭虚拟列表隐藏节点判定。
+- **菜单通过展示抽查**：新增02消息长按可见回复、复制、转发、编辑、已读成员、撤回及表情栏。没有执行撤回/删除等子操作。
+- **表情通过**：只在02上加👍，新鲜UI状态确认👍1；移除后再次确认消失。第一次添加截图抓到菜单退场中，已补拍稳定画面，不把动画中画面当作成功依据。
+- **已读明细通过**：可打开，最终已读1/未读0，成员为QA b；不能替代实时刷新通过。
+
+## 自动测试与源码范围
+
+| 项目 | 结果 |
+|---|---|
+| yarn install | exit0，patch应用成功，lock更新；有既有peer依赖警告 |
+| UI Jest | exit0，54 suites、249 tests通过；第五轮23失败已消失 |
+| OpenIM业务 | exit0，287 tests通过 |
+| SDK Jest | exit0，91 suites、501 tests、34 snapshots通过 |
+| 应用 / SDK typecheck | 通过 |
+| 源码lint | 通过；排除生成的example/public/**，没有自动修复 |
+| SDK build | 通过；lib为忽略构建产物 |
+| Android Release | 构建并覆盖安装通过，原生patch进入构建 |
+
+本轮没有重跑或声称新的后端Go测试结果，后端沿用第五轮镜像。Jest仍有worker未优雅退出后被回收警告（整体exit0），Node模块类型警告、Gradle弃用及Yarn peer依赖警告均保留日志，没有为消除它们修改源码。
+
+提交范围只有本报告、交接/推送验收文档、脱敏证据和TEST_6明确要求的example/yarn.lock。各仓库实现源码保持原样；构建产物、依赖目录、私密服务配置不提交。
