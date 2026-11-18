@@ -1,7 +1,7 @@
-import React, { useCallback, useRef, useState } from 'react'
+import React, { useCallback, useState } from 'react'
 import { Pressable, Text, View } from 'react-native'
 import { useFocusEffect } from 'expo-router'
-import { openConversation, useOpenIM } from '../application/store'
+import { calls, openConversation, useOpenIM } from '../application/store'
 import LoginScreen from '../auth/LoginScreen'
 import { HeaderAction, ProductHint } from '../groups/group-ui'
 import { shortTime } from '../messages/presentation'
@@ -26,8 +26,8 @@ const labels: Record<string, string> = {
 }
 // Kept so that the list, mounted again on PC as navigation moves in and out of 通话, starts filled.
 const remembered = rememberedValue<ServerCall[]>()
-// Also kept: the page is mounted again on every visit, and each visit asked again only to be told
-// the same thing.
+// Also kept, so a visit after the server said it has no call service shows that at once instead of
+// the skeleton; the visit still asks once, quietly, in case the service has been turned on since.
 const serviceOff = rememberedValue<boolean>()
 
 /** The 通话 section's page: the tab on a phone, the master list on PC. */
@@ -58,35 +58,31 @@ function History ({
   const [kept] = useState(() => remembered.get(account))
   const [records, setRecords] = useState<ServerCall[]>(kept ?? [])
   const [unavailable, setUnavailable] = useState(() => !!serviceOff.get(account))
-  // Read in the focus callback: once the server has said it has no call service, coming back to the
-  // page does not ask again. Only 刷新 or 重新加载 does.
-  const unavailableRef = useRef(unavailable)
   const task = useTask()
   const { run } = task
   const load = useCallback(() => {
     void run(async current => {
       try {
         const result = await callAuthority(session, url, { action: 'list' })
-        unavailableRef.current = false
         serviceOff.set(account, false)
+        // The service is back: incoming calls are watched again without signing in again.
+        calls.serviceAnswered()
         if (current()) {
           setUnavailable(false)
           setRecords(result)
           remembered.set(account, result)
         }
       } catch (error) {
-        unavailableRef.current = isCallServiceUnavailable(error)
-        serviceOff.set(account, unavailableRef.current)
+        const off = isCallServiceUnavailable(error)
+        serviceOff.set(account, off)
         if (current())
-          setUnavailable(unavailableRef.current)
+          setUnavailable(off)
         throw error
       }
     })
   }, [run, session, url, account])
-  useFocusEffect(useCallback(() => {
-    if (!unavailableRef.current)
-      load()
-  }, [load]))
+  // One request per visit, also while the service is off: entering the page is the user asking.
+  useFocusEffect(load)
   return (
     <ProductPage
       title='通话'

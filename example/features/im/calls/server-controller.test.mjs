@@ -92,3 +92,18 @@ test('polling stops while the server has no call service and resumes after it an
  clock += 3000; c.tick(); await new Promise(r => setImmediate(r))
  assert.equal(polls, 3)
 })
+
+test('an answer to the 通话 page resumes polling stopped for a missing call service', async () => {
+ let clock = 1000; let polls = 0
+ const c = createServerCallController({ request: async () => {
+  polls++
+  throw new CallServiceUnavailableError()
+ }, record: async () => {}, now: () => clock })
+ c.reset('me')
+ clock += 3000; c.tick(); await new Promise(r => setImmediate(r))
+ clock += 3000; c.tick(); await new Promise(r => setImmediate(r))
+ assert.equal(polls, 1)
+ c.serviceAnswered()
+ clock += 3000; c.tick(); await new Promise(r => setImmediate(r))
+ assert.equal(polls, 2)
+})

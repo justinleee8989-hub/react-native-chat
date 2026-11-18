@@ -24,7 +24,9 @@ const mockRun = async (callback: (current: () => boolean) => unknown) => {
 }
 const mockFocusCallbacks: (() => void)[] = []
 
+const mockServiceAnswered = jest.fn()
 jest.mock('../application/store', () => ({
+  calls: { serviceAnswered: () => mockServiceAnswered() },
   openConversation: jest.fn(),
   useOpenIM: () => ({
     session: { userID: 'me', imToken: `token-${mockAccount}` },
@@ -81,6 +83,7 @@ beforeEach(() => {
   mockFocusCallbacks.length = 0
   mockTask = { busy: false, error: '', hasSucceeded: false }
   mockAccount++
+  mockServiceAnswered.mockClear()
   jest.mocked(callAuthority).mockImplementation(async () => [mockRecord])
 })
 
@@ -117,7 +120,7 @@ it('draws the list skeleton, not the empty state, until the first answer', async
   expect(view.queryByText('暂无通话记录')).toBeNull()
 })
 
-it('says the call service is off and stops asking on focus', async () => {
+it('says the call service is off, and asks once per visit', async () => {
   const { CallServiceUnavailableError } = jest.requireActual<typeof import('./errors')>('./errors')
   jest.mocked(callAuthority).mockImplementation(async () => {
     throw new CallServiceUnavailableError()
@@ -126,12 +129,13 @@ it('says the call service is off and stops asking on focus', async () => {
   await focusHistory()
   await waitFor(() => expect(view.getByText(/通话服务未启用/)).toBeTruthy())
   expect(view.queryByText('skeleton')).toBeNull()
-  await focusHistory()
-  await focusHistory()
   expect(callAuthority).toHaveBeenCalledTimes(1)
+  await focusHistory()
+  expect(callAuthority).toHaveBeenCalledTimes(2)
+  expect(mockServiceAnswered).not.toHaveBeenCalled()
 })
 
-it('remembers the call service is off when the page is visited again', async () => {
+it('shows at once that the call service is off on the next visit, rechecks, and recovers', async () => {
   const { CallServiceUnavailableError } = jest.requireActual<typeof import('./errors')>('./errors')
   jest.mocked(callAuthority).mockImplementation(async () => {
     throw new CallServiceUnavailableError()
@@ -141,8 +145,15 @@ it('remembers the call service is off when the page is visited again', async () 
   await waitFor(() => expect(first.getByText(/通话服务未启用/)).toBeTruthy())
   first.unmount()
   mockFocusCallbacks.length = 0
+  // The service has been turned on in between.
+  jest.mocked(callAuthority).mockImplementation(async () => [mockRecord])
   const again = await render(<CallHistoryScreen />)
   expect(again.getByText(/通话服务未启用/)).toBeTruthy()
+  expect(again.queryByText('skeleton')).toBeNull()
   await focusHistory()
-  expect(callAuthority).toHaveBeenCalledTimes(1)
+  expect(callAuthority).toHaveBeenCalledTimes(2)
+  await waitFor(() => expect(again.getByText('QA 群')).toBeTruthy())
+  expect(again.queryByText(/通话服务未启用/)).toBeNull()
+  // The overlay watches for incoming calls again.
+  expect(mockServiceAnswered).toHaveBeenCalledTimes(1)
 })

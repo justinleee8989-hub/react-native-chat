@@ -25,8 +25,9 @@ export function createServerCallController ({ request, record, now = Date.now }:
 }) {
   let self = ''; let epoch = 0; let revision = 0; let state: State = { error: '', notice: '' }
   let pending = false; let polling = false; let lastPoll = 0; let lastOK = 0; let lastBeat = 0; let mediaRoom = ''
-  // Set when the server has no call service: polling stops until the next sign-in, instead of
-  // asking every two seconds for as long as the app is open.
+  // Set when the server has no call service: polling stops instead of asking every two seconds for
+  // as long as the app is open. It starts again on the next sign-in, or when the user's own use of
+  // calls (the 通话 page, starting or joining a call) gets an answer.
   let unavailable = false
   const ignored = new Set<string>()
   const listeners = new Set<() => void>()
@@ -121,6 +122,10 @@ export function createServerCallController ({ request, record, now = Date.now }:
       self = user; mediaRoom = ''; epoch++; pending = false; polling = false; lastPoll = 0; lastOK = now(); lastBeat = 0; unavailable = false; ignored.clear(); update({ active: undefined, error: '', notice: '' })
     },
     dismiss: () => update({ error: '', notice: '' }),
+    /** The call service answered a request made outside the controller (the 通话 page's list). */
+    serviceAnswered () {
+      unavailable = false
+    },
     // OpenIM messages are durable display records, never authoritative call transitions.
     receive (message: unknown) {
       void message
