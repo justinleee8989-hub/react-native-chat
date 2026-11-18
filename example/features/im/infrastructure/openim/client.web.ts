@@ -88,7 +88,7 @@ export const client: IMClient = {
     if (state.login) {
       if (state.login.key !== key)
         throw new Error('另一个账户正在连接，请稍后重试')
-      return withTimeout(state.login.promise, 30000, 'OpenIM 连接超时，请重试恢复登录')
+      return withTimeout(state.login.promise, 30000, '连接超时，请检查网络后重试')
     }
     const promise = (async () => {
       if (state.authenticatedKey === key && (await instance.getLoginStatus()).data === 3)

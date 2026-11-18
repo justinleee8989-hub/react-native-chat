@@ -477,6 +477,27 @@ test('a lost connection says only that the network is down until the SDK connect
   await h.store.logout()
 })
 
+test('a reconnect refused for a kicked token stops retrying and signs out to the login page', async () => {
+  const h = harness()
+  let attempts = 0
+  h.client.login = async () => {
+    attempts++
+    throw attempts === 1 ? new Error('connection refused') : Object.assign(new Error('token kicked'), { code: '1506' })
+  }
+  await h.store.login('me', 'password', { chat: 'http://test' })
+  assert.equal(h.store.useOpenIM().offline, true)
+  await h.store.refresh()
+  assert.equal(attempts, 2)
+  assert.equal(h.store.useOpenIM().session, undefined)
+  assert.equal(h.store.useOpenIM().offline, false)
+  assert.equal(h.store.useOpenIM().error, '登录已失效，请重新登录')
+  assert.equal(h.store.useOpenIM().lastAccount.account, 'me')
+  assert.equal(h.savedSession(), null)
+  // No retry is left scheduled.
+  await new Promise(resolve => setTimeout(resolve, 2200))
+  assert.equal(attempts, 2)
+})
+
 test('signing out while offline stops reconnecting', async () => {
   const h = harness()
   let attempts = 0
