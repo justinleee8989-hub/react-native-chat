@@ -26,7 +26,7 @@ example/features/im/
   infrastructure/
     openim/                  SDK 参数与响应适配、平台媒体处理
     storage/                 Web/原生会话存储适配
-  config.ts                  平台 ID 和服务地址
+  config.ts                  平台 ID 和服务地址（只来自构建变量 EXPO_PUBLIC_OPENIM_CHAT_URL / API_URL / WS_URL，界面上不能改）
 ```
 
 业务仍使用现有 `example` 的 Expo 宿主和独立 Yarn 工程，避免在整理期间再复制一套构建系统。目录已隔离，未来可整体迁移为独立应用；这次没有宣称完成独立产品仓库拆分。

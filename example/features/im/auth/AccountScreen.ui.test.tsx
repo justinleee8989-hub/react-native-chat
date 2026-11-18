@@ -40,7 +40,7 @@ it('registration validates fields and retries only login after account creation'
   await fireEvent.changeText(screen.getByLabelText('昵称'), '测试用户')
   await fireEvent.press(screen.getByRole('button', { name: '创建账户' }))
   await waitFor(() => expect(screen.getByRole('button', { name: '重试登录' })).toBeTruthy())
-  expect(mockLogin).toHaveBeenCalledWith('person@example.com', 'secret', { chat: 'http://test', api: 'http://test', ws: 'ws://test' })
+  expect(mockLogin).toHaveBeenCalledWith('person@example.com', 'secret')
   expect(mockReplace).not.toHaveBeenCalled()
   await fireEvent.press(screen.getByRole('button', { name: '重试登录' }))
   expect(submit).toHaveBeenCalledTimes(1)

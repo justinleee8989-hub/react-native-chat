@@ -32,12 +32,11 @@ jest.mock('./AuthForm', () => {
     AuthLink: ({ title }: { title: string }) => <Text>{title}</Text>,
     AuthLinks: ({ children }: React.PropsWithChildren) => <View>{children}</View>,
     AuthNotice: ({ children }: React.PropsWithChildren) => <Text>{children}</Text>,
-    AdvancedSettings: ({ children }: React.PropsWithChildren) => <View>{children}</View>,
   }
 })
 
 const servers = { chat: 'http://chat', api: 'http://api', ws: 'ws://ws' }
-const last = { account: 'alice@example.com', config: { chat: 'http://saved-chat', api: 'http://saved-api', ws: 'ws://saved-ws' } }
+const last = { account: 'alice@example.com' }
 
 beforeEach(() => {
   mockParams = {}
@@ -46,11 +45,10 @@ beforeEach(() => {
   mockState = { busy: false, error: '', config: servers }
 })
 
-it('fills in the last account and its servers after an expired login, asking only the password', async () => {
+it('fills in the last account after an expired login, asking only the password', async () => {
   mockState = { ...mockState, lastAccount: last, error: '登录已失效，请重新登录' }
   const view = await render(<LoginScreen />)
   expect(view.getByLabelText('邮箱账号').props.value).toBe('alice@example.com')
-  expect(view.getByLabelText('账户服务地址').props.value).toBe('http://saved-chat')
   expect(view.getByLabelText('密码').props.autoFocus).toBe(true)
   expect(view.getByText('登录已失效，请重新登录')).toBeTruthy()
   expect(view.queryByText('重试恢复上次登录')).toBeNull()
@@ -62,7 +60,6 @@ it('fills in the last account when it is read after the page mounted', async () 
   mockState = { ...mockState, lastAccount: last }
   await view.rerender(<LoginScreen />)
   expect(view.getByLabelText('邮箱账号').props.value).toBe('alice@example.com')
-  expect(view.getByLabelText('消息服务地址').props.value).toBe('http://saved-api')
 })
 
 it('keeps the account a link opened it with (注册, 忘记密码)', async () => {
@@ -70,7 +67,12 @@ it('keeps the account a link opened it with (注册, 忘记密码)', async () =>
   mockState = { ...mockState, lastAccount: last }
   const view = await render(<LoginScreen />)
   expect(view.getByLabelText('邮箱账号').props.value).toBe('bob@example.com')
-  expect(view.getByLabelText('账户服务地址').props.value).toBe('http://chat')
+})
+
+it('has no server settings: the app signs in to the servers it was built for', async () => {
+  const view = await render(<LoginScreen />)
+  for (const label of ['服务连接', '账户服务地址', '消息服务地址', '实时连接地址'])
+    expect(view.queryByText(label) ?? view.queryByLabelText(label)).toBeNull()
 })
 
 it('focuses the password again when the sign-out transition ends, so Android shows the keyboard', async () => {

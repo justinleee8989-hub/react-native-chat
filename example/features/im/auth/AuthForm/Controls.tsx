@@ -1,10 +1,9 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { ActivityIndicator, Pressable, Text, View } from 'react-native'
 
 
 
 
-import { ProductIcon } from '../../ui/ProductIcon'
 import { useProductColors as useChatListColors } from '../../ui/theme'
 import { styles } from './styles'
 
@@ -91,25 +90,6 @@ export function AuthNotice ({
     >
       {children}
     </Text>
-  )
-}
-
-export function AdvancedSettings ({ children }: React.PropsWithChildren) {
-  const [open, setOpen] = useState(false)
-  const colors = useChatListColors()
-  return (
-    <View style={[styles.advanced, { borderColor: colors.divider }]}>
-      <Pressable
-        accessibilityRole='button'
-        accessibilityState={{ expanded: open }}
-        onPress={() => setOpen(!open)}
-        style={styles.advancedToggle}
-      >
-        <Text style={{ color: colors.message }}>服务连接</Text>
-        <ProductIcon name={open ? 'up' : 'down'} size={18} color={colors.message} />
-      </Pressable>
-      {open && <View style={{ gap: 10, marginTop: 14 }}>{children}</View>}
-    </View>
   )
 }
 

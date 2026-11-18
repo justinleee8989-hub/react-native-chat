@@ -32,8 +32,8 @@ const key = 'openim-example-session-v1'
  */
 const signOutReasonKey = 'openim-example-signout-reason-v1'
 /**
- * The account (email) and servers last signed in with, kept through any sign-out so the login page
- * is filled in and only the password is asked. The saved login holds the user ID and tokens only.
+ * The account (email) last signed in with, kept through any sign-out so the login page is filled in
+ * and only the password is asked. The saved login holds the user ID and tokens only.
  */
 const lastAccountKey = 'openim-example-last-account-v1'
 const homeSnapshots = createHomeSnapshots(storage)
@@ -262,17 +262,19 @@ const recoverConversation = createConversationRecovery({
 export function resumeConversation (conversationID: string, session: Session) {
   return recoverConversation({ conversationID, generation: runtime.generation, session })
 }
-export async function login (account: string, password: string, config: ServerConfig) {
+/** Signs in to the servers the app was built for (`defaultConfig`); there is no choosing one. */
+export async function login (account: string, password: string) {
   if (runtime.state.busy)
     return
+  const config = defaultConfig
   stopReconnecting()
   const epoch = ++runtime.generation
   runtime.update({ busy: true, error: '', startupSnapshot: undefined, conversations: [], conversationsLoaded: false })
   try {
     const session = await authenticate(account, password, config.chat, platformID)
     if (epoch === runtime.generation) {
-      runtime.update({ lastAccount: { account, config } })
-      await storage.setItem(lastAccountKey, JSON.stringify({ account, config })).catch(() => {})
+      runtime.update({ lastAccount: { account } })
+      await storage.setItem(lastAccountKey, JSON.stringify({ account })).catch(() => {})
       await storage.setItem(key, JSON.stringify({ session, config }))
       await storage.removeItem(signOutReasonKey)
       if (epoch !== runtime.generation)
@@ -290,9 +292,10 @@ function loadLastAccount (raw: string | null) {
   if (!raw || runtime.state.lastAccount)
     return
   try {
-    const value = JSON.parse(raw) as { account?: unknown, config?: ServerConfig }
-    if (typeof value.account === 'string' && value.config)
-      runtime.update({ lastAccount: { account: value.account, config: value.config } })
+    // Entries written before the server settings were removed also hold `config`; it is ignored.
+    const value = JSON.parse(raw) as { account?: unknown }
+    if (typeof value.account === 'string')
+      runtime.update({ lastAccount: { account: value.account } })
   } catch {
     /* A damaged entry only means the login page starts empty. */
   }
@@ -312,7 +315,12 @@ async function restore (retry = false) {
     if (epoch !== runtime.generation)
       return
     if (saved) {
-      const { session, config } = JSON.parse(saved)
+      // The built-in servers, not the ones saved with the login: a login saved while the login page
+      // could still choose servers may name one this build no longer reaches, and there is no longer
+      // a way to change it. A token from another server is refused here like any dead token, which
+      // signs out to the login page with the account filled in.
+      const { session } = JSON.parse(saved)
+      const config = defaultConfig
       const startupSnapshot = await homeSnapshots.load(session.userID, config)
       if (epoch !== runtime.generation)
         return

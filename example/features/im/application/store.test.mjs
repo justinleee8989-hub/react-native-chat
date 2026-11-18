@@ -736,7 +736,7 @@ test('the last account survives a manual sign-out and a cold start, to fill the 
   second.mount()
   await settle()
   assert.equal(second.store.useOpenIM().session, undefined)
-  assert.equal(JSON.stringify(second.store.useOpenIM().lastAccount), JSON.stringify({ account: 'alice@example.com', config: { chat: 'http://test' } }))
+  assert.equal(JSON.stringify(second.store.useOpenIM().lastAccount), JSON.stringify({ account: 'alice@example.com' }))
 })
 
 
@@ -768,4 +768,26 @@ test('store deletion returns only after the persisted home snapshot excludes the
   await qa.store.removeConversations(['chat-bob'])
   assert.equal(qa.store.useOpenIM().conversations.length, 0)
   assert.equal(JSON.parse(qa.homeEntries()[0][1]).conversations.length, 0)
+})
+
+test('a login saved with another server is restored against the built-in one', async () => {
+  const first = harness()
+  await first.store.login('me', 'password')
+  const saved = JSON.parse(first.savedSession())
+  saved.config = { chat: 'http://old-server', api: 'http://old-server', ws: 'ws://old-server' }
+  const second = harness(undefined, { savedSession: JSON.stringify(saved) })
+  let used
+  second.client.login = async (_session, config) => { used = config }
+  second.mount()
+  await settle()
+  assert.equal(used.chat, 'http://test')
+  assert.equal(second.store.useOpenIM().session.userID, 'me')
+  await second.store.logout()
+})
+
+test('a remembered account written with servers (before they were removed) still fills the login page', async () => {
+  const h = harness(undefined, { snapshotEntries: [['openim-example-last-account-v1', JSON.stringify({ account: 'old@example.com', config: { chat: 'http://old-server' } })]] })
+  h.mount()
+  await settle()
+  assert.equal(JSON.stringify(h.store.useOpenIM().lastAccount), JSON.stringify({ account: 'old@example.com' }))
 })

@@ -14,7 +14,7 @@ interface State {
   busy: boolean
   error: string
   /** The account last signed in on this device, kept through sign-out to fill the login page. */
-  lastAccount?: { account: string, config: ServerConfig }
+  lastAccount?: { account: string }
   /**
    * Signed in, but the IM server could not be reached: the app shows what it has while the store
    * connects again by itself (see `connect` in store.ts).

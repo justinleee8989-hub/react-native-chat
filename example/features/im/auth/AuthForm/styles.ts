@@ -45,12 +45,5 @@ export const styles = StyleSheet.create({
   buttonText: { fontSize: 16, fontWeight: '600' },
   link: { minHeight: 32, alignItems: 'center', justifyContent: 'center' },
   notice: { fontSize: 13, lineHeight: 18 },
-  advanced: { borderTopWidth: StyleSheet.hairlineWidth, marginTop: 22, paddingTop: 18 },
-  advancedToggle: {
-    minHeight: 22,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
   footer: { fontSize: 12, textAlign: 'center', marginTop: 28 },
 })

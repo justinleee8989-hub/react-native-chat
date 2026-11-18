@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useLocalSearchParams, useRouter, type Href } from 'expo-router'
 import { login, useOpenIM } from '../application/store'
-import { platformID } from '../config'
+import { defaultConfig, platformID } from '../config'
 import { showProductToast } from '../shared/ProductToast'
 import { useTask } from '../shared/useTask'
 import { createAccountService, type AccountMode } from './account-api'
@@ -9,19 +9,12 @@ import { AuthButton, AuthField, AuthLink, AuthNotice, AuthPage } from './AuthFor
 
 const emailEnabled = process.env.EXPO_PUBLIC_OPENIM_EMAIL_VERIFICATION_ENABLED === 'true'
 export default function AccountScreen ({ mode: requestedMode }: { mode?: AccountMode }) {
-  const params = useLocalSearchParams<{
-    mode?: string
-    chat?: string
-    api?: string
-    ws?: string
-    email?: string
-  }>()
+  const params = useLocalSearchParams<{ mode?: string, email?: string }>()
   const router = useRouter()
   const mode = requestedMode || (params.mode === 'reset' ? 'reset' : 'register')
   const registering = mode === 'register'
-  const { config, session, error: loginError, busy: loginBusy } = useOpenIM()
+  const { session, error: loginError, busy: loginBusy } = useOpenIM()
   const task = useTask()
-  const baseURL = params.chat || config.chat
   const [email, setEmail] = useState(params.email || '')
   const [nickname, setNickname] = useState('')
   const [invitationCode, setInvitationCode] = useState('')
@@ -42,16 +35,12 @@ export default function AccountScreen ({ mode: requestedMode }: { mode?: Account
     return () => clearTimeout(timer)
   }, [cooldown])
   const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
-  const service = createAccountService(baseURL.trim(), platformID, emailEnabled)
+  // The servers the app was built for: there is no choosing one on the login pages.
+  const service = createAccountService(defaultConfig.chat, platformID, emailEnabled)
   const backToLogin = () =>
     router.replace({
       pathname: '/auth/login',
-      params: {
-        email: email.trim(),
-        chat: baseURL,
-        api: params.api || config.api,
-        ws: params.ws || config.ws,
-      },
+      params: { email: email.trim() },
     } as Href)
   const submit = () => {
     if (
@@ -81,11 +70,7 @@ export default function AccountScreen ({ mode: requestedMode }: { mode?: Account
           setCreated(true)
       }
       if (registering) {
-        await login(email.trim(), password, {
-          chat: baseURL,
-          api: params.api || config.api,
-          ws: params.ws || config.ws,
-        })
+        await login(email.trim(), password)
       } else if (current()) {
         setPassword('')
         setRepeat('')

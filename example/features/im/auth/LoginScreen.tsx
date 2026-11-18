@@ -4,7 +4,6 @@ import { useLocalSearchParams, useNavigation, useRouter, type Href } from 'expo-
 import { login, useOpenIM } from '../application/store'
 import { type NavigationWithTransitions, onOpeningTransition } from '../navigation/opening-transition'
 import {
-  AdvancedSettings,
   AuthButton,
   AuthField,
   AuthLink,
@@ -15,23 +14,13 @@ import {
 
 export default function LoginScreen () {
   const router = useRouter()
-  const params = useLocalSearchParams<{
-    email?: string
-    chat?: string
-    api?: string
-    ws?: string
-  }>()
+  const params = useLocalSearchParams<{ email?: string }>()
   const state = useOpenIM()
   // The account last signed in here, unless the page was opened with one (from 注册 or 忘记密码):
   // a sign-out for an expired login then only asks for the password.
   const last = params.email ? undefined : state.lastAccount
   const [account, setAccount] = useState(params.email || last?.account || '')
   const [password, setPassword] = useState('')
-  const [config, setConfig] = useState({
-    chat: params.chat || last?.config.chat || state.config.chat,
-    api: params.api || last?.config.api || state.config.api,
-    ws: params.ws || last?.config.ws || state.config.ws,
-  })
   // The last account is read from storage alongside startup and can arrive after this page mounts;
   // it fills the form then, unless the user has started typing.
   const touched = useRef(!!(params.email || last))
@@ -41,7 +30,6 @@ export default function LoginScreen () {
       return
     touched.current = true
     setAccount(lastAccount.account)
-    setConfig(lastAccount.config)
   }, [lastAccount, params.email])
   const type = (value: string) => {
     touched.current = true
@@ -60,10 +48,10 @@ export default function LoginScreen () {
     return onOpeningTransition(navigation, 'transitionEnd', () => passwordField.current?.focus())
   }, [filled, navigation])
   const navigate = (mode: 'register' | 'reset') =>
-    router.push({ pathname: `/auth/${mode}`, params: { ...config, email: account.trim() } } as Href)
+    router.push({ pathname: `/auth/${mode}`, params: { email: account.trim() } } as Href)
   const submit = () => {
     if (account.trim() && password && !state.busy)
-      void login(account.trim(), password, config)
+      void login(account.trim(), password)
   }
   return (
     <AuthPage title='欢迎回来' subtitle='登录你的账户，继续与朋友保持联系。'>
@@ -101,20 +89,6 @@ export default function LoginScreen () {
         <AuthLink title='忘记密码？' disabled={state.busy} onPress={() => navigate('reset')} />
         <AuthLink title='注册新账户' disabled={state.busy} onPress={() => navigate('register')} />
       </AuthLinks>
-      <AdvancedSettings>
-        {(['chat', 'api', 'ws'] as const).map(field => (
-          <AuthField
-            compact
-            key={field}
-            placeholder={{ chat: '账户服务地址', api: '消息服务地址', ws: '实时连接地址' }[field]}
-            label={{ chat: '账户服务地址', api: '消息服务地址', ws: '实时连接地址' }[field]}
-            keyboardType='url'
-            value={config[field]}
-            editable={!state.busy}
-            onChangeText={value => setConfig(current => ({ ...current, [field]: value }))}
-          />
-        ))}
-      </AdvancedSettings>
     </AuthPage>
   )
 }
