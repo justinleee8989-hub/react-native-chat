@@ -32,8 +32,8 @@
 
 | 仓库 | 分支 | 改动 |
 |---|---|---|
-| `open-im-server` | `feat/group-read-webhook-context` | `CallbackGroupMsgReadReq` 新增 `conversationID`、`groupID`、`hasReadSeq` 三个字段，在 `MarkConversationAsRead` 里填入。原有字段不变 |
-| `chat` | `feat/group-read-push` | 新增路由 `POST /callback/openim_webhook/:secret/:command`（`internal/api/chat/group_read_webhook.go`），以及对应的单元测试 |
+| `open-im-server` | `feat/group-read-webhook-context`（`280d0a23d`，基于当前部署的 `e089f78`） | `CallbackGroupMsgReadReq` 新增 `conversationID`、`groupID`、`hasReadSeq` 三个字段，在 `MarkConversationAsRead` 里填入。原有字段不变 |
+| `chat` | `feat/group-read-push`（`054fd9a`，已合入当前部署的 `feature/rtc-terminal-records` / `d5f9db7`） | 新增路由 `POST /callback/openim_webhook/:secret/:command`（`internal/api/chat/group_read_webhook.go`），以及对应的单元测试 |
 | `react-native-chat` | `perf/openim-open-chat` | 监听 `onRecvCustomBusinessMessage`，按会话发出刷新信号；去掉 5 秒轮询；回到前台时的刷新保留 |
 
 ## 四、部署配置
@@ -104,3 +104,9 @@ export IMENV_WEBHOOKS_AFTERGROUPMSGREAD_ENABLE=true
 RN SDK 事件名已核实：`@openim/rn-client-sdk/src/constants/OpenIMEvents.ts:56` 定义 `OnRecvCustomBusinessMessage: 'onRecvCustomBusinessMessage'`，与客户端监听一致。UI 247 项、业务 287 项、应用 typecheck、源码 lint 及推送分支 `go test ./internal/api/chat/` 均通过。
 
 **端到端部署仍受阻。** 指定 `chat` 分支 `ad2265e` 不含当前 `feature/rtc-terminal-records` / `d5f9db7` 的可见性、消息准入及通话记录等改动。直接部署会回退这些功能，故本轮保持 v17 服务，不合并或修改实现。不能把事件名核实、Go 单测或已读明细页可打开当作实时推送通过。具体分支差异及后续项见 [第四轮报告 V3](entry-perf-2026-11-18/RESULTS_4.md#v3-群已读推送未部署保留阻塞)。
+
+## 2026-11-18 第四轮阻塞的处理
+
+`chat` 的 `feat/group-read-push` 已合入 `origin/feature/rtc-terminal-records`（`d5f9db7`），合并提交为 `054fd9a`。合并后相对 `d5f9db7` 只多 4 个文件：`group_read_webhook.go`、`group_read_webhook_test.go`、`chat.go`（Api 结构体多两个字段）和 `start.go`（多一条路由），**可见性、消息准入、通话记录等现有能力全部保留**。合并后 `go build ./...`、`go vet`、`go test ./internal/api/chat/ ./pkg/common/...` 均已通过。
+
+`open-im-server` 的 `feat/group-read-webhook-context` 本来就基于当前部署的 `e089f78`，只多 2 个文件，无需处理。现在两个后端都可以在当前服务的基础上构建部署，测试方法见 [第五轮 V3](entry-perf-2026-11-18/TEST_5.md)。

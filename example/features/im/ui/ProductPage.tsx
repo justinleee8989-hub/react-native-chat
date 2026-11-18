@@ -1,7 +1,7 @@
 import React from 'react'
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native'
 import { type Href, useRouter } from 'expo-router'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useDesktopNavigation } from '../navigation/DesktopNavigation'
 import { ProductToast } from '../shared/ProductToast'
 import { useProductLayout } from './preferences'
@@ -45,8 +45,11 @@ export function ProductPage ({
   const navigation = useDesktopNavigation()
   const { desktop } = useProductLayout()
   const t = useProductTheme()
+  // The inset is padded from JS, not by SafeAreaView: a native SafeAreaView applies it a frame after
+  // it mounts, so a tab opened for the first time drew its title under the status bar, then jumped.
+  const insets = useSafeAreaInsets()
   return (
-    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: white ? t.page : t.bg }}>
+    <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: white ? t.page : t.bg }}>
       <View
         style={{
           flex: 1,
@@ -97,7 +100,7 @@ export function ProductPage ({
         </ScrollView>
         <ProductToast />
       </View>
-    </SafeAreaView>
+    </View>
   )
 }
 export function ProductIconButton ({

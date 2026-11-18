@@ -74,6 +74,8 @@ export default function ChatScreen ({ id, messageID }: { id: string, messageID?:
 }
 
 const EMPTY_MESSAGES: IMMessage[] = []
+/** A chat opens with one history page (30); below two, the next is fetched as the buffer grows. */
+const PREFETCH_EARLIER_BELOW = 60
 
 function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
   const state = useOpenIM()
@@ -83,7 +85,15 @@ function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
     traceChatRender(entryAccount, id)
   })
   const { chatRef, locating, requestLocation } = useMessageLocation(id, messageID)
-  const messageListLayout = useMessageListLayout()
+  // A chat opens with only its latest page, and a fling up right after opening reached the top of
+  // it in ~0.3s and waited there for the next one (round four: an empty band, then rows filling in).
+  // So the page above is fetched when the list grows its buffer: on the first drag, or once the push ends.
+  const earlierPage = useRef({ available: false, id })
+  const prefetchEarlier = useCallback(() => {
+    if (earlierPage.current.available)
+      void loadHistory(earlierPage.current.id, true).catch(reportError)
+  }, [])
+  const messageListLayout = useMessageListLayout({ onExpand: prefetchEarlier })
 
   const router = useRouter()
   const [forward, setForward] = useState<IMMessage>()
@@ -100,6 +110,14 @@ function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
   const access = useConversationAccess(conversation, state.session?.userID || '')
   const batches = useAttachmentBatches().filter(batch => batch.conversationID === id)
   const rawMessages = state.messages[id] || EMPTY_MESSAGES
+  const historyEnd = state.historyEnd[id]
+  const historyLoading = !!state.historyLoading?.[id]
+  useLayoutEffect(() => {
+    earlierPage.current = {
+      id,
+      available: rawMessages.length > 0 && rawMessages.length < PREFETCH_EARLIER_BELOW && !historyEnd && !historyLoading,
+    }
+  })
   const onEntryReady = useChatEntryReady(
     entryAccount,
     id,

@@ -18,7 +18,7 @@ jest.mock('../ui/theme', () => ({ useProductTheme: () => mockProductPalette.ligh
 jest.mock('../ui/ProductIcon', () => ({ ProductIcon: () => null }))
 jest.mock('../shared/ProductToast', () => ({ ProductToast: () => null }))
 jest.mock('../navigation/DesktopNavigation', () => ({ useDesktopNavigation: () => ({ canGoBackInSection: mockCanGoBackInSection }) }))
-jest.mock('react-native-safe-area-context', () => ({ SafeAreaView: require('react-native').View }))
+jest.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 0, right: 0, bottom: 0, left: 0 }) }))
 
 it('keeps the registered-user instruction between the ID field and the open action', async () => {
   await render(<NewMessageScreen />)
