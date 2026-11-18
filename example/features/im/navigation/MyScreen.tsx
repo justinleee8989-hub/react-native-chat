@@ -44,7 +44,7 @@ function MyAccount ({ userID }: { userID: string }) {
     void refresh()
   }, [refresh]))
   return (
-    <ProductPage title='我的' root {...task} initialLoading={!task.hasSucceeded} skeleton='settings' onRetry={() => {
+    <ProductPage title='我的' root {...task} loading={!task.hasSucceeded} onRetry={() => {
       void refresh()
     }}
     >

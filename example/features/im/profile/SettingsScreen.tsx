@@ -19,6 +19,7 @@ import {
   ProductSwitch,
 } from '../ui/primitives'
 import { ProductPage, ProductEmpty, ProductInset, ProductSection } from '../ui/ProductPage'
+import { ProductSkeleton } from '../ui/ProductSkeleton'
 import { useProductTheme } from '../ui/theme'
 import PasswordForm from './PasswordForm'
 import { profileEmail } from './profile-email'
@@ -94,8 +95,8 @@ function Settings ({ session, chatURL }: { session: NonNullable<ReturnType<typeo
       backHref='/(tabs)/me'
       title={titles[section || ''] || '我的资料与设置'}
       {...task}
-      initialLoading={!task.hasSucceeded}
-      skeleton='settings'
+      // The sections are there from the first frame; only the values and the blacklist wait.
+      loading={!task.hasSucceeded}
       onRetry={() => {
         void refresh()
       }}
@@ -126,13 +127,15 @@ function Settings ({ session, chatURL }: { session: NonNullable<ReturnType<typeo
       {show('profile') && (
         <>
           <View style={{ alignItems: 'center', paddingTop: 20, paddingBottom: 20 }}>
-            {self && (
+            {self ? (
               <ProductAvatar
                 id={self.userID}
                 title={self.nickname || self.userID}
                 uri={self.faceURL}
                 size={96}
               />
+            ) : (
+              <View style={{ width: 96, height: 96, borderRadius: 48, backgroundColor: t.surface2 }} />
             )}
             <View style={{ marginTop: 8 }}>
               <HeaderAction
@@ -178,10 +181,11 @@ function Settings ({ session, chatURL }: { session: NonNullable<ReturnType<typeo
       )}
       {show('privacy') && (
         <>
-          <ProductSection>黑名单 · {blocked.length}</ProductSection>
+          <ProductSection>黑名单{task.hasSucceeded ? ` · ${blocked.length}` : ''}</ProductSection>
           <ProductInset>
             <ProductCard>
-              {!blocked.length && !task.busy && <ProductEmpty title='暂无黑名单用户' />}
+              {!task.hasSucceeded && !task.error && <ProductSkeleton kind='list' rows={2} small />}
+              {task.hasSucceeded && !blocked.length && !task.busy && <ProductEmpty title='暂无黑名单用户' />}
               {blocked.map(person => (
                 <ProductRow
                   trailingInteractive

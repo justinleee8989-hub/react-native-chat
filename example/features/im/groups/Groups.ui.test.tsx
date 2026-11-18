@@ -23,6 +23,15 @@ jest.mock('../auth/LoginScreen', () => () => null)
 beforeEach(() => {
   jest.clearAllMocks(); mockCanGoBack = false; mockManage = ''; jest.mocked(directory.friends).mockResolvedValue([{ userID: 'friend', nickname: '好友' }]); jest.mocked(directory.create).mockResolvedValue({ groupID: 'new', groupName: '新群' }); jest.mocked(openConversation).mockResolvedValue('real-conversation'); jest.mocked(refresh).mockResolvedValue(undefined); jest.mocked(directory.member).mockResolvedValue({ userID: 'self', roleLevel: 100 }); jest.mocked(directory.members).mockResolvedValue([{ userID: 'friend', nickname: '好友', roleLevel: 20 }]); jest.mocked(directory.group).mockResolvedValue({ groupID: 'g1', groupName: '测试群', memberCount: 2 }); jest.mocked(directory.update).mockResolvedValue(undefined); jest.mocked(checkGroupManagement).mockResolvedValue(undefined); jest.mocked(groupManagement.requests).mockResolvedValue([]); jest.mocked(directory.groups).mockResolvedValue([{ groupID: 'g1', groupName: '测试群', memberCount: 3 }])
 })
+it('keeps the group list page shape while groups load: only the group rows are placeholders', async () => {
+  jest.mocked(directory.groups).mockReturnValue(new Promise(() => {}))
+  await render(<GroupsScreen />)
+  expect(screen.getByText('入群申请')).toBeTruthy()
+  expect(screen.getByText('我加入的群聊')).toBeTruthy()
+  expect(screen.getByLabelText('正在加载内容')).toBeTruthy()
+  expect(screen.queryByText('还没有加入群聊')).toBeNull()
+  expect(screen.queryByLabelText('正在处理')).toBeNull()
+})
 it('opens creation and join on separate pages from the new menu', async () => {
   await render(<GroupsScreen />)
   await waitFor(() => expect(screen.getByText('测试群')).toBeTruthy())

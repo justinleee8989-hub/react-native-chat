@@ -13,6 +13,7 @@ import { useDirectoryEvents } from '../shared/useDirectoryEvents'
 import { ProductListRow, ProductSheet } from '../ui/primitives'
 import { ProductIcon } from '../ui/ProductIcon'
 import { ProductPage, ProductEmpty, ProductIconButton, ProductSection } from '../ui/ProductPage'
+import { ProductSkeleton } from '../ui/ProductSkeleton'
 import { useProductTheme } from '../ui/theme'
 import { GroupAvatar } from './group-ui'
 
@@ -66,14 +67,15 @@ function Groups ({ root, userID }: { root: boolean, userID: string }) {
   }, [refresh])
   const [menu, setMenu] = useState(false)
   const t = useProductTheme()
+  // 入群申请 and the section title are there from the first frame; only the group rows wait.
+  const loading = !task.hasSucceeded
   return (
     <ProductPage
       white
       root={root}
       title='群聊'
       {...task}
-      initialLoading={!task.hasSucceeded}
-      skeleton='list'
+      loading={loading}
       onRetry={() => {
         void refresh()
       }}
@@ -117,10 +119,12 @@ function Groups ({ root, userID }: { root: boolean, userID: string }) {
         onPress={() => router.push('/chats/groups/requests' as Href)}
       />
       <ProductSection variant='list'>
-        我加入的群聊 · {groups.length}
+        我加入的群聊
+        {loading ? '' : ` · ${groups.length}`}
         {more ? '+' : ''}
       </ProductSection>
-      {!groups.length && !task.busy && (
+      {loading && !task.error && <ProductSkeleton kind='list' small />}
+      {!loading && !groups.length && !task.busy && (
         <ProductEmpty title='还没有加入群聊' subtitle='点右上角创建或加入' />
       )}
       {groups.map((group, index) => (

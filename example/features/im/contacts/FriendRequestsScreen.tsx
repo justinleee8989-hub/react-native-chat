@@ -11,6 +11,7 @@ import { useDirectoryEvents } from '../shared/useDirectoryEvents'
 import { useTask } from '../shared/useTask'
 import { ProductAvatar, ProductListRow, ProductButton, ProductSegment } from '../ui/primitives'
 import { ProductEmpty } from '../ui/ProductPage'
+import { ProductSkeleton } from '../ui/ProductSkeleton'
 import { useProductTheme } from '../ui/theme'
 import { ContactIconButton, ContactLayout } from './ContactLayout'
 
@@ -62,11 +63,7 @@ function Requests () {
       white
       title='新的朋友'
       {...task}
-      initialLoading={!task.hasSucceeded}
-      skeleton='list'
-      onRetry={() => {
-        void refresh()
-      }}
+      loading={!task.hasSucceeded}
       right={
         <ContactIconButton
           name='userPlus'
@@ -134,7 +131,9 @@ function Requests () {
           />
         )
       })}
-      {!requests.length && !task.busy && <ProductEmpty title='暂无申请' />}
+      {/* The segment above is there from the first frame; only the rows wait. */}
+      {!task.hasSucceeded && !task.error && <ProductSkeleton kind='list' small />}
+      {task.hasSucceeded && !requests.length && !task.busy && <ProductEmpty title='暂无申请' />}
       {!!task.error && (
         <Action
           title='重试'

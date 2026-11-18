@@ -16,6 +16,7 @@ import { useDirectoryEvents } from '../shared/useDirectoryEvents'
 import { useTask } from '../shared/useTask'
 import { ProductAvatar, ProductListRow, ProductButton, ProductSegment } from '../ui/primitives'
 import { ProductPage, ProductEmpty } from '../ui/ProductPage'
+import { ProductSkeleton } from '../ui/ProductSkeleton'
 import { useProductTheme } from '../ui/theme'
 import { GroupAvatar } from './group-ui'
 
@@ -102,8 +103,7 @@ function RequestList ({
       white
       title='入群申请'
       {...task}
-      initialLoading={!task.hasSucceeded}
-      skeleton='list'
+      loading={!task.hasSucceeded}
       onRetry={() => {
         void refresh()
       }}
@@ -121,7 +121,9 @@ function RequestList ({
         />
       }
     >
-      {!items.length && !task.busy && <ProductEmpty title='暂无入群申请' />}
+      {/* The segment above is there from the first frame; only the rows wait. */}
+      {!task.hasSucceeded && !task.error && <ProductSkeleton kind='list' small />}
+      {task.hasSucceeded && !items.length && !task.busy && <ProductEmpty title='暂无入群申请' />}
       {items.map((item, index) => (
         <ProductListRow
           small

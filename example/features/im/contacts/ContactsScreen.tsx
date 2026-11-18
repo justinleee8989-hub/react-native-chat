@@ -118,10 +118,7 @@ function Contacts ({ root }: { root: boolean }) {
       {...task}
       // Search, 新的朋友 and 群聊 show from the first frame; only the friend rows wait for data. A
       // whole-page skeleton was swapped for a differently shaped page once friends arrived.
-      busy={task.busy && task.hasSucceeded}
-      onRetry={() => {
-        void refresh()
-      }}
+      loading={loading}
       right={
         <ContactIconButton
           name='userPlus'
@@ -168,7 +165,7 @@ function Contacts ({ root }: { root: boolean }) {
         {loading ? '' : ` · ${visible.length}`}
         {more ? '（已加载）' : ''}
       </ContactSection>
-      {loading && !task.error && <ProductSkeleton kind='list' />}
+      {loading && !task.error && <ProductSkeleton kind='list' small />}
       {visible.map((person, index) => (
         <ProductListRow
           small

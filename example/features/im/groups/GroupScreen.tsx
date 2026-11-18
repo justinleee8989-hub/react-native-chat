@@ -61,8 +61,11 @@ function GroupDetails ({ groupID, userID }: { groupID: string, userID: string })
     <ProductPage
       title=''
       {...task}
+      // What this page shows depends on the group and this user's role, so it waits whole, behind
+      // a placeholder drawn to its header and grouped cards.
       initialLoading={!task.hasSucceeded}
       skeleton='profile'
+      skeletonGroup
       onRetry={() => {
         void refresh()
       }}

@@ -86,8 +86,10 @@ function PersonDetails ({ id, selfID, more }: { id: string, selfID: string, more
     <ContactLayout
       title={more ? name : ''}
       {...task}
+      // What this page shows depends on whether this is a friend, so it waits whole, behind a
+      // placeholder drawn to its header and grouped cards (or just the cards on 更多).
       initialLoading={!task.hasSucceeded}
-      skeleton='profile'
+      skeleton={more ? 'settings' : 'profile'}
       onRetry={() => {
         void refresh()
       }}

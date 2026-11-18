@@ -1,5 +1,5 @@
 import React from 'react'
-import { ActivityIndicator, ScrollView, Text, View } from 'react-native'
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { type Href, useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useDesktopNavigation } from '../navigation/DesktopNavigation'
@@ -23,7 +23,9 @@ export function ProductPage ({
   white = false,
   alwaysShowBack = false,
   initialLoading = false,
+  loading = false,
   skeleton = 'list',
+  skeletonGroup = false,
   onRetry,
   backHref = '/(tabs)/contacts',
 }: React.PropsWithChildren<{
@@ -36,8 +38,16 @@ export function ProductPage ({
   headerContent?: React.ReactNode
   white?: boolean
   alwaysShowBack?: boolean
+  /** The first load has not finished: `children` are replaced by a `skeleton` of the page's shape. */
   initialLoading?: boolean
+  /**
+   * The first load has not finished, and the page draws its own structure with placeholders only
+   * where the data goes. Preferred when the structure does not depend on the data.
+   */
+  loading?: boolean
   skeleton?: ProductSkeletonKind
+  /** The `profile` skeleton stands in for a group (rounded-square avatar). */
+  skeletonGroup?: boolean
   onRetry?: () => void
   backHref?: Href
 }>) {
@@ -77,27 +87,32 @@ export function ProductPage ({
           }
         />
         {headerContent}
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps='handled'
-          contentContainerStyle={{ paddingBottom: 40 }}
-        >
-          {busy && !initialLoading && <ActivityIndicator accessibilityLabel='正在处理' color={t.accent} />}
-          {!!error && (
-            <Text accessibilityRole='alert' style={{ padding: 16, color: t.danger }}>
-              {error}
-            </Text>
+        <View style={{ flex: 1 }}>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps='handled'
+            contentContainerStyle={{ paddingBottom: 40 }}
+          >
+            {!!error && (
+              <Text accessibilityRole='alert' style={{ padding: 16, color: t.danger }}>
+                {error}
+              </Text>
+            )}
+            {(initialLoading || loading) && !!error && onRetry && (
+              <Pressable accessibilityRole='button' accessibilityLabel='重新加载' disabled={busy} onPress={onRetry} style={{ padding: 20, alignItems: 'center' }}>
+                <Text style={{ color: t.accent }}>重新加载</Text>
+              </Pressable>
+            )}
+            {initialLoading
+              ? !error && <ProductSkeleton kind={skeleton} group={skeletonGroup} />
+              : children}
+          </ScrollView>
+          {/* Floats over the content: in the flow it pushed the page down on every refresh (pages
+              refresh on focus), and back up when the refresh ended. */}
+          {busy && !initialLoading && !loading && (
+            <ActivityIndicator accessibilityLabel='正在处理' color={t.accent} style={styles.busy} pointerEvents='none' />
           )}
-          {initialLoading
-            ? error
-              ? onRetry && (
-                <Pressable accessibilityRole='button' accessibilityLabel='重新加载' disabled={busy} onPress={onRetry} style={{ padding: 20, alignItems: 'center' }}>
-                  <Text style={{ color: t.accent }}>重新加载</Text>
-                </Pressable>
-              )
-              : <ProductSkeleton kind={skeleton} />
-            : children}
-        </ScrollView>
+        </View>
         <ProductToast />
       </View>
     </View>
@@ -181,3 +196,7 @@ export function ProductEmpty ({ title, subtitle }: { title: string, subtitle?: s
     </View>
   )
 }
+
+const styles = StyleSheet.create({
+  busy: { position: 'absolute', top: 8, alignSelf: 'center' },
+})

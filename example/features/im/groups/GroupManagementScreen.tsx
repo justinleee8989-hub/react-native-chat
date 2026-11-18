@@ -196,8 +196,9 @@ function Management ({
       title={membersPage ? (managesMembers ? '成员管理' : '群成员') : '群管理'}
       subtitle={membersPage ? `${group?.memberCount || members.length} 人` : undefined}
       {...task}
+      // Which sections show depends on this user's role, so the page waits whole.
       initialLoading={!task.hasSucceeded}
-      skeleton='settings'
+      skeleton={membersPage ? 'members' : 'settings'}
       onRetry={() => {
         void refresh()
       }}

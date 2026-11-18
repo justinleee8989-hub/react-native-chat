@@ -1,5 +1,5 @@
 import React from 'react'
-import { Text } from 'react-native'
+import { StyleSheet, Text } from 'react-native'
 import { expect, it, jest } from '@jest/globals'
 import { fireEvent, render } from '@testing-library/react-native'
 import { ProductPage } from './ProductPage'
@@ -74,4 +74,23 @@ it('preserves loaded content during background refresh', async () => {
   const view = await render(<ProductPage title='我的' busy error='' initialLoading={false}><Text>已有资料</Text></ProductPage>)
   expect(view.getByText('已有资料')).toBeTruthy()
   expect(view.queryByLabelText('正在加载内容')).toBeNull()
+})
+
+it('draws the page itself while loading, with no spinner pushing it down', async () => {
+  const view = await render(<ProductPage title='我的' busy error='' loading><Text>消息通知</Text></ProductPage>)
+  expect(view.getByText('消息通知')).toBeTruthy()
+  expect(view.queryByLabelText('正在处理')).toBeNull()
+  expect(view.queryByLabelText('正在加载内容')).toBeNull()
+})
+
+it('offers a retry when the first load of a self-drawn page fails', async () => {
+  const retry = jest.fn()
+  const view = await render(<ProductPage title='我的' busy={false} error='连接失败' loading onRetry={retry}><Text>消息通知</Text></ProductPage>)
+  await fireEvent.press(view.getByRole('button', { name: '重新加载' }))
+  expect(retry).toHaveBeenCalledTimes(1)
+})
+
+it('floats the refresh spinner over the content instead of taking space above it', async () => {
+  const view = await render(<ProductPage title='我的' busy error=''><Text>已有资料</Text></ProductPage>)
+  expect(StyleSheet.flatten(view.getByLabelText('正在处理').props.style)).toMatchObject({ position: 'absolute' })
 })
