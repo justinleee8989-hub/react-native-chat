@@ -5931,6 +5931,7 @@ __metadata:
     lodash.isequal: "npm:^4.5.0"
     lucide-react-native: "npm:^1.65.0"
     md5: "npm:^2.3.0"
+    pinyin-pro: "npm:^3.29.5"
     react: "npm:19.3.1"
     react-dom: "npm:19.3.1"
     react-native: "npm:0.88.1"
@@ -9151,6 +9152,13 @@ __metadata:
   version: 4.0.4
   resolution: "picomatch@npm:4.0.4"
   checksum: 10c0/e2c6023372cc7b5764719a5ffb9da0f8e781212fa7ca4bd0562db929df8e117460f00dff3cb7509dacfc06b86de924b247f504d0ce1806a37fac4633081466b0
+  languageName: node
+  linkType: hard
+
+"pinyin-pro@npm:^3.29.5":
+  version: 3.29.5
+  resolution: "pinyin-pro@npm:3.29.5"
+  checksum: 10c0/a10d201833c98f2d719253961b16b107e44308bb7c1e8b37f3a36397fa3b72b2c64298226204c9b2933d1a095473cef7afa5bcce51349660948f4d43d3f4682e
   languageName: node
   linkType: hard
 

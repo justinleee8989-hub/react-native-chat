@@ -30,6 +30,8 @@ export function ProductPage ({
   onRetry,
   onRefresh,
   refreshing = false,
+  scrollRef,
+  overlay,
   backHref = '/(tabs)/contacts',
 }: React.PropsWithChildren<{
   title: string
@@ -58,6 +60,10 @@ export function ProductPage ({
    */
   onRefresh?: () => void
   refreshing?: boolean
+  /** The page's scroll view, for a page that scrolls itself (the contacts letter index). */
+  scrollRef?: React.Ref<React.ComponentRef<typeof ScrollView>>
+  /** Drawn over the scrolling area and not scrolled with it (the contacts letter index). */
+  overlay?: React.ReactNode
   backHref?: Href
 }>) {
   const router = useRouter()
@@ -102,6 +108,7 @@ export function ProductPage ({
         {headerContent}
         <View style={{ flex: 1 }}>
           <ScrollView
+            ref={scrollRef}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps='handled'
             contentContainerStyle={{ paddingBottom: 40 }}
@@ -124,6 +131,7 @@ export function ProductPage ({
               ? !error && <ProductSkeleton kind={skeleton} group={skeletonGroup} />
               : children}
           </ScrollView>
+          {overlay}
           {/* Floats over the content: in the flow it pushed the page down on every refresh (pages
               refresh on focus), and back up when the refresh ended. */}
           {busy && !initialLoading && !loading && !refreshing && (

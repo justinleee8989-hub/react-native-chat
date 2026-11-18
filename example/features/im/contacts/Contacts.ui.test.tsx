@@ -122,3 +122,23 @@ it('loads a supplied person ID without an extra search tap', async () => {
   expect(profile.person).toHaveBeenCalledWith('alice')
   expect(screen.getByRole('button', { name: '发送好友申请' })).toBeTruthy()
 })
+
+const manyFriends = ['张三', '李四', '王五', 'alice', 'Bob', '陈晨', '赵六', '孙七', '周八', '吴九'].map(name => ({ userID: name, nickname: name }))
+
+it('groups 10 or more friends under letter headings with an index, flat while searching', async () => {
+  jest.mocked(directory.friends).mockResolvedValue(manyFriends)
+  await render(<ContactsScreen root />)
+  await waitFor(() => expect(screen.getByLabelText('按字母定位')).toBeTruthy())
+  // Headings for the letters present, in A–Z order.
+  for (const letter of ['A', 'B', 'C', 'L', 'S', 'W', 'Z'])
+    expect(screen.getAllByText(letter).length).toBeGreaterThan(0)
+  await fireEvent.changeText(screen.getByLabelText('搜索好友'), '张')
+  expect(screen.queryByLabelText('按字母定位')).toBeNull()
+  expect(screen.getByText('张三')).toBeTruthy()
+})
+
+it('keeps a short friend list flat and without an index', async () => {
+  await render(<ContactsScreen root />)
+  await waitFor(() => expect(screen.getByText('同事')).toBeTruthy())
+  expect(screen.queryByLabelText('按字母定位')).toBeNull()
+})

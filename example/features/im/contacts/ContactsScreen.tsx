@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useState } from 'react'
-import { Text, View } from 'react-native'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { type ScrollView, Text, View } from 'react-native'
 import { type Href, useRouter } from 'expo-router'
 import { directory, contactDirectoryEvents, groupDirectoryEvents } from '../application/directory'
 import { groupApplicationEvents, groupManagement } from '../application/group-management'
@@ -16,9 +16,15 @@ import { ProductIcon } from '../ui/ProductIcon'
 import { ProductEmpty } from '../ui/ProductPage'
 import { ProductSkeleton } from '../ui/ProductSkeleton'
 import { useProductTheme } from '../ui/theme'
+import { groupByInitial } from './contact-index'
 import { directorySummary } from './contact-summary'
 import { ContactActions } from './ContactActions'
 import { ContactIconButton, ContactLayout, ContactSection } from './ContactLayout'
+import { LetterHeader, LetterIndex } from './LetterIndex'
+
+// Below this many friends the letter index would light only two or three letters; the list stays flat.
+const INDEX_MIN_FRIENDS = 10
+const nameOf = (person: Person) => person.remark || person.nickname || person.userID
 
 const events = [
   ...new Set([...contactDirectoryEvents, ...groupDirectoryEvents, ...groupApplicationEvents]),
@@ -89,15 +95,46 @@ function Contacts ({ root, account }: { root: boolean, account: string }) {
     void refresh()
   }, [refresh])
   const q = query.trim().toLocaleLowerCase()
-  const visible = friends
-    .filter(person =>
+  // Pinyin order, the same on every platform (see contact-index.ts).
+  const sections = groupByInitial(
+    friends.filter(person =>
       [person.nickname, person.remark, person.userID].some(value =>
         value?.toLocaleLowerCase().includes(q)
       )
-    )
-    .sort((a, b) =>
-      (a.remark || a.nickname || a.userID).localeCompare(b.remark || b.nickname || b.userID, 'zh')
-    )
+    ),
+    nameOf
+  )
+  const visible = sections.flatMap(section => section.items)
+  const indexed = !q && friends.length >= INDEX_MIN_FRIENDS && sections.length > 1
+  // Each letter heading's offset in the scroll content: where the index jumps to.
+  const scroll = useRef<React.ComponentRef<typeof ScrollView>>(null)
+  const offsets = useRef(new Map<string, number>())
+  const jump = (letter: string) => {
+    const y = offsets.current.get(letter)
+    if (y !== undefined)
+      scroll.current?.scrollTo({ y, animated: false })
+  }
+  const row = (person: Person, last: boolean) => (
+    <ProductListRow
+      small
+      side={root}
+      last={last}
+      key={person.userID}
+      title={nameOf(person)}
+      subtitle={person.remark ? `昵称：${person.nickname || person.userID}` : undefined}
+      leading={
+        <ProductAvatar
+          id={person.userID}
+          title={nameOf(person)}
+          uri={person.faceURL}
+          size={44}
+        />
+      }
+      trailing={<View />}
+      onLongPress={() => setSelected(person)}
+      onPress={() => open(`/chats/people/${encodeURIComponent(person.userID)}` as Href)}
+    />
+  )
   const tile = (name: 'userPlus' | 'users') => (
     <View
       style={{
@@ -120,6 +157,9 @@ function Contacts ({ root, account }: { root: boolean, account: string }) {
     </Text>
   )
   const loading = !task.hasSucceeded && !kept
+  const letterIndex = indexed && !loading
+    ? <LetterIndex letters={sections.map(section => section.letter)} onSelect={jump} />
+    : undefined
   return (
     <ContactLayout
       white
@@ -129,6 +169,8 @@ function Contacts ({ root, account }: { root: boolean, account: string }) {
       // Search, 新的朋友 and 群聊 show from the first frame; only the friend rows wait for data. A
       // whole-page skeleton was swapped for a differently shaped page once friends arrived.
       loading={loading}
+      scrollRef={scroll}
+      overlay={letterIndex}
       right={
         <ContactIconButton
           name='userPlus'
@@ -176,27 +218,18 @@ function Contacts ({ root, account }: { root: boolean, account: string }) {
         {more ? '（已加载）' : ''}
       </ContactSection>
       {loading && !task.error && <ProductSkeleton kind='list' small />}
-      {visible.map((person, index) => (
-        <ProductListRow
-          small
-          side={root}
-          last={index === visible.length - 1}
-          key={person.userID}
-          title={person.remark || person.nickname || person.userID}
-          subtitle={person.remark ? `昵称：${person.nickname || person.userID}` : undefined}
-          leading={
-            <ProductAvatar
-              id={person.userID}
-              title={person.remark || person.nickname || person.userID}
-              uri={person.faceURL}
-              size={44}
+      {indexed
+        ? sections.map(section => (
+          <React.Fragment key={section.letter}>
+            <LetterHeader
+              letter={section.letter}
+              side={root}
+              onLayout={y => offsets.current.set(section.letter, y)}
             />
-          }
-          trailing={<View />}
-          onLongPress={() => setSelected(person)}
-          onPress={() => open(`/chats/people/${encodeURIComponent(person.userID)}` as Href)}
-        />
-      ))}
+            {section.items.map((person, index) => row(person, index === section.items.length - 1))}
+          </React.Fragment>
+        ))
+        : visible.map((person, index) => row(person, index === visible.length - 1))}
       {!loading && !visible.length && !task.busy && (
         <ProductEmpty
           title={q ? '没有找到好友' : '还没有好友'}
