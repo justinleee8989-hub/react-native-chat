@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import type { GroupMessageReadInfo, GroupMessageReadGuard, Session } from '../domain/types'
 import { fetchMessageReaders } from './readers'
 
-export function useLatestGroupReaders ({ session, chatURL, conversationID, message, readInfo, enabled, refreshToken = 0, sync }: {
+export function useLatestGroupReaders ({ session, chatURL, conversationID, message, readInfo, enabled, refreshToken = 0, sync, resolveSeq }: {
   session?: Session
   chatURL: string
   conversationID: string
@@ -11,13 +11,20 @@ export function useLatestGroupReaders ({ session, chatURL, conversationID, messa
   enabled: boolean
   refreshToken?: number
   sync: (conversationID: string, messageID: string, readCount: number, unreadCount: number, guard?: GroupMessageReadGuard) => void
+  /**
+   * The server seq of a message that has none locally yet. A message just sent gets its seq only
+   * with the next sync, and it is the one a member is about to read: without this, its count was
+   * never asked for and stayed at 0 however many read it.
+   */
+  resolveSeq?: (messageID: string) => Promise<number>
 }) {
   const requested = useRef('')
   const inFlight = useRef(new Map<string, Promise<void>>())
   const messageID = message?.clientMsgID
   const seq = message?.seq
   useEffect(() => {
-    if (!enabled || !session?.chatToken || !messageID || !Number.isSafeInteger(seq) || (seq || 0) < 1 || (readInfo && refreshToken === 0))
+    const synced = Number.isSafeInteger(seq) && (seq || 0) > 0
+    if (!enabled || !session?.chatToken || !messageID || (!synced && !resolveSeq) || (readInfo && refreshToken === 0))
       return
     const key = `${session.userID}:${session.imToken}:${session.chatToken}:${conversationID}:${messageID}:${seq}:${refreshToken}`
     const identity = `${session.userID}:${session.imToken}:${session.chatToken}:${conversationID}:${messageID}:${seq}`
@@ -38,7 +45,10 @@ export function useLatestGroupReaders ({ session, chatURL, conversationID, messa
       request = (async () => {
         for (let attempt = 0; attempt < 2; attempt++)
           try {
-            const result = await fetchMessageReaders(session, chatURL, conversationID, messageID, seq!)
+            const target = synced ? seq! : await resolveSeq!(messageID)
+            if (!current)
+              return
+            const result = await fetchMessageReaders(session, chatURL, conversationID, messageID, target)
             if (current)
               sync(conversationID, messageID, result.readCount, result.unreadCount, guard)
             return
@@ -75,5 +85,5 @@ export function useLatestGroupReaders ({ session, chatURL, conversationID, messa
       current = false
       cancelRetry?.()
     }
-  }, [chatURL, conversationID, enabled, messageID, readInfo, refreshToken, seq, session, sync])
+  }, [chatURL, conversationID, enabled, messageID, readInfo, refreshToken, resolveSeq, seq, session, sync])
 }

@@ -150,27 +150,3 @@ it('shares the measured viewport width with rows before their own layout callbac
   await act(() => result.current.onLayout(layout(0)))
   expect(result.current.width).toBe(920)
 })
-
-it('reports the buffer growing once, whether the user drags or the push ends first', async () => {
-  const onExpand = jest.fn()
-  const { result } = await renderHook(() => useMessageListLayout({ onExpand }))
-  await act(() => result.current.onReady())
-  expect(onExpand).not.toHaveBeenCalled()
-  await act(() => result.current.onScrollBeginDrag())
-  expect(onExpand).toHaveBeenCalledTimes(1)
-  await act(() => result.current.onTransitionEnd())
-  await flushFrame()
-  await flushFrame()
-  await act(() => result.current.onScrollBeginDrag())
-  expect(onExpand).toHaveBeenCalledTimes(1)
-})
-
-it('is opening until the buffer grows', async () => {
-  const { result } = await renderHook(useMessageListLayout)
-  await act(() => result.current.onLayout(layout(390, 700)))
-  expect(result.current.opening).toBe(true)
-  await act(() => result.current.onReady())
-  await act(() => result.current.onScrollBeginDrag())
-  expect(result.current.opening).toBe(false)
-  expect(result.current.drawDistance).toBe(1400)
-})

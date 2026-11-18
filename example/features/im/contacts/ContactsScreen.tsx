@@ -13,6 +13,7 @@ import { useTask } from '../shared/useTask'
 import { ProductAvatar, ProductListRow, ProductSearch } from '../ui/primitives'
 import { ProductIcon } from '../ui/ProductIcon'
 import { ProductEmpty } from '../ui/ProductPage'
+import { ProductSkeleton } from '../ui/ProductSkeleton'
 import { useProductTheme } from '../ui/theme'
 import { directorySummary } from './contact-summary'
 import { ContactActions } from './ContactActions'
@@ -108,14 +109,16 @@ function Contacts ({ root }: { root: boolean }) {
       {count}
     </Text>
   )
+  const loading = !task.hasSucceeded
   return (
     <ContactLayout
       white
       root={root}
       title='通讯录'
       {...task}
-      initialLoading={!task.hasSucceeded}
-      skeleton='list'
+      // Search, 新的朋友 and 群聊 show from the first frame; only the friend rows wait for data. A
+      // whole-page skeleton was swapped for a differently shaped page once friends arrived.
+      busy={task.busy && task.hasSucceeded}
       onRetry={() => {
         void refresh()
       }}
@@ -161,9 +164,11 @@ function Contacts ({ root }: { root: boolean }) {
         </>
       )}
       <ContactSection variant='list' side={root}>
-        {q ? '搜索结果' : '好友'} · {visible.length}
+        {q ? '搜索结果' : '好友'}
+        {loading ? '' : ` · ${visible.length}`}
         {more ? '（已加载）' : ''}
       </ContactSection>
+      {loading && !task.error && <ProductSkeleton kind='list' />}
       {visible.map((person, index) => (
         <ProductListRow
           small
@@ -185,7 +190,7 @@ function Contacts ({ root }: { root: boolean }) {
           onPress={() => open(`/chats/people/${encodeURIComponent(person.userID)}` as Href)}
         />
       ))}
-      {!visible.length && !task.busy && (
+      {!loading && !visible.length && !task.busy && (
         <ProductEmpty
           title={q ? '没有找到好友' : '还没有好友'}
           subtitle={q ? undefined : '点右上角添加好友'}

@@ -114,3 +114,17 @@ it('clears the bounded retry timer when the reader screen is disabled', async ()
     jest.useRealTimers()
   }
 })
+
+it('asks for a just-sent message once its server seq is resolved', async () => {
+  mockFetchReaders.mockResolvedValueOnce({ members: [], readCount: 1, unreadCount: 2, excludedJoinedLater: 0 })
+  const resolveSeq = jest.fn<(messageID: string) => Promise<number>>().mockResolvedValue(21)
+  function SentProbe () {
+    useLatestGroupReaders({ session, chatURL: 'http://chat', conversationID: 'group-new', message: { clientMsgID: 'message-new', seq: 0 }, enabled: true, sync, resolveSeq })
+    return null
+  }
+  await render(<SentProbe />)
+  await act(async () => {})
+  expect(resolveSeq).toHaveBeenCalledWith('message-new')
+  expect(mockFetchReaders).toHaveBeenCalledWith(session, 'http://chat', 'group-new', 'message-new', 21)
+  expect(sync).toHaveBeenCalledWith('group-new', 'message-new', 1, 2, { readInfo: undefined, userID: 'me', imToken: 'im', chatToken: 'chat' })
+})

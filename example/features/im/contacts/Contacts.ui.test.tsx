@@ -33,6 +33,16 @@ beforeEach(() => {
   jest.mocked(directory.add).mockResolvedValue(undefined)
 })
 
+it('keeps the page shape while friends load: only the friend rows are placeholders', async () => {
+  jest.mocked(directory.friends).mockReturnValue(new Promise(() => {}))
+  await render(<ContactsScreen root />)
+  expect(screen.getByLabelText('搜索好友')).toBeTruthy()
+  expect(screen.getByText('新的朋友')).toBeTruthy()
+  expect(screen.getByText('群聊')).toBeTruthy()
+  expect(screen.getByLabelText('正在加载内容')).toBeTruthy()
+  expect(screen.queryByText('还没有好友')).toBeNull()
+})
+
 it('filters loaded friends by nickname and keeps actions on separate routes', async () => {
   await render(<ContactsScreen root />)
   await waitFor(() => expect(screen.getByText('同事')).toBeTruthy())

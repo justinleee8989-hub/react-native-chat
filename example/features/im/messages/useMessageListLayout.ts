@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { LayoutChangeEvent } from 'react-native'
 import type { ChatProps, IMessage } from '@kesha-antonov/react-native-chat'
 import { reportError } from '../application/store'
@@ -8,12 +8,8 @@ type MessageList = NonNullable<NonNullable<ChatProps<IMessage>['messagesContaine
 /** The longest the buffer waits for the push animation to end before growing anyway. */
 const BUFFER_EXPAND_FALLBACK_MS = 700
 
-/**
- * Reflow the virtualized rows without replacing the chat, composer or visible-item anchor.
- *
- * `onExpand` runs once, when the off-screen buffer grows: the moment the user may start reading up.
- */
-export function useMessageListLayout ({ onExpand }: { onExpand?: () => void } = {}) {
+/** Reflow the virtualized rows without replacing the chat, composer or visible-item anchor. */
+export function useMessageListLayout () {
   const [width, setWidth] = useState<number>()
   // The first build is only the viewport: a chat that was not prepared ahead cannot open until these
   // rows are built (600 built about twice the rows and opened ~190ms later on Android, round three).
@@ -24,10 +20,6 @@ export function useMessageListLayout ({ onExpand }: { onExpand?: () => void } = 
   const targetDistance = useRef(1000)
   const bufferFrame = useRef<number | undefined>(undefined)
   const bufferTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
-  const latestOnExpand = useRef(onExpand)
-  useLayoutEffect(() => {
-    latestOnExpand.current = onExpand
-  })
   const expand = useCallback(() => {
     if (expanded.current)
       return
@@ -36,7 +28,6 @@ export function useMessageListLayout ({ onExpand }: { onExpand?: () => void } = 
       clearTimeout(bufferTimer.current)
     bufferTimer.current = undefined
     setDrawDistance(targetDistance.current)
-    latestOnExpand.current?.()
   }, [])
   const expandInTwoFrames = useCallback(() => {
     bufferFrame.current = requestAnimationFrame(() => {
@@ -114,7 +105,5 @@ export function useMessageListLayout ({ onExpand }: { onExpand?: () => void } = 
       })
     })
   }, [])
-  // Until the buffer grows the page is still opening: only the viewport is built.
-  const opening = drawDistance === 0
-  return { messagesContainerRef, onLayout, onReady, onTransitionEnd, onScrollBeginDrag, drawDistance, opening, width }
+  return { messagesContainerRef, onLayout, onReady, onTransitionEnd, onScrollBeginDrag, drawDistance, width }
 }

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Button, StyleSheet, Text, View } from 'react-native'
 import { Chat, IMessage, ReplyMessage } from '@kesha-antonov/react-native-chat'
 import { useFocusEffect, useNavigation, useRouter } from 'expo-router'
@@ -8,6 +8,7 @@ import {
   sendQuote,
   revokeMessage,
   loadHistory,
+  loadServerHistory,
   reportError,
   retryMessage,
   sendMedia,
@@ -36,6 +37,7 @@ import { productChatLabels } from '../ui/ProductChatLabels'
 import { useProductChatTheme, productChatIcons } from '../ui/ProductChatTheme'
 import { AttachmentBatchTray } from './AttachmentBatchTray'
 import { useComposerEnhancements } from './ComposerEnhancements'
+import { resolveExtraSequence } from './extras'
 import ForwardPicker from './ForwardPicker'
 import { HistoryLoadIndicator } from './HistoryLoadIndicator'
 import { MentionPicker } from './MentionPicker'
@@ -74,14 +76,6 @@ export default function ChatScreen ({ id, messageID }: { id: string, messageID?:
 }
 
 const EMPTY_MESSAGES: IMMessage[] = []
-/** A chat opens with one history page (30); below two, the next is fetched as the buffer grows. */
-const PREFETCH_EARLIER_BELOW = 60
-/**
- * Messages the list is given while the page opens, newest first. However much history is cached
- * (a prefetched page, or all of it after reading far up), the first build then lays out only
- * about one page: round five opened ~140ms later with more cached. The rest follows with the buffer.
- */
-const OPENING_MESSAGES = 30
 
 function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
   const state = useOpenIM()
@@ -91,15 +85,7 @@ function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
     traceChatRender(entryAccount, id)
   })
   const { chatRef, locating, requestLocation } = useMessageLocation(id, messageID)
-  // A chat opens with only its latest page, and a fling up right after opening reached the top of
-  // it in ~0.3s and waited there for the next one (round four: an empty band, then rows filling in).
-  // So the page above is fetched when the list grows its buffer: on the first drag, or once the push ends.
-  const earlierPage = useRef({ available: false, id })
-  const prefetchEarlier = useCallback(() => {
-    if (earlierPage.current.available)
-      void loadHistory(earlierPage.current.id, true).catch(reportError)
-  }, [])
-  const messageListLayout = useMessageListLayout({ onExpand: prefetchEarlier })
+  const messageListLayout = useMessageListLayout()
 
   const router = useRouter()
   const [forward, setForward] = useState<IMMessage>()
@@ -116,14 +102,6 @@ function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
   const access = useConversationAccess(conversation, state.session?.userID || '')
   const batches = useAttachmentBatches().filter(batch => batch.conversationID === id)
   const rawMessages = state.messages[id] || EMPTY_MESSAGES
-  const historyEnd = state.historyEnd[id]
-  const historyLoading = !!state.historyLoading?.[id]
-  useLayoutEffect(() => {
-    earlierPage.current = {
-      id,
-      available: rawMessages.length > 0 && rawMessages.length < PREFETCH_EARLIER_BELOW && !historyEnd && !historyLoading,
-    }
-  })
   const onEntryReady = useChatEntryReady(
     entryAccount,
     id,
@@ -141,10 +119,13 @@ function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
           message.sendID === sessionID &&
             message.groupID === conversation.groupID &&
             message.status === 2 &&
-            message.contentType < 1000 &&
-            (message.seq || 0) > 0
+            message.contentType < 1000
       )
       : undefined
+  const resolveReaderSeq = useCallback(
+    (clientMsgID: string) => resolveExtraSequence({ clientMsgID }, cursor => loadServerHistory({ conversationID: id, cursor })),
+    [id]
+  )
   useLatestGroupReaders({
     session: state.session,
     chatURL: state.config.chat,
@@ -158,6 +139,7 @@ function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
     // read past this user's messages (`group_read_progress`; OpenIM itself tells the sender nothing).
     refreshToken: readerRefreshToken + (state.readersChanged?.[id] || 0),
     sync: syncMessageReaders,
+    resolveSeq: resolveReaderSeq,
   })
   // Move the status slot when the optimistic row appears, not again on its acknowledgement.
   const lastOwnMessageID = rawMessages.find(
@@ -282,13 +264,6 @@ function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
     requestCall,
     onRevoke: setRevoke,
   })
-  // Not while locating a message, which may be further back than the opening window.
-  const windowed = messageListLayout.opening && !messageID
-  const allMessages = rows.messages
-  const listMessages = useMemo(
-    () => windowed ? allMessages.slice(0, OPENING_MESSAGES) : allMessages,
-    [windowed, allMessages]
-  )
 
   if (!state.session)
     return <LoginScreen />
@@ -473,7 +448,7 @@ function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
         renderTypingIndicator={() => (
           <ProductTyping group={!!conversation.groupID} user={composer.typingUsers[0]} />
         )}
-        messages={listMessages}
+        messages={rows.messages}
         renderCustomView={rows.renderCustomView}
         onSend={onSend}
         onEditMessage={extras.edit}
