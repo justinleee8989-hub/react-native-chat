@@ -93,3 +93,15 @@ export function sectionDetailDepth (state: NavigationSnapshot | undefined): numb
   }
   return depth
 }
+
+/**
+ * The screens in the open detail stack (the `chats` stack over the tabs); 0 when the active route
+ * is anything else.
+ */
+export function openDetailScreens (state: NavigationSnapshot | undefined): number {
+  state = productNavigationState(state)
+  const active = state?.routes[state.index ?? state.routes.length - 1]
+  if (!active || active.name !== 'chats')
+    return 0
+  return active.state?.routes.length || 1
+}

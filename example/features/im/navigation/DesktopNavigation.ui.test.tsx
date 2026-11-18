@@ -63,7 +63,7 @@ describe('desktop navigation provider', () => {
     mockSession = { userID: 'account-a', imToken: 'token-a' }
     mockRoot = rootState()
     mockNavigation = { dispatch: jest.fn(), getRootState: jest.fn(() => mockRoot) }
-    mockRouter = { push: jest.fn(), navigate: jest.fn(), replace: jest.fn() }
+    mockRouter = { push: jest.fn(), navigate: jest.fn(), replace: jest.fn(), dismissAll: jest.fn() }
     mockPath = '/chats'
   })
   afterEach(() => {
@@ -126,18 +126,30 @@ describe('desktop navigation provider', () => {
     expect(mockRouter.replace).toHaveBeenCalledWith('/chats/chat-8')
   })
 
-  it('waits for a root-only master reset before pushing its detail route', async () => {
+  it('replaces any open detail in place, collapsing a deeper stack first, never through the empty master', async () => {
     const view = await render(app())
     await fireEvent.press(view.getByTestId('master'))
-    const reset = mockNavigation.dispatch.mock.calls[0][0]
-    expect(reset.payload.routes).toHaveLength(1)
+    expect(mockNavigation.dispatch).not.toHaveBeenCalled()
     expect(mockRouter.push).not.toHaveBeenCalled()
-    mockRoot = reset.payload
-    await view.rerender(app())
-    expect(mockRouter.push).toHaveBeenCalledWith('/chats/new')
+    expect(mockRouter.dismissAll).toHaveBeenCalledTimes(1)
+    expect(mockRouter.replace).toHaveBeenCalledWith('/chats/new')
+    expect(mockRouter.dismissAll.mock.invocationCallOrder[0]).toBeLessThan(mockRouter.replace.mock.invocationCallOrder[0])
+  })
+
+  it('replaces a single open detail without collapsing anything', async () => {
+    mockRoot = rootState()
+    mockRoot.routes[1].state = { key: 'chat-stack-state', index: 0, routes: [{ name: 'people/[id]', params: { id: 'alice' } }] }
+    mockPath = '/chats/people/alice'
+    const view = await render(app())
+    await fireEvent.press(view.getByTestId('master'))
+    expect(mockRouter.dismissAll).not.toHaveBeenCalled()
+    expect(mockRouter.replace).toHaveBeenCalledWith('/chats/new')
   })
 
   it('does not push a pending master route after an account change', async () => {
+    // A screen other than the detail stack is on top: the master route waits for the reset.
+    mockRoot = rootState()
+    mockRoot.routes[1] = { key: 'modal-route', name: 'modal' }
     const view = await render(app())
     await fireEvent.press(view.getByTestId('master'))
     expect(mockNavigation.dispatch).toHaveBeenCalledTimes(1)
@@ -146,30 +158,23 @@ describe('desktop navigation provider', () => {
     expect(mockRouter.push).not.toHaveBeenCalled()
   })
 
-  it('resets the actual __root stack before pushing a master route, then restores deep chats state', async () => {
+  it('replaces in the actual __root stack, then restores deep chats state across sections', async () => {
     mockRoot = wrappedRootState()
     const view = await render(app())
     await fireEvent.press(view.getByTestId('master'))
-    const reset = mockNavigation.dispatch.mock.calls[0][0]
-    expect(reset.target).toBe('navigator:root')
-    expect(reset.payload.routes).toHaveLength(1)
-    expect(reset.payload.routes[0].name).toBe('__root')
-    expect(reset.payload.routes[0].state.routes.map((route: any) => route.name)).toEqual(['(tabs)'])
-    expect(mockRouter.push).not.toHaveBeenCalled()
-
-    mockRoot = reset.payload
-    await view.rerender(app())
-    expect(mockRouter.push).toHaveBeenCalledWith('/chats/new')
+    expect(mockNavigation.dispatch).not.toHaveBeenCalled()
+    expect(mockRouter.dismissAll).toHaveBeenCalledTimes(1)
+    expect(mockRouter.replace).toHaveBeenCalledWith('/chats/new')
 
     mockRoot = wrappedRootState()
     const switched = await render(app())
     await fireEvent.press(switched.getByTestId('contacts'))
-    const contacts = mockNavigation.dispatch.mock.calls[1][0]
+    const contacts = mockNavigation.dispatch.mock.calls[0][0]
     expect(contacts.payload.routes[0].name).toBe('__root')
     mockRoot = contacts.payload
     await switched.rerender(app())
     await fireEvent.press(switched.getByTestId('chats'))
-    const chats = mockNavigation.dispatch.mock.calls[2][0]
+    const chats = mockNavigation.dispatch.mock.calls[1][0]
     expect(chats.payload.routes[0].state.routes.map((route: any) => route.name)).toEqual(['(tabs)', 'chats'])
     expect(chats.payload.routes[0].state.routes[1].state.routes[1].params.id).toBe('real-chat-42')
   })

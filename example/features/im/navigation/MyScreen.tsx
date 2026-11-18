@@ -4,6 +4,7 @@ import { Href, useFocusEffect, useRouter } from 'expo-router'
 import { profile } from '../application/profile'
 import { logout, useOpenIM } from '../application/store'
 import type { SelfProfile } from '../domain/profile'
+import { rememberedValue } from '../shared/remembered'
 import { Confirm } from '../shared/shared'
 import { useTask } from '../shared/useTask'
 import { useProductAppearance, useProductLayout, setProductAppearance } from '../ui/preferences'
@@ -13,13 +14,16 @@ import { ProductPage } from '../ui/ProductPage'
 import { useProductTheme } from '../ui/theme'
 import { useMasterNavigation } from './DesktopNavigation'
 
+// Kept so that the page, mounted again on PC as navigation moves in and out of 我的, starts filled.
+const remembered = rememberedValue<{ self: SelfProfile, blacklistCount: number }>()
+
 export default function MyScreen () {
   const { session } = useOpenIM()
   return session ? (
-    <MyAccount key={`${session.userID}:${session.imToken}`} userID={session.userID} />
+    <MyAccount key={`${session.userID}:${session.imToken}`} account={`${session.userID}:${session.imToken}`} userID={session.userID} />
   ) : null
 }
-function MyAccount ({ userID }: { userID: string }) {
+function MyAccount ({ userID, account }: { userID: string, account: string }) {
   const t = useProductTheme()
   const { desktop } = useProductLayout()
   const appearance = useProductAppearance()
@@ -30,21 +34,23 @@ function MyAccount ({ userID }: { userID: string }) {
   const { busy } = useOpenIM()
   const task = useTask()
   const { run } = task
-  const [blacklistCount, setBlacklistCount] = useState(0)
-  const [self, setSelf] = useState<SelfProfile>()
+  const [kept] = useState(() => remembered.get(account))
+  const [blacklistCount, setBlacklistCount] = useState(kept?.blacklistCount ?? 0)
+  const [self, setSelf] = useState<SelfProfile | undefined>(kept?.self)
   const [confirmLogout, setConfirmLogout] = useState(false)
   const refresh = useCallback(() => run(async current => {
     const [result, list] = await Promise.all([profile.self(), profile.blacklist()])
     if (current()) {
       setSelf(result)
       setBlacklistCount(list.length)
+      remembered.set(account, { self: result, blacklistCount: list.length })
     }
-  }), [run])
+  }), [run, account])
   useFocusEffect(useCallback(() => {
     void refresh()
   }, [refresh]))
   return (
-    <ProductPage title='我的' root {...task} loading={!task.hasSucceeded} onRetry={() => {
+    <ProductPage title='我的' root {...task} loading={!task.hasSucceeded && !kept} onRetry={() => {
       void refresh()
     }}
     >

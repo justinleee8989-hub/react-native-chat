@@ -12,6 +12,7 @@ import { useProductLayout } from '../ui/preferences'
 import { productSection, type ProductSection } from './layout'
 import {
   createSectionHistory,
+  openDetailScreens,
   productNavigationState,
   sectionDetailDepth,
   sectionFromState,
@@ -33,7 +34,7 @@ export function DesktopNavigationProvider ({ children }: React.PropsWithChildren
   const router = useRouter()
   const path = usePathname()
   const { desktop } = useProductLayout()
-  const { session, conversations } = useOpenIM()
+  const { session } = useOpenIM()
   const enabled = desktop && Platform.OS === 'web'
   const account = session ? `${session.userID}:${session.imToken}` : ''
   const previousAccount = useRef(account)
@@ -109,19 +110,24 @@ export function DesktopNavigationProvider ({ children }: React.PropsWithChildren
       router.push(href)
       return
     }
-    // Switching peers is one route replacement, never a visible trip through the empty master.
-    const isConversation = (value: unknown) => conversations?.some(item => value === `/chats/${encodeURIComponent(item.conversationID)}`)
-    if (isConversation(path) && isConversation(href)) {
-      if (path !== href)
-        router.replace(href)
-      return
-    }
     const current = navigation.getRootState()
     if (
       productNavigationState(current)?.routes.length === 1 &&
       productNavigationState(current)?.routes[0].name === '(tabs)'
     ) {
       router.push(href)
+      return
+    }
+    // A detail is open: replace it where it is, for any kind of item. Going back to the empty
+    // master and pushing again unmounted and remounted the whole frame, and the master list
+    // reloaded, on every click; only conversations were replaced in place before. Both steps run
+    // in this one event, so the first screen of a deeper stack is never painted on its own.
+    const screens = openDetailScreens(current)
+    if (screens) {
+      if (screens > 1)
+        router.dismissAll()
+      if (screens > 1 || path !== href)
+        router.replace(href)
       return
     }
     pending.current = { account, section, href }

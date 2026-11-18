@@ -7,6 +7,7 @@ import { useOpenIM } from '../application/store'
 import LoginScreen from '../auth/LoginScreen'
 import { mergeDirectory, type Person } from '../domain/directory'
 import { useMasterNavigation } from '../navigation/DesktopNavigation'
+import { rememberedValue } from '../shared/remembered'
 import { Action } from '../shared/shared'
 import { useDirectoryEvents } from '../shared/useDirectoryEvents'
 import { useTask } from '../shared/useTask'
@@ -22,29 +23,37 @@ import { ContactIconButton, ContactLayout, ContactSection } from './ContactLayou
 const events = [
   ...new Set([...contactDirectoryEvents, ...groupDirectoryEvents, ...groupApplicationEvents]),
 ]
+const remembered = rememberedValue<{
+  friends: Person[]
+  more: boolean
+  pending: number
+  groups: number
+  groupPending: number
+}>()
 
 export default function ContactsScreen ({ root = false }: { root?: boolean }) {
   const { session } = useOpenIM()
   return session ? (
-    <Contacts root={root} key={`${session.userID}:${session.imToken}`} />
+    <Contacts root={root} account={`${session.userID}:${session.imToken}`} key={`${session.userID}:${session.imToken}`} />
   ) : (
     <LoginScreen />
   )
 }
-function Contacts ({ root }: { root: boolean }) {
+function Contacts ({ root, account }: { root: boolean, account: string }) {
   const router = useRouter()
   const openMaster = useMasterNavigation()
   const open = root ? openMaster : (href: Href) => router.push(href)
   const t = useProductTheme()
   const task = useTask()
   const { run } = task
-  const [friends, setFriends] = useState<Person[]>([])
-  const [pending, setPending] = useState(0)
-  const [groups, setGroups] = useState(0)
-  const [groupPending, setGroupPending] = useState(0)
+  const [kept] = useState(() => remembered.get(account))
+  const [friends, setFriends] = useState<Person[]>(kept?.friends ?? [])
+  const [pending, setPending] = useState(kept?.pending ?? 0)
+  const [groups, setGroups] = useState(kept?.groups ?? 0)
+  const [groupPending, setGroupPending] = useState(kept?.groupPending ?? 0)
   const [selected, setSelected] = useState<Person>()
-  const [offset, setOffset] = useState(0)
-  const [more, setMore] = useState(false)
+  const [offset, setOffset] = useState(kept?.friends.length ?? 0)
+  const [more, setMore] = useState(kept?.more ?? false)
   const [query, setQuery] = useState('')
   const refresh = useCallback(
     () =>
@@ -71,8 +80,9 @@ function Contacts ({ root }: { root: boolean }) {
         setPending(requests)
         setGroups(groupCount)
         setGroupPending(groupRequests)
+        remembered.set(account, { friends: people, more: people.length === 30, pending: requests, groups: groupCount, groupPending: groupRequests })
       }),
-    [run]
+    [run, account]
   )
   useDirectoryEvents(events, refresh, task.busy)
   useEffect(() => {
@@ -109,7 +119,7 @@ function Contacts ({ root }: { root: boolean }) {
       {count}
     </Text>
   )
-  const loading = !task.hasSucceeded
+  const loading = !task.hasSucceeded && !kept
   return (
     <ContactLayout
       white
