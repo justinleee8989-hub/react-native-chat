@@ -6,6 +6,7 @@ import {
   type VoiceRecordingControlProps,
 } from '@kesha-antonov/react-native-chat'
 import { reportError } from '../application/store'
+import { useT } from '../i18n'
 import { useProductLayout } from '../ui/preferences'
 import { ProductIcon } from '../ui/ProductIcon'
 import { useProductTheme } from '../ui/theme'
@@ -34,6 +35,7 @@ function ProductRecordingControl ({
   onStart,
   onActiveChange,
 }: Omit<ProductRecordingProps, 'config' | 'onSend'> & { controls: VoiceRecordingControlProps }) {
+  const tr = useT()
   const t = useProductTheme()
   const { desktop } = useProductLayout()
   const [pending, setPending] = useState(false)
@@ -101,7 +103,7 @@ function ProductRecordingControl ({
       >
         <Pressable
           accessibilityRole='button'
-          accessibilityLabel='录制语音消息'
+          accessibilityLabel={tr('chat.recordVoice')}
           disabled={pending || settling}
           onPress={start}
           style={{ width: 40, height: 40, alignItems: 'center', justifyContent: 'center' }}
@@ -131,22 +133,22 @@ function ProductRecordingControl ({
     >
       <ProductPulse size={10} color={t.danger} />
       <Text
-        accessibilityLabel={requestingMicrophone ? '录音状态' : '录音时长'}
+        accessibilityLabel={requestingMicrophone ? tr('recording.status') : tr('recording.duration')}
         style={{ flex: 1, fontSize: 16, color: t.text, fontVariant: ['tabular-nums'] }}
       >
-        {requestingMicrophone ? '正在请求麦克风…' : timer}
+        {requestingMicrophone ? tr('recording.requestingMic') : timer}
       </Text>
       <Pressable
         accessibilityRole='button'
-        accessibilityLabel='取消录音'
+        accessibilityLabel={tr('recording.cancel')}
         onPress={() => finish(false)}
         style={{ padding: 8 }}
       >
-        <Text style={{ color: t.accent, fontSize: 16 }}>取消</Text>
+        <Text style={{ color: t.accent, fontSize: 16 }}>{tr('common.cancel')}</Text>
       </Pressable>
       <Pressable
         accessibilityRole='button'
-        accessibilityLabel='发送语音'
+        accessibilityLabel={tr('recording.send')}
         onPress={() => finish(true)}
         style={{
           width: 40,

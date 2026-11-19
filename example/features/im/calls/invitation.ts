@@ -1,5 +1,7 @@
+import { ProductError } from '../shared/product-error.ts'
 export interface CallInvitation { room: string, expires: number }
-const prefix = '[OpenIM 通话邀请] '
+// Wire format other clients match: never shown, never translated.
+const prefix = '[OpenIM 通话邀请] ' // i18n-ignore
 export function parseCallInvitation (text: string): CallInvitation | undefined {
   if (!text.startsWith(prefix))
     return
@@ -14,12 +16,12 @@ export function formatCallInvitation (value: CallInvitation) {
 }
 export function assertActiveInvitation (value: CallInvitation, now = Date.now()) {
   if (!parseCallInvitation(formatCallInvitation(value)) || value.expires <= now)
-    throw new Error('通话邀请已过期或无效，请重新发起')
+    throw new ProductError('call.invitationExpired')
 }
 
 export function assertJoinableInvitation (call?: { status: string, expires: number }) {
   if (!call || call.status !== 'accepted')
-    throw new Error('通话已结束，请重新发起通话，不要重发旧邀请')
+    throw new ProductError('call.endedDontResend')
   if (call.expires <= Date.now())
-    throw new Error('通话邀请已过期，请重新发起通话')
+    throw new ProductError('call.invitationTimedOut')
 }

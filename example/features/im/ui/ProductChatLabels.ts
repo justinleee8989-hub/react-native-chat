@@ -1,6 +1,11 @@
 import type { ChatLabels } from '@kesha-antonov/react-native-chat'
 
-export const productChatLabels: Partial<ChatLabels> = {
-  recordAudioMessage: '录制语音消息',
-  recordVideoMessage: '录制视频消息',
+import type { Translate } from '../i18n/translate.ts'
+
+/** The app's wording over the chat library's own, in the current language. */
+export function productChatLabels (tr: Translate): Partial<ChatLabels> {
+  return {
+    recordAudioMessage: tr('chat.recordVoice'),
+    recordVideoMessage: tr('chat.recordVideo'),
+  }
 }

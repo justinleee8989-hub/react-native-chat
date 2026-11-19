@@ -1,4 +1,5 @@
 import type { Conversation, ServerConfig } from '../../domain/types'
+import { ProductError } from '../../shared/product-error.ts'
 
 interface SnapshotStorage {
   getItem: (key: string) => Promise<string | null>
@@ -75,7 +76,7 @@ export function createHomeSnapshots (storage: SnapshotStorage) {
           try {
             await storage.removeItem(key)
           } catch {
-            throw new Error('本机首页快照清理失败，请重试。')
+            throw new ProductError('snapshot.clearFailed')
           }
         }
       }, options?.required)

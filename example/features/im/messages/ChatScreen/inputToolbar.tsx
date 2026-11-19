@@ -1,14 +1,16 @@
 import React from 'react'
 import { Text, View } from 'react-native'
 import type { IMessage, InputToolbarProps } from '@kesha-antonov/react-native-chat'
+import type { MessageKey, Translate } from '../../i18n'
 import type { useProductChatTheme } from '../../ui/ProductChatTheme'
 import { ProductInputToolbar } from '../ProductInputToolbar'
 
-const ACCESS_PENDING = '正在同步会话权限…'
+const ACCESS_PENDING: MessageKey = 'access.syncing'
 
 /** The composer, or why this user cannot send here; while access is still syncing, a disabled composer. */
-export function renderChatInputToolbar ({ accessNotice, selfID, theme }: {
-  accessNotice: string
+export function renderChatInputToolbar ({ accessNotice, selfID, theme, tr }: {
+  accessNotice: MessageKey | ''
+  tr: Translate
   selfID?: string
   theme: ReturnType<typeof useProductChatTheme>
 }) {
@@ -16,7 +18,7 @@ export function renderChatInputToolbar ({ accessNotice, selfID, theme }: {
     accessNotice && accessNotice !== ACCESS_PENDING ? (
       <View style={{ minHeight: 56, padding: 12, justifyContent: 'center' }}>
         <Text style={{ textAlign: 'center', color: theme.colors.dayPillText, fontSize: 14 }}>
-          {accessNotice}
+          {tr(accessNotice)}
         </Text>
       </View>
     ) : (

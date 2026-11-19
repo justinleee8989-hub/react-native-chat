@@ -9,7 +9,7 @@ function answer (body) {
 }
 
 test('a server without a call service is reported as such, not as a generic failure', async () => {
-  answer({ errCode: 1002, errMsg: 'NoPermissionError', errDlt: '通话服务未启用' })
+  answer({ errCode: 20201, errMsg: 'FeatureDisabled', errDlt: 'call service disabled' })
   await assert.rejects(callAuthority(session, 'http://chat', { action: 'list' }), isCallServiceUnavailable)
 })
 

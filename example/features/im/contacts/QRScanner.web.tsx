@@ -1,13 +1,15 @@
 import React from 'react'
 import { StyleSheet, Text, View } from 'react-native'
+import { useT } from '../i18n'
 
 /** A browser has no camera scanner here (Safari has no barcode detection): 扫一扫 is phone-only. */
 // Same props as the native scanner, which this file stands in for on web.
 export function QRScanner (props: { active: boolean, onScanned: (value: string) => void }): React.ReactElement
 export function QRScanner () {
+  const tr = useT()
   return (
     <View style={styles.blocked}>
-      <Text style={styles.text}>请在手机 App 中使用扫一扫。</Text>
+      <Text style={styles.text}>{tr('qr.webOnlyApp')}</Text>
     </View>
   )
 }

@@ -1,6 +1,7 @@
 import type { Person } from '../../domain/directory'
 import type { ProfilePatch, SelfProfile } from '../../domain/profile'
 import type { Session } from '../../domain/types'
+import { ProductError } from '../../shared/product-error.ts'
 import type { SelfProfileIdentity } from './self-profile-api'
 
 interface ProfileSDK {
@@ -20,13 +21,13 @@ export function createProfileService (
 ) {
   function person (value: unknown): Person {
     if (!value || typeof value !== 'object' || !('userID' in value) || typeof value.userID !== 'string')
-      throw new Error('XIM 用户资料响应格式不正确')
+      throw new ProductError('profile.badProfileResponse')
     return value as Person
   }
   function list (value: unknown): Person[] {
     const data = unwrap(value)
     if (!Array.isArray(data))
-      throw new Error('XIM 用户列表响应格式不正确')
+      throw new ProductError('profile.badUsersResponse')
     return data.map(person)
   }
   return {
@@ -58,9 +59,9 @@ export function createProfileService (
       nickname = nickname.trim()
       faceURL = faceURL.trim()
       if (!nickname)
-        throw new Error('昵称不能为空')
+        throw new ProductError('profile.nicknameRequired')
       if (faceURL && !/^https?:\/\/[^\s]+$/.test(faceURL))
-        throw new Error('头像地址必须是 http 或 https 图片地址')
+        throw new ProductError('profile.avatarURL')
       return (await getSDK()).setSelfInfo({ nickname, faceURL })
     },
     muteNotifications: async (muted: boolean) => (await getSDK()).setSelfInfo({ globalRecvMsgOpt: muted ? 2 : 0 }),
@@ -68,7 +69,7 @@ export function createProfileService (
       const sdk = await getSDK()
       const friends = list(await sdk.getSpecifiedFriendsInfo({ friendUserIDList: [id], filterBlack: false }))
       if (!friends.some(user => user.userID === id))
-        throw new Error('仅好友可设置好友备注')
+        throw new ProductError('profile.remarkFriendsOnly')
       return sdk.updateFriends({ friendUserIDs: [id], remark: remark.trim() })
     },
     block: async (id: string, blocked: boolean) => {

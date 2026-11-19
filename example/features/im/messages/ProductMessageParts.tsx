@@ -9,6 +9,7 @@ import {
   type RenderMessageTextProps,
   type ReplyPreviewProps,
 } from '@kesha-antonov/react-native-chat'
+import { useT } from '../i18n'
 import { useProductLayout } from '../ui/preferences'
 import { useSentPartColor } from '../ui/ProductChatTheme'
 import { ProductIcon } from '../ui/ProductIcon'
@@ -16,6 +17,7 @@ import { useProductTheme } from '../ui/theme'
 import { ProductImagePreview } from './ProductImagePreview'
 
 export function ProductMessageText (props: RenderMessageTextProps<IMessage>) {
+  const tr = useT()
   const t = useProductTheme()
   const sent = useSentPartColor()
   const color = props.position === 'right' ? sent : t.text
@@ -28,8 +30,8 @@ export function ProductMessageText (props: RenderMessageTextProps<IMessage>) {
       }}
       trailing={
         props.currentMessage.isEdited ? (
-          <Text accessibilityLabel='已编辑' style={{ color, fontSize: 11, opacity: 0.6 }}>
-            {'\u3000已\u2060编\u2060辑'}
+          <Text accessibilityLabel={tr('message.edited')} style={{ color, fontSize: 11, opacity: 0.6 }}>
+            {tr('message.editedMark')}
           </Text>
         ) : undefined
       }
@@ -132,24 +134,25 @@ export function ProductReplyPreview ({
   selfID,
   onClearReply,
 }: ReplyPreviewProps & { selfID?: string }) {
+  const tr = useT()
   const t = useProductTheme()
   const { desktop } = useProductLayout()
   const media = replyMessage as Partial<IMessage>
   const title =
     mode === 'edit'
-      ? '编辑消息'
-      : `回复 ${String(replyMessage.user._id) === selfID ? '自己' : replyMessage.user.name || replyMessage.user._id}`
+      ? tr('composer.editing')
+      : tr('composer.replyTo', { name: String(replyMessage.user._id) === selfID ? tr('composer.yourself') : replyMessage.user.name || replyMessage.user._id })
   const summary =
     replyMessage.text ||
     (media.file
-      ? `[文件] ${media.file.name}`
+      ? tr('preview.file', { name: media.file.name })
       : media.video
-        ? '[视频]'
+        ? tr('preview.video')
         : media.image
-          ? '[图片]'
+          ? tr('preview.image')
           : media.audio
-            ? '[语音]'
-            : '[消息]')
+            ? tr('preview.voice')
+            : tr('preview.message'))
   return (
     <View
       style={{
@@ -180,7 +183,7 @@ export function ProductReplyPreview ({
       </View>
       <Pressable
         accessibilityRole='button'
-        accessibilityLabel='取消'
+        accessibilityLabel={tr('common.cancel')}
         onPress={onClearReply}
         style={{ width: 40, height: 40, alignItems: 'center', justifyContent: 'center' }}
       >

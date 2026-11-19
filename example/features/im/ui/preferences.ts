@@ -2,6 +2,7 @@ import { useEffect, useSyncExternalStore } from 'react'
 import { useWindowDimensions } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useColorScheme } from '@/hooks/use-color-scheme'
+import { type LanguageChoice, parseLanguageChoice } from '../i18n/translate.ts'
 import { parseChatTheme, type ChatThemeId } from './chat-theme'
 import { parseChatWallpaper, type ChatWallpaperId } from './chat-wallpaper'
 import { parseAppearance, resolveAppearance, type ProductAppearance } from './preferences-model'
@@ -45,6 +46,8 @@ const chatWallpaper = stored<ChatWallpaperId>('openim.product.chat-wallpaper', '
 const chatTheme = stored<ChatThemeId>('openim.product.chat-theme', 'default', parseChatTheme)
 // The picked photo for the 相册图片 wallpaper: a file in the app's documents, or a data URL on web.
 const chatWallpaperPhoto = stored<string>('openim.product.chat-wallpaper-photo', '', value => value ?? '')
+// 我的 → 语言: a language, or the system's.
+const language = stored<LanguageChoice>('openim.product.language', 'auto', parseLanguageChoice)
 function restore () {
   if (initialized)
     return
@@ -53,6 +56,7 @@ function restore () {
   chatWallpaper.restore()
   chatTheme.restore()
   chatWallpaperPhoto.restore()
+  language.restore()
 }
 function useStored<T extends string> (choice: ReturnType<typeof stored<T>>) {
   useEffect(restore, [])
@@ -66,6 +70,8 @@ export const setChatWallpaperPhoto = chatWallpaperPhoto.set
 export const useChatWallpaperPhoto = () => useStored(chatWallpaperPhoto)
 export const setChatTheme = chatTheme.set
 export const useChatTheme = () => useStored(chatTheme)
+export const setLanguageChoice = language.set
+export const useLanguageChoice = () => useStored(language)
 export const setProductAppearance = appearance.set
 export const useProductAppearance = () => useStored(appearance)
 export function setPhonePreview (value: boolean) {

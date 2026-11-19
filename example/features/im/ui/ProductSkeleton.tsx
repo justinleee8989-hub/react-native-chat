@@ -1,5 +1,6 @@
 import React from 'react'
 import { StyleSheet, View } from 'react-native'
+import { useT } from '../i18n'
 import { useProductTheme } from './theme'
 
 export type ProductSkeletonKind = 'list' | 'profile' | 'settings' | 'members'
@@ -20,8 +21,9 @@ export function ProductSkeleton ({ kind = 'list', rows, small = false, group = f
   /** A group's profile: its avatar is a rounded square, a person's is a circle. */
   group?: boolean
 }) {
+  const tr = useT()
   return (
-    <View accessible accessibilityLabel='正在加载内容' accessibilityState={{ busy: true }} pointerEvents='none'>
+    <View accessible accessibilityLabel={tr('common.loadingContent')} accessibilityState={{ busy: true }} pointerEvents='none'>
       <View accessibilityElementsHidden importantForAccessibility='no-hide-descendants'>
         {kind === 'list' && <ListRows count={rows ?? 7} small={small} />}
         {kind === 'profile' && (

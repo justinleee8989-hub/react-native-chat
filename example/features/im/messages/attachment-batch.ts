@@ -1,4 +1,7 @@
 import type { IMMessage, MediaInput } from '../domain/types'
+import type { MessageKey } from '../i18n'
+import { errorKey } from '../shared/error-message.ts'
+import { ProductError } from '../shared/product-error.ts'
 
 export type AttachmentBatchItemStatus = 'queued' | 'preparing' | 'ready' | 'sending' | 'failed' | 'sent'
 export type AttachmentBatchStatus = 'ready' | 'sending' | 'failed' | 'completed' | 'cancelled' | 'blocked'
@@ -10,7 +13,8 @@ export interface AttachmentBatchItem {
   text?: string
   recovered?: boolean
   prepared?: IMMessage
-  error?: string
+  /** Why it stopped, as the key of its text (saved with the batch). */
+  error?: MessageKey
 }
 
 export interface AttachmentBatch {
@@ -22,7 +26,8 @@ export interface AttachmentBatch {
   items: AttachmentBatchItem[]
   status: AttachmentBatchStatus
   cancelled: boolean
-  error?: string
+  /** Why it stopped, as the key of its text (saved with the batch). */
+  error?: MessageKey
 }
 
 export interface AttachmentPersistence {
@@ -43,10 +48,6 @@ interface AttachmentBatchDependencies {
   createMedia: (media: MediaInput, reply?: IMMessage) => Promise<IMMessage>
   createText: (text: string, reply?: IMMessage) => Promise<IMMessage>
   send: (conversationID: string, message: IMMessage) => Promise<void>
-}
-
-function errorText (error: unknown) {
-  return error instanceof Error ? error.message : String(error)
 }
 
 function copyBatch (batch: AttachmentBatch): AttachmentBatch {
@@ -103,12 +104,12 @@ export function createAttachmentBatchManager (dependencies: AttachmentBatchDepen
     const scope = dependencies.getScope?.()
     const epoch = dependencies.getEpoch()
     if (!scope)
-      throw new Error('请先登录')
+      throw new ProductError('session.signInFirst')
     for (const [id, batch] of batches)
       if (batch.status === 'completed' || batch.status === 'cancelled')
         batches.delete(id)
     if (batches.size >= 50 || media.length > 20)
-      throw new Error('待发送附件过多，请完成或取消现有任务后重试')
+      throw new ProductError('attachments.tooMany')
     const id = `attachment-batch-${Date.now()}-${Math.random().toString(36).slice(2)}-${++nextID}`
     const batch: AttachmentBatch = { id, conversationID, scope, epoch, reply, items: [], status: 'ready', cancelled: false }
     try {
@@ -117,14 +118,14 @@ export function createAttachmentBatchManager (dependencies: AttachmentBatchDepen
       if (caption.trim())
         batch.items.push({ kind: 'caption', status: 'queued', text: caption })
       if (epoch !== dependencies.getEpoch() || scope !== dependencies.getScope?.())
-        throw new Error('登录已改变，请重新选择附件')
+        throw new ProductError('attachments.signInChangedReselect')
       await persist(batch)
     } catch (error) {
       await dependencies.persistence.remove(scope, id).catch(() => undefined)
       throw error
     }
     if (epoch !== dependencies.getEpoch() || scope !== dependencies.getScope?.())
-      throw new Error('登录已改变，附件已保存，请登录原账号后继续')
+      throw new ProductError('attachments.savedSignInAgain')
     batches.set(id, batch)
     notify()
     return copyBatch(batch)
@@ -146,7 +147,7 @@ export function createAttachmentBatchManager (dependencies: AttachmentBatchDepen
       })
       batch.epoch = epoch
       batch.status = 'failed'
-      batch.error = '附件任务已恢复，请确认后继续发送'
+      batch.error = 'attachments.restored'
       batches.set(batch.id, batch)
     }
     notify()
@@ -195,12 +196,12 @@ export function createAttachmentBatchManager (dependencies: AttachmentBatchDepen
 
   async function process (batch: AttachmentBatch) {
     if (batch.cancelled)
-      throw new Error('附件批次已取消')
+      throw new ProductError('attachments.canceled')
     if (batch.epoch !== dependencies.getEpoch()) {
       batch.status = 'blocked'
-      batch.error = '登录已改变，请勿继续发送旧账号附件'
+      batch.error = 'attachments.oldAccount'
       notify()
-      throw new Error(batch.error)
+      throw new ProductError(batch.error)
     }
     batch.status = 'sending'
     batch.error = undefined
@@ -209,17 +210,17 @@ export function createAttachmentBatchManager (dependencies: AttachmentBatchDepen
       if (item.status === 'sent')
         continue
       if (batch.cancelled)
-        throw new Error('附件批次已取消')
+        throw new ProductError('attachments.canceled')
       if (batch.epoch !== dependencies.getEpoch()) {
         batch.status = 'blocked'
-        batch.error = '登录已改变，请勿继续发送旧账号附件'
+        batch.error = 'attachments.oldAccount'
         notify()
-        throw new Error(batch.error)
+        throw new ProductError(batch.error)
       }
       if (item.prepared && dependencies.reconcile && (item.recovered || item.status === 'sending' || item.status === 'failed')) {
         const delivered = await dependencies.reconcile(batch.conversationID, item.prepared)
         if (batch.cancelled || batch.epoch !== dependencies.getEpoch())
-          throw new Error('登录已改变或附件批次已取消')
+          throw new ProductError('attachments.changedOrCanceled')
         if (delivered) {
           item.status = 'sent'
           item.error = undefined
@@ -254,10 +255,10 @@ export function createAttachmentBatchManager (dependencies: AttachmentBatchDepen
             batch.status = 'cancelled'
             batch.items.forEach(releasePayload)
             notify()
-            throw new Error('附件批次已取消')
+            throw new ProductError('attachments.canceled')
           }
           item.status = 'failed'
-          item.error = errorText(error)
+          item.error = errorKey(error)
           batch.status = 'failed'
           batch.error = item.error
           notify()
@@ -266,20 +267,20 @@ export function createAttachmentBatchManager (dependencies: AttachmentBatchDepen
       }
       if (batch.epoch !== dependencies.getEpoch()) {
         batch.status = 'blocked'
-        batch.error = '登录已改变，请勿继续发送旧账号附件'
+        batch.error = 'attachments.oldAccount'
         notify()
-        throw new Error(batch.error)
+        throw new ProductError(batch.error)
       }
       if (batch.cancelled) {
         batch.status = 'cancelled'
         batch.items.forEach(releasePayload)
         notify()
-        throw new Error('附件批次已取消')
+        throw new ProductError('attachments.canceled')
       }
       item.status = 'sending'
       await persist(batch)
       if (batch.cancelled || batch.epoch !== dependencies.getEpoch())
-        throw new Error('登录已改变或附件批次已取消')
+        throw new ProductError('attachments.changedOrCanceled')
       notify()
       try {
         await dependencies.send(batch.conversationID, item.prepared)
@@ -293,11 +294,11 @@ export function createAttachmentBatchManager (dependencies: AttachmentBatchDepen
           batch.status = 'cancelled'
           batch.items.forEach(releasePayload)
           notify()
-          throw new Error('附件批次已取消')
+          throw new ProductError('attachments.canceled')
         }
         if (item.status !== 'sent')
           item.status = 'failed'
-        item.error = errorText(error)
+        item.error = errorKey(error)
         batch.status = 'failed'
         batch.error = item.error
         notify()
@@ -311,7 +312,7 @@ export function createAttachmentBatchManager (dependencies: AttachmentBatchDepen
     await dependencies.persistence?.remove(batch.scope!, batch.id)
     notify()
     if (batch.cancelled)
-      throw new Error('附件批次已取消')
+      throw new ProductError('attachments.canceled')
   }
 
   function run (id: string): Promise<void> {
@@ -320,11 +321,11 @@ export function createAttachmentBatchManager (dependencies: AttachmentBatchDepen
       return current
     const batch = batches.get(id)
     if (!batch)
-      return Promise.reject(new Error('附件批次不存在'))
+      return Promise.reject(new ProductError('attachments.missing'))
     const result = process(batch).catch(async error => {
       if (!batch.cancelled && batch.status !== 'blocked') {
         batch.status = 'failed'
-        batch.error = errorText(error)
+        batch.error = errorKey(error)
         notify()
       }
       throw error

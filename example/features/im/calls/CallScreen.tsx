@@ -4,6 +4,8 @@ import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router'
 import { Room, RoomEvent } from 'livekit-client'
 import { calls, useOpenIM } from '../application/store'
 import LoginScreen from '../auth/LoginScreen'
+import type { MessageKey } from '../i18n'
+import { useT } from '../i18n'
 import { useTask } from '../shared/useTask'
 import { ProductModal } from '../ui/ProductModal'
 import { CallControl, CallPresentation, callConnectionLabel } from './CallPresentation'
@@ -46,6 +48,7 @@ function Call ({
   session: NonNullable<ReturnType<typeof useOpenIM>['session']>
   chatURL: string
 }) {
+  const tr = useT()
   const router = useRouter()
   const { conversations } = useOpenIM()
   const callState = useSyncExternalStore(calls.subscribe, calls.snapshot, calls.snapshot)
@@ -69,7 +72,7 @@ function Call ({
     const timer = setInterval(() => setElapsed(Math.floor((Date.now() - connectedAt) / 1000)), 1000)
     return () => clearInterval(timer)
   }, [connectedAt])
-  const [status, setStatus] = useState('准备连接')
+  const [status, setStatus] = useState<MessageKey>('call.preparing')
   const mediaActive = useRef(false)
   useEffect(() => {
     if (managed && callState.active?.room !== roomID) {
@@ -98,7 +101,7 @@ function Call ({
       const appState = AppState.addEventListener('change', state => {
         if (state === 'background') {
           stop()
-          setStatus('已离开通话，请返回聊天后重新加入')
+          setStatus('call.leftRejoin')
         }
       })
       const changed = () => {
@@ -199,7 +202,7 @@ function Call ({
     <ProductModal onRequestClose={hangUp}>
       <CallPresentation
         group={!!active?.groupID}
-        name={conversation?.showName || active?.name || active?.peer || '音视频通话'}
+        name={conversation?.showName || active?.name || active?.peer || tr(active?.groupID ? 'call.group' : 'call.title')}
         id={active?.groupID || active?.peer || roomID}
         uri={conversation?.faceURL}
         status={
@@ -209,10 +212,10 @@ function Call ({
               .padStart(
                 2,
                 '0'
-              )}:${(elapsed % 60).toString().padStart(2, '0')}${active?.groupID ? ` · ${participants.length} 人` : ''}`
-            : status
+              )}:${(elapsed % 60).toString().padStart(2, '0')}${active?.groupID ? ` · ${tr('chatInfo.memberCount', { count: participants.length })}` : ''}`
+            : tr(status)
         }
-        error={task.error ? callError({ message: task.error }).message : ''}
+        error={task.error}
         media={
           <View style={{ width: '100%', marginTop: 12 }}>
             {participants.map(participant => (
@@ -222,7 +225,7 @@ function Call ({
                 ) && (
                   <Text style={{ color: '#fff', fontSize: 12, marginTop: 4 }}>
                     {participant.name || participant.identity || session.userID}
-                    {participant.isLocal ? '（我）' : ''}
+                    {participant.isLocal ? tr('call.me') : ''}
                   </Text>
                 )}
                 {[...participant.trackPublications.values()].map(publication => (
@@ -240,7 +243,7 @@ function Call ({
       >
         <View style={{ flexDirection: 'row', gap: 26, marginBottom: 34 }}>
           <CallControl
-            label={room.localParticipant.isMicrophoneEnabled ? '麦克风' : '已静音'}
+            label={room.localParticipant.isMicrophoneEnabled ? tr('call.microphone') : tr('call.muted')}
             icon={room.localParticipant.isMicrophoneEnabled ? 'mic' : 'micOff'}
             active={room.localParticipant.isMicrophoneEnabled}
             disabled={disabled}
@@ -268,7 +271,7 @@ function Call ({
             }}
           />
           <CallControl
-            label={Platform.OS === 'web' ? '声音' : '扬声器'}
+            label={Platform.OS === 'web' ? tr('call.sound') : tr('call.speaker')}
             icon='speaker'
             active={active?.media.speaker !== false}
             disabled={disabled}
@@ -284,7 +287,7 @@ function Call ({
             }}
           />
           <CallControl
-            label='摄像头'
+            label={tr('call.camera')}
             icon='video'
             active={room.localParticipant.isCameraEnabled}
             disabled={disabled}
@@ -312,7 +315,7 @@ function Call ({
             }}
           />
         </View>
-        <CallControl label='挂断' icon='phone' tone='red' onPress={hangUp} />
+        <CallControl label={tr('call.hangUp')} icon='phone' tone='red' onPress={hangUp} />
       </CallPresentation>
     </ProductModal>
   )

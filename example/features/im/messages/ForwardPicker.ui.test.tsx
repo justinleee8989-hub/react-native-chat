@@ -16,7 +16,7 @@ let mockDesktop = false
 jest.mock('../application/store', () => ({ useOpenIM: () => ({ session: { userID: 'self', imToken: 'token' }, conversations: [{ conversationID: 'c1', showName: '小林' }, { conversationID: 'c2', showName: '小周' }] }), forwardMessage: (...args: unknown[]) => mockForward(...args) }))
 jest.mock('../auth/LoginScreen', () => () => null)
 jest.mock('expo-router', () => ({ useRouter: () => ({}) }))
-jest.mock('../ui/preferences', () => ({ useProductLayout: () => ({ desktop: mockDesktop }), useProductScheme: () => 'light' }))
+jest.mock('../ui/preferences', () => ({ useLanguageChoice: () => 'auto', useProductLayout: () => ({ desktop: mockDesktop }), useProductScheme: () => 'light' }))
 jest.mock('../ui/ProductIcon', () => ({ ProductIcon: () => null }))
 it('confirms the selected recipient and blocks dismissal and duplicate sends while pending', async () => {
   let finish!: () => void

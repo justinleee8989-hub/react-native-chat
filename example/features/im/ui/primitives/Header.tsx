@@ -1,5 +1,6 @@
 import React from 'react'
 import { Text, View } from 'react-native'
+import { useT } from '../../i18n'
 import { useProductLayout } from '../preferences'
 import { ProductIcon } from '../ProductIcon'
 import { ProductPressable as Pressable } from '../ProductPressable'
@@ -23,6 +24,7 @@ export function ProductHeader ({
   backgroundColor?: string
   detail?: boolean
 }) {
+  const tr = useT()
   const t = useProductTheme()
   const { desktop } = useProductLayout()
   const desktopLarge = large && desktop
@@ -49,7 +51,7 @@ export function ProductHeader ({
       {onBack && (
         <Pressable
           accessibilityRole='button'
-          accessibilityLabel='返回'
+          accessibilityLabel={tr('common.back')}
           onPress={onBack}
           style={({ pressed }) => [
             styles.icon,
@@ -60,7 +62,9 @@ export function ProductHeader ({
         </Pressable>
       )}
       {!onBack && !large && <View style={styles.icon} />}
-      <View pointerEvents='none' style={desktopLarge ? styles.heading : styles.centeredHeading}>
+      {/* Centred over the whole bar, clear of the buttons: room for a wide right action (保存,
+          完成) only when there is one, or a narrow phone cuts an English title short. */}
+      <View pointerEvents='none' style={desktopLarge ? styles.heading : [styles.centeredHeading, !right && styles.centeredHeadingNarrow]}>
         {!!title && (
           <Text
             accessibilityRole='header'

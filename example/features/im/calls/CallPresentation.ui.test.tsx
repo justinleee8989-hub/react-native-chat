@@ -1,8 +1,11 @@
 import React from 'react'
 import { expect, it, jest } from '@jest/globals'
 import { fireEvent, render } from '@testing-library/react-native'
+import { translatorFor } from '../i18n/translate'
 import { CallControl, CallPresentation, callConnectionLabel } from './CallPresentation'
-jest.mock('../ui/preferences', () => ({ useProductLayout: () => ({ desktop: true }) }))
+
+const zhT = translatorFor('zh')
+jest.mock('../ui/preferences', () => ({ useLanguageChoice: () => 'auto', useProductLayout: () => ({ desktop: true }) }))
 jest.mock('../ui/ProductIcon', () => ({ ProductIcon: () => null }))
 jest.mock('../ui/primitives', () => {
   const Native = require('react-native')
@@ -61,7 +64,7 @@ it.each([
   ['disconnected', '连接已断开'],
   ['unknown', '准备连接'],
 ] as const)('maps the %s connection state to its user-facing label', (state, label) => {
-  expect(callConnectionLabel(state)).toBe(label)
+  expect(zhT(callConnectionLabel(state))).toBe(label)
 })
 
 jest.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }) }))

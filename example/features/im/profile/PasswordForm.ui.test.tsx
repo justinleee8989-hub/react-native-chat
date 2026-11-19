@@ -67,18 +67,18 @@ it('successful confirmation calls the real application contract then logs out', 
     await fireEvent.press(screen.getByRole('button', { name: '确认' })) 
   })
   expect(changePassword).toHaveBeenCalledWith({ userID: 'isolated-test', imToken: 'fake-im', chatToken: 'fake' }, 'old-test', 'new-test', 'http://local-test')
-  expect(logout).toHaveBeenCalledWith('密码已修改，请使用新密码登录')
+  expect(logout).toHaveBeenCalledWith('password.changed')
 })
 
 it('rejected change displays error and does not log out', async () => {
-  jest.mocked(changePassword).mockRejectedValue(new Error('当前密码错误'))
+  jest.mocked(changePassword).mockRejectedValue({ errCode: 20001, errMsg: 'PasswordError' })
   await render(<PasswordForm />)
   await fillValid()
   await fireEvent.press(screen.getByRole('button', { name: '修改密码' }))
   await act(async () => {
     await fireEvent.press(screen.getByRole('button', { name: '确认' })) 
   })
-  expect(screen.getByText('当前密码错误')).toBeTruthy()
+  expect(screen.getByText('账号或密码错误')).toBeTruthy()
   expect(logout).not.toHaveBeenCalled()
 })
 

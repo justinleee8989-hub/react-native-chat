@@ -4,6 +4,7 @@ import { usePathname } from 'expo-router'
 import CallHistoryScreen from '../../calls/CallHistoryScreen'
 import ContactsScreen from '../../contacts/ContactsScreen'
 import ChatListScreen from '../../conversations/ChatListScreen'
+import { useT } from '../../i18n'
 import { useProductLayout } from '../../ui/preferences'
 import { ProductIcon } from '../../ui/ProductIcon'
 import { useProductTheme } from '../../ui/theme'
@@ -18,15 +19,16 @@ export default function ProductShell ({
   children,
   master = false,
 }: React.PropsWithChildren<{ master?: boolean }>) {
+  const tr = useT()
   const { desktop } = useProductLayout()
   const path = usePathname()
   const navigation = useDesktopNavigation()
   const section = navigation?.section ?? productSection(path)
   const blank = {
-    chats: ['选择一个会话', '从左侧列表选择会话，或点右上角发起新的聊天'],
-    contacts: ['通讯录', '从左侧选择好友，或查看新的朋友和群聊'],
-    calls: ['通话', '点左侧的通话记录可以再次呼叫'],
-    me: ['我的', '从左侧选择要查看的设置'],
+    chats: [tr('shell.pickChat'), tr('shell.pickChatHint')],
+    contacts: [tr('tab.contacts'), tr('shell.contactsHint')],
+    calls: [tr('tab.calls'), tr('shell.callsHint')],
+    me: [tr('tab.me'), tr('shell.meHint')],
   }[section]
   const blankIcon = { chats: 'chat', contacts: 'users', calls: 'phone', me: 'user' } as const
   const t = useProductTheme()

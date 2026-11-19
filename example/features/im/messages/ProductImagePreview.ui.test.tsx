@@ -3,7 +3,7 @@ import { expect, it, jest } from '@jest/globals'
 import { act, fireEvent, render } from '@testing-library/react-native'
 import { ProductImagePreview } from './ProductImagePreview'
 
-jest.mock('../ui/preferences', () => ({ useProductLayout: () => ({ desktop: false }) }))
+jest.mock('../ui/preferences', () => ({ useLanguageChoice: () => 'auto', useProductLayout: () => ({ desktop: false }) }))
 jest.mock('../ui/ProductIcon', () => ({ ProductIcon: () => null }))
 jest.mock('../ui/ProductModal', () => ({ ProductModal: ({ children }: { children: React.ReactNode }) => children }))
 jest.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 0 }) }))

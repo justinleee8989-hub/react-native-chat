@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react'
 import { useLocalSearchParams, useRouter, type Href } from 'expo-router'
 import { login, useOpenIM } from '../application/store'
 import { defaultConfig, platformID } from '../config'
+import type { MessageKey } from '../i18n'
+import { useT } from '../i18n'
+import { errorMessage } from '../shared/error-message'
 import { showProductToast } from '../shared/ProductToast'
 import { useTask } from '../shared/useTask'
 import { createAccountService, type AccountMode } from './account-api'
@@ -9,6 +12,7 @@ import { AuthButton, AuthField, AuthLink, AuthNotice, AuthPage } from './AuthFor
 
 const emailEnabled = process.env.EXPO_PUBLIC_OPENIM_EMAIL_VERIFICATION_ENABLED === 'true'
 export default function AccountScreen ({ mode: requestedMode }: { mode?: AccountMode }) {
+  const tr = useT()
   const params = useLocalSearchParams<{ mode?: string, email?: string }>()
   const router = useRouter()
   const mode = requestedMode || (params.mode === 'reset' ? 'reset' : 'register')
@@ -21,7 +25,7 @@ export default function AccountScreen ({ mode: requestedMode }: { mode?: Account
   const [code, setCode] = useState('')
   const [password, setPassword] = useState('')
   const [repeat, setRepeat] = useState('')
-  const [notice, setNotice] = useState('')
+  const [notice, setNotice] = useState<MessageKey>()
   const [created, setCreated] = useState(false)
   useEffect(() => {
     if (session)
@@ -75,7 +79,7 @@ export default function AccountScreen ({ mode: requestedMode }: { mode?: Account
         setPassword('')
         setRepeat('')
         setCode('')
-        showProductToast('密码已重置，请使用新密码登录')
+        showProductToast(tr('auth.passwordResetDone'))
         backToLogin()
       }
     })
@@ -84,46 +88,46 @@ export default function AccountScreen ({ mode: requestedMode }: { mode?: Account
     <AuthPage
       brand={false}
       onBack={backToLogin}
-      title={registering ? '创建账户' : '找回密码'}
-      subtitle={registering ? '用邮箱注册，几步就能开始聊天。' : '通过邮箱验证码重置登录密码。'}
+      title={registering ? tr('auth.createAccount') : tr('auth.resetTitle')}
+      subtitle={registering ? tr('auth.registerSubtitle') : tr('auth.resetSubtitle')}
     >
       <>
         {!emailEnabled && (
-          <AuthNotice>邮箱验证服务尚未开通，注册和找回密码暂不可用，请联系管理员。</AuthNotice>
+          <AuthNotice>{tr('auth.emailDisabled')}</AuthNotice>
         )}
         <AuthField
-          label='邮箱'
-          placeholder={registering ? '邮箱' : '注册邮箱'}
+          label={tr('auth.email')}
+          placeholder={registering ? tr('auth.email') : tr('auth.registeredEmail')}
           keyboardType='email-address'
           autoComplete='email'
           value={email}
           onChangeText={setEmail}
           editable={!task.busy && !loginBusy && !created}
         />
-        {!!email && !validEmail && <AuthNotice error>请填写有效的邮箱地址</AuthNotice>}
+        {!!email && !validEmail && <AuthNotice error>{tr('auth.invalidEmail')}</AuthNotice>}
         {registering && (
           <>
             <AuthField
-              label='昵称'
-              placeholder='昵称：朋友们如何称呼你'
+              label={tr('auth.nickname')}
+              placeholder={tr('auth.nicknamePlaceholder')}
               value={nickname}
               onChangeText={setNickname}
               editable={!task.busy && !loginBusy && !created}
             />
           </>
         )}
-        {!!notice && <AuthNotice>{notice}</AuthNotice>}
+        {!!notice && <AuthNotice>{tr(notice)}</AuthNotice>}
         <AuthField
-          label='邮箱验证码'
-          placeholder='邮箱验证码'
+          label={tr('auth.emailCode')}
+          placeholder={tr('auth.emailCode')}
           autoComplete='one-time-code'
           value={code}
           onChangeText={setCode}
           editable={!task.busy && !loginBusy && !created}
           trailing={
             <AuthLink
-              accessibilityLabel={cooldown ? `${cooldown} 秒后重新发送` : '发送邮箱验证码'}
-              title={cooldown ? `${cooldown} 秒后重新发送` : '发送验证码'}
+              accessibilityLabel={cooldown ? tr('auth.resendIn', { seconds: cooldown }) : tr('auth.sendEmailCode')}
+              title={cooldown ? tr('auth.resendIn', { seconds: cooldown }) : tr('auth.sendCode')}
               disabled={
                 created || loginBusy || task.busy || !emailEnabled || !validEmail || cooldown > 0
               }
@@ -131,7 +135,7 @@ export default function AccountScreen ({ mode: requestedMode }: { mode?: Account
                 void task.run(async current => {
                   await service.sendCode(email.trim(), mode, invitationCode.trim())
                   if (current()) {
-                    setNotice('验证码已发送，请检查邮箱及垃圾邮件文件夹。')
+                    setNotice('auth.codeSent')
                     setCooldown(60)
                   }
                 })
@@ -140,8 +144,8 @@ export default function AccountScreen ({ mode: requestedMode }: { mode?: Account
           }
         />
         <AuthField
-          label={registering ? '密码' : '新密码'}
-          placeholder={registering ? '密码（至少 6 位）' : '新密码（至少 6 位）'}
+          label={registering ? tr('auth.password') : tr('auth.newPassword')}
+          placeholder={registering ? tr('auth.passwordHint') : tr('auth.newPasswordHint')}
           password
           autoComplete='new-password'
           value={password}
@@ -149,8 +153,8 @@ export default function AccountScreen ({ mode: requestedMode }: { mode?: Account
           editable={!task.busy && !loginBusy && !created}
         />
         <AuthField
-          label='确认密码'
-          placeholder={registering ? '确认密码' : '确认新密码'}
+          label={tr('auth.confirmPassword')}
+          placeholder={registering ? tr('auth.confirmPassword') : tr('auth.confirmNewPassword')}
           returnKeyType={registering ? 'next' : 'go'}
           onSubmitEditing={registering ? undefined : submit}
           password
@@ -163,27 +167,27 @@ export default function AccountScreen ({ mode: requestedMode }: { mode?: Account
           <AuthField
             returnKeyType='go'
             onSubmitEditing={submit}
-            label='邀请码（选填）'
-            placeholder='邀请码（选填）'
+            label={tr('auth.invitationCode')}
+            placeholder={tr('auth.invitationCode')}
             value={invitationCode}
             onChangeText={setInvitationCode}
             editable={!task.busy && !loginBusy && !created}
           />
         )}
-        {!!repeat && password !== repeat && <AuthNotice error>两次输入的密码不一致</AuthNotice>}
-        {!!(task.error || (created ? loginError : '')) && (
-          <AuthNotice error>{task.error || (created ? loginError : '')}</AuthNotice>
+        {!!repeat && password !== repeat && <AuthNotice error>{tr('auth.passwordMismatch')}</AuthNotice>}
+        {!!(task.error || (created && loginError)) && (
+          <AuthNotice error>{task.error || errorMessage(loginError, tr)}</AuthNotice>
         )}
-        {created && !session && <AuthNotice>账户已创建，请重试登录。</AuthNotice>}
+        {created && !session && <AuthNotice>{tr('auth.createdRetryLogin')}</AuthNotice>}
         <AuthButton
           title={
             task.busy || loginBusy
-              ? '正在处理…'
+              ? tr('auth.working')
               : created
-                ? '重试登录'
+                ? tr('auth.retryLogin')
                 : registering
-                  ? '创建账户'
-                  : '重置密码'
+                  ? tr('auth.createAccount')
+                  : tr('auth.resetPassword')
           }
           busy={task.busy || loginBusy}
           disabled={
@@ -197,7 +201,7 @@ export default function AccountScreen ({ mode: requestedMode }: { mode?: Account
           onPress={submit}
         />
         <AuthLink
-          title={registering ? '已有账户？返回登录' : '返回登录'}
+          title={registering ? tr('auth.haveAccount') : tr('auth.backToLogin')}
           disabled={task.busy || loginBusy}
           onPress={backToLogin}
         />

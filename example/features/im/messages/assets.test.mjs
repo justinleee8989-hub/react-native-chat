@@ -3,11 +3,12 @@ import test from 'node:test'
 import { readFileSync } from 'node:fs'
 import { runInNewContext } from 'node:vm'
 import ts from 'typescript'
+import { withI18n } from '../i18n/test-modules.mjs'
 
 const exports = {}
 runInNewContext(ts.transpileModule(readFileSync(new URL('./assets.ts', import.meta.url), 'utf8'), {
   compilerOptions: { module: ts.ModuleKind.CommonJS },
-}).outputText, { exports, URL, Set, Map, Object, Error, RegExp })
+}).outputText, { exports, URL, Set, Map, Object, Error, RegExp, require: withI18n() })
 
 const message = (id, sendTime, patch = {}) => ({
   clientMsgID: id,

@@ -8,6 +8,8 @@ import { mergeDirectory, type Group } from '@/features/im/domain/directory'
 import { useTask } from '@/features/im/shared/useTask'
 import { groupManagement, groupApplicationEvents } from '../application/group-management'
 import { directorySummary } from '../contacts/contact-summary'
+import { roleKey } from '../domain/group-management'
+import { useT } from '../i18n'
 import { Action } from '../shared/shared'
 import { useDirectoryEvents } from '../shared/useDirectoryEvents'
 import { ProductListRow, ProductSheet } from '../ui/primitives'
@@ -26,6 +28,7 @@ export default function GroupsScreen ({ root = false }: { root?: boolean }) {
   )
 }
 function Groups ({ root, userID }: { root: boolean, userID: string }) {
+  const tr = useT()
   const router = useRouter()
   const task = useTask()
   const { run } = task
@@ -73,20 +76,20 @@ function Groups ({ root, userID }: { root: boolean, userID: string }) {
     <ProductPage
       white
       root={root}
-      title='群聊'
+      title={tr('contacts.groupChats')}
       {...task}
       loading={loading}
       onRetry={() => {
         void refresh()
       }}
-      right={<ProductIconButton name='plus' label='新建' onPress={() => setMenu(true)} />}
+      right={<ProductIconButton name='plus' label={tr('chats.new')} onPress={() => setMenu(true)} />}
     >
       <ProductListRow
         small
         side={root}
         chevron
         titleWeight='500'
-        title='入群申请'
+        title={tr('groups.joinRequests')}
         leading={
           <View
             style={{
@@ -119,13 +122,13 @@ function Groups ({ root, userID }: { root: boolean, userID: string }) {
         onPress={() => router.push('/chats/groups/requests' as Href)}
       />
       <ProductSection variant='list'>
-        我加入的群聊
+        {tr('groups.joined')}
         {loading ? '' : ` · ${groups.length}`}
         {more ? '+' : ''}
       </ProductSection>
       {loading && !task.error && <ProductSkeleton kind='list' small />}
       {!loading && !groups.length && !task.busy && (
-        <ProductEmpty title='还没有加入群聊' subtitle='点右上角创建或加入' />
+        <ProductEmpty title={tr('groups.none')} subtitle={tr('groups.noneHint')} />
       )}
       {groups.map((group, index) => (
         <ProductListRow
@@ -134,7 +137,7 @@ function Groups ({ root, userID }: { root: boolean, userID: string }) {
           last={index === groups.length - 1}
           key={group.groupID}
           title={group.groupName}
-          subtitle={`${group.memberCount || 0} 位成员${roles[group.groupID] ? ` · ${roles[group.groupID] === 100 ? '群主' : roles[group.groupID] === 60 ? '管理员' : '群成员'}` : ''}`}
+          subtitle={tr('groups.memberSummary', { count: group.memberCount || 0, role: roles[group.groupID] ? ` · ${tr(roleKey(roles[group.groupID]))}` : '' })}
           leading={<GroupAvatar group={group} size={44} />}
           trailing={<></>}
           onPress={() => router.push(`/chats/groups/${encodeURIComponent(group.groupID)}` as Href)}
@@ -145,14 +148,14 @@ function Groups ({ root, userID }: { root: boolean, userID: string }) {
           onClose={() => setMenu(false)}
           items={[
             {
-              title: '创建群聊',
+              title: tr('chats.createGroup'),
               onPress: () => {
                 setMenu(false)
                 router.push('/chats/groups/create' as Href)
               },
             },
             {
-              title: '通过群 ID 加群',
+              title: tr('chats.joinGroupByID'),
               onPress: () => {
                 setMenu(false)
                 router.push('/chats/groups/join' as Href)
@@ -163,7 +166,7 @@ function Groups ({ root, userID }: { root: boolean, userID: string }) {
       )}
       {more && (
         <Action
-          title='加载更多群组'
+          title={tr('groups.loadMore')}
           disabled={task.busy}
           onPress={() => {
             void run(async current => {

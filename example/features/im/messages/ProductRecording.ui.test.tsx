@@ -11,7 +11,7 @@ jest.mock('@kesha-antonov/react-native-chat', () => ({
     return props.renderControl(mockControls)
   },
 }))
-jest.mock('../ui/preferences', () => ({ useProductLayout: () => ({ desktop: false }) }))
+jest.mock('../ui/preferences', () => ({ useLanguageChoice: () => 'auto', useProductLayout: () => ({ desktop: false }) }))
 jest.mock('../ui/theme', () => ({ useProductTheme: () => ({ text: '#111', text2: '#666', accent: '#06f', onAccent: '#fff', danger: '#f00' }) }))
 jest.mock('../ui/ProductIcon', () => ({ ProductIcon: () => null }))
 jest.mock('../application/store', () => ({ reportError: jest.fn() }))

@@ -5,6 +5,7 @@ import { directory, contactDirectoryEvents } from '../application/directory'
 import { useOpenIM } from '../application/store'
 import LoginScreen from '../auth/LoginScreen'
 import { mergeDirectory, type FriendRequest } from '../domain/directory'
+import { useT } from '../i18n'
 import { showProductToast } from '../shared/ProductToast'
 import { Action } from '../shared/shared'
 import { useDirectoryEvents } from '../shared/useDirectoryEvents'
@@ -20,6 +21,7 @@ export default function FriendRequestsScreen () {
   return session ? <Requests key={`${session.userID}:${session.imToken}`} /> : <LoginScreen />
 }
 function Requests () {
+  const tr = useT()
   const router = useRouter()
   const t = useProductTheme()
   const task = useTask()
@@ -54,28 +56,28 @@ function Requests () {
             item.fromUserID === id ? { ...item, handleResult: accept ? 1 : -1 } : item
           )
         )
-        setNotice(accept ? '已接受好友申请' : '已拒绝好友申请')
+        setNotice(accept ? tr('requests.accepted') : tr('requests.declined'))
       }
     })
   }
   return (
     <ContactLayout
       white
-      title='新的朋友'
+      title={tr('contacts.newFriends')}
       {...task}
       loading={!task.hasSucceeded}
       right={
         <ContactIconButton
           name='userPlus'
-          label='添加好友'
+          label={tr('addFriend.title')}
           onPress={() => router.push('/chats/add-friend' as Href)}
         />
       }
       headerContent={
         <ProductSegment
           options={[
-            { value: 'in', label: '收到的申请' },
-            { value: 'out', label: '发出的申请' },
+            { value: 'in', label: tr('requests.received') },
+            { value: 'out', label: tr('requests.sent') },
           ]}
           value={received ? 'in' : 'out'}
           onChange={value => {
@@ -98,7 +100,7 @@ function Requests () {
             last={index === requests.length - 1}
             key={`${request.fromUserID}:${request.toUserID}`}
             title={name}
-            subtitle={request.reqMsg || '好友申请'}
+            subtitle={request.reqMsg || tr('requests.title')}
             leading={<ProductAvatar id={id} title={name} size={44} />}
             onPress={() => router.push(`/chats/people/${encodeURIComponent(id)}` as Href)}
             trailing={
@@ -107,13 +109,13 @@ function Requests () {
                   <ProductButton
                     compact
                     variant='gray'
-                    title='拒绝'
+                    title={tr('requests.decline')}
                     disabled={task.busy}
                     onPress={() => respond(id, false)}
                   />
                   <ProductButton
                     compact
-                    title='接受'
+                    title={tr('requests.accept')}
                     disabled={task.busy}
                     onPress={() => respond(id, true)}
                   />
@@ -121,10 +123,10 @@ function Requests () {
               ) : (
                 <Text style={{ fontSize: 13, color: t.text3 }}>
                   {request.handleResult === 0
-                    ? '待处理'
+                    ? tr('requests.pending')
                     : request.handleResult === 1
-                      ? '已通过'
-                      : '已拒绝'}
+                      ? tr('requests.approved')
+                      : tr('requests.rejected')}
                 </Text>
               )
             }
@@ -133,10 +135,10 @@ function Requests () {
       })}
       {/* The segment above is there from the first frame; only the rows wait. */}
       {!task.hasSucceeded && !task.error && <ProductSkeleton kind='list' small />}
-      {task.hasSucceeded && !requests.length && !task.busy && <ProductEmpty title='暂无申请' />}
+      {task.hasSucceeded && !requests.length && !task.busy && <ProductEmpty title={tr('requests.none')} />}
       {!!task.error && (
         <Action
-          title='重新加载'
+          title={tr('common.reload')}
           disabled={task.busy}
           onPress={() => {
             void refresh()
@@ -145,7 +147,7 @@ function Requests () {
       )}
       {more && (
         <Action
-          title='加载更多申请'
+          title={tr('requests.loadMore')}
           disabled={task.busy}
           onPress={() => {
             void run(async current => {

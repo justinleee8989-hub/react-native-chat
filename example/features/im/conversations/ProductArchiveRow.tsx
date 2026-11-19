@@ -1,6 +1,7 @@
 import React from 'react'
 import { Text, View } from 'react-native'
 import { type ChatListItem } from '@kesha-antonov/react-native-chat'
+import { useT } from '../i18n'
 import { useProductLayout } from '../ui/preferences'
 import { ProductIcon } from '../ui/ProductIcon'
 import { ProductPressable } from '../ui/ProductPressable'
@@ -15,12 +16,13 @@ export function ProductArchiveRow ({
   onPress: () => void
   active?: boolean
 }) {
+  const tr = useT()
   const t = useProductTheme()
   const { desktop } = useProductLayout()
   return (
     <ProductPressable
       accessibilityRole='button'
-      accessibilityLabel={`已归档会话 ${chats.length}`}
+      accessibilityLabel={tr('chats.archivedCount', { count: chats.length })}
       onPress={onPress}
       style={{
         backgroundColor: active ? t.surface2 : undefined,
@@ -51,12 +53,12 @@ export function ProductArchiveRow ({
             numberOfLines={1}
             style={{ flex: 1, color: t.text, fontSize: 16, fontWeight: '600' }}
           >
-            已归档会话
+            {tr('chats.archived')}
           </Text>
           <Text style={{ fontSize: 12, color: t.text3 }}>{chats.length}</Text>
         </View>
         <Text numberOfLines={1} style={{ fontSize: 14, color: t.text2 }}>
-          {chats.map(chat => chat.title).join('、')}
+          {chats.map(chat => chat.title).join(tr('common.listSeparator'))}
         </Text>
       </View>
     </ProductPressable>

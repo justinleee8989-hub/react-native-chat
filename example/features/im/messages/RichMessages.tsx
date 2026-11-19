@@ -3,6 +3,7 @@ import { Linking, Text, View } from 'react-native'
 import { useRouter } from 'expo-router'
 import { GestureDetector, useTapGesture } from 'react-native-gesture-handler'
 import type { IMMessage } from '../domain/types'
+import { useT } from '../i18n'
 import { ProductAvatar } from '../ui/primitives'
 import { useSentPartColor } from '../ui/ProductChatTheme'
 import { ProductIcon } from '../ui/ProductIcon'
@@ -19,6 +20,7 @@ export function RichMessage ({
   message?: IMMessage
   onError: (error: unknown) => void
 }) {
+  const tr = useT()
   const router = useRouter()
   const t = useProductTheme()
   const sent = useSentPartColor()
@@ -39,7 +41,7 @@ export function RichMessage ({
     if (location)
       try {
         void Linking.openURL(
-          locationURL({ ...location, description: location.description || '位置' })
+          locationURL({ ...location, description: location.description || tr('composer.location') })
         ).catch(onError)
       } catch (error) {
         onError(error)
@@ -61,7 +63,7 @@ export function RichMessage ({
       <View
         accessible
         accessibilityRole='button'
-        accessibilityLabel={card ? '查看联系人资料' : '在地图中打开位置'}
+        accessibilityLabel={card ? tr('rich.viewContact') : tr('rich.openMap')}
         onAccessibilityTap={open}
         style={{ paddingVertical: 12, paddingHorizontal: 14, minWidth: 200 }}
       >
@@ -92,10 +94,10 @@ export function RichMessage ({
               numberOfLines={1}
               style={{ maxWidth: 170, color, fontSize: 15, lineHeight: 20, fontWeight: '600' }}
             >
-              {card ? card.nickname || card.userID : location?.description || '位置'}
+              {card ? card.nickname || card.userID : location?.description || tr('composer.location')}
             </Text>
             <Text style={{ color, opacity: 0.7, fontSize: 12, lineHeight: 16 }}>
-              {card ? `ID：${card.userID}` : `${location?.latitude}, ${location?.longitude}`}
+              {card ? tr('common.idLabel', { id: card.userID }) : `${location?.latitude}, ${location?.longitude}`}
             </Text>
           </View>
         </View>
@@ -111,7 +113,7 @@ export function RichMessage ({
           }}
         >
           <Text style={{ fontSize: 12, color, opacity: 0.7 }}>
-            {card ? '个人名片' : '在地图中打开'}
+            {card ? tr('rich.card') : tr('rich.openInMaps')}
           </Text>
         </View>
       </View>

@@ -38,6 +38,7 @@ export async function createNativeMedia (media: MediaInput) {
   }
   return SDK.createFileMessageFromFullPath({
     filePath: path,
-    fileName: media.name || original.name || '文件',
+    // Sent as the file's name, so it is not in the sender's language.
+    fileName: media.name || original.name || 'file',
   })
 }

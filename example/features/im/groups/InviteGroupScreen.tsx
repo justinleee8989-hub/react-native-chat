@@ -4,7 +4,9 @@ import { directory } from '../application/directory'
 import { useOpenIM } from '../application/store'
 import LoginScreen from '../auth/LoginScreen'
 import { groupPermissions } from '../domain/directory'
+import { useT } from '../i18n'
 import { FriendPicker } from '../shared/FriendPicker'
+import { ProductError } from '../shared/product-error'
 import { showProductToast } from '../shared/ProductToast'
 import { useTask } from '../shared/useTask'
 import { ProductPage } from '../ui/ProductPage'
@@ -23,6 +25,7 @@ export default function InviteGroupScreen () {
   )
 }
 function Invite ({ groupID, userID }: { groupID: string, userID: string }) {
+  const tr = useT()
   const router = useRouter()
   const task = useTask()
   const { run } = task
@@ -39,10 +42,10 @@ function Invite ({ groupID, userID }: { groupID: string, userID: string }) {
       if (!current())
         return
       if (!group)
-        throw new Error('群组不存在或无法访问')
+        throw new ProductError('group.notFound')
       const permissions = groupPermissions(self, group.needVerification)
       if (!permissions.invite)
-        throw new Error('当前没有邀请权限')
+        throw new ProductError('invite.noPermission')
       const ids: string[] = []
       let offset = 0
       while (current()) {
@@ -61,11 +64,11 @@ function Invite ({ groupID, userID }: { groupID: string, userID: string }) {
   }, [groupID, userID, run])
   return (
     <ProductPage
-      title='邀请好友入群'
+      title={tr('invite.title')}
       {...task}
       right={
         <HeaderAction
-          title={selected.length ? `邀请(${selected.length})` : '邀请'}
+          title={selected.length ? tr('invite.actionCount', { count: selected.length }) : tr('chatInfo.invite')}
           disabled={!allowed || task.busy || !selected.length}
           onPress={() => {
             void run(async current => {
@@ -77,7 +80,7 @@ function Invite ({ groupID, userID }: { groupID: string, userID: string }) {
                 return
               const permissions = groupPermissions(self, group?.needVerification)
               if (!group || !permissions.invite)
-                throw new Error('群成员或权限已变化，请刷新后重试')
+                throw new ProductError('group.permissionChanged')
               const memberIDs: string[] = []
               let offset = 0
               while (current()) {
@@ -93,15 +96,15 @@ function Invite ({ groupID, userID }: { groupID: string, userID: string }) {
               setExcluded(memberIDs)
               setSelected(invitees)
               if (!invitees.length)
-                throw new Error('所选好友已加入群聊，请重新选择')
+                throw new ProductError('invite.alreadyMembers')
               await directory.invite(groupID, invitees)
               if (current()) {
                 setAllowed(false)
                 setSelected([])
                 showProductToast(
                   permissions.inviteNeedsApproval
-                    ? '邀请申请已提交，等待群主或管理员审核'
-                    : '邀请已发送'
+                    ? tr('invite.submitted')
+                    : tr('invite.sent')
                 )
                 if (router.canGoBack())
                   router.back()
@@ -113,7 +116,7 @@ function Invite ({ groupID, userID }: { groupID: string, userID: string }) {
         />
       }
     >
-      {approval && <ProductHint>邀请需经群主或管理员审核。</ProductHint>}
+      {approval && <ProductHint>{tr('invite.needsApproval')}</ProductHint>}
       {allowed && (
         <FriendPicker
           inviting

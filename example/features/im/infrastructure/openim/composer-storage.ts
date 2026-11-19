@@ -1,3 +1,4 @@
+import { ProductError } from '../../shared/product-error.ts'
 import { draftStorage } from '../storage/draft-storage'
 
 let scope = ''
@@ -17,7 +18,7 @@ async function readRecord (key: string): Promise<DraftRecord> {
     return {}
   const parsed: unknown = JSON.parse(value)
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed))
-    throw new Error('本地草稿无法读取，请重试')
+    throw new ProductError('draft.unreadable')
   return parsed as DraftRecord
 }
 export async function readLocalDraft (userID: string, conversationID: string) {
@@ -38,7 +39,7 @@ function writeRecord (key: string, update: (previous: DraftRecord) => DraftRecor
 }
 export async function writeLocalDraft (userID: string, conversationID: string, text: string) {
   if (text.length > 100000)
-    throw new Error('草稿过长，暂时无法保存，请缩短后重试')
+    throw new ProductError('draft.tooLong')
   const key = draftKey(userID, conversationID)
   await writeRecord(key, previous => ({ ...previous, text }))
 }

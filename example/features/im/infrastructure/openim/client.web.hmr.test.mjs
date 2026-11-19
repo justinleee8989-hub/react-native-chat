@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 import test from 'node:test'
 import { runInNewContext } from 'node:vm'
 import ts from 'typescript'
+import { withI18n } from '../../i18n/test-modules.mjs'
 
 const source = new URL('./client.web.ts', import.meta.url)
 const settle = () => new Promise(resolve => setImmediate(resolve))
@@ -55,6 +56,7 @@ function harness (overrides = {}) {
       setTimeout: setTimer,
       clearTimeout: clearTimer,
       require: name => {
+        if (/shared\/(product-error|error-message)|i18n\/translate/.test(name)) return withI18n()(name)
         if (name === '../../config') return { platformID: 5 }
         if (name === './media.web') return { createWebMedia: async () => ({}) }
         if (name === './web-session') return { endWebSession: async () => {} }

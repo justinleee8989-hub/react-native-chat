@@ -5,6 +5,7 @@ import { syncMessageReaders, useOpenIM } from '../application/store'
 import LoginScreen from '../auth/LoginScreen'
 import type { Person } from '../domain/directory'
 import { HeaderAction, ProductHint } from '../groups/group-ui'
+import { useT } from '../i18n'
 import { useTask } from '../shared/useTask'
 import { ProductSegment, ProductAvatar, ProductListRow } from '../ui/primitives'
 import { ProductEmpty, ProductPage } from '../ui/ProductPage'
@@ -27,6 +28,7 @@ export default function MessageReadersScreen (props: Props) {
   )
 }
 function SessionReaders ({ id, messageID, seq }: Props) {
+  const tr = useT()
   const { session, config, conversations } = useOpenIM()
   const groupID = conversations.find(item => item.conversationID === id)?.groupID
   const [roles, setRoles] = useState<Person[]>([])
@@ -64,18 +66,18 @@ function SessionReaders ({ id, messageID, seq }: Props) {
   const members = result?.members.filter(member => member.read === read) || []
   return (
     <ProductPage
-      title='消息已读情况'
+      title={tr('readers.title')}
       white
       busy={busy}
       error={error}
       backHref='/chats'
-      right={<HeaderAction title='刷新' disabled={busy} onPress={refresh} />}
+      right={<HeaderAction title={tr('common.refresh')} disabled={busy} onPress={refresh} />}
       headerContent={
         result && (
           <ProductSegment
             options={[
-              { value: 'read', label: `已读 ${result.readCount}` },
-              { value: 'unread', label: `未读 ${result.unreadCount}` },
+              { value: 'read', label: tr('readers.readCount', { count: result.readCount }) },
+              { value: 'unread', label: tr('readers.unreadCount', { count: result.unreadCount }) },
             ]}
             value={read ? 'read' : 'unread'}
             onChange={value => {
@@ -88,7 +90,7 @@ function SessionReaders ({ id, messageID, seq }: Props) {
     >
       {result && (
         <>
-          {!members.length && <ProductEmpty title={read ? '还没有成员读过' : '所有成员都已读'} />}
+          {!members.length && <ProductEmpty title={read ? tr('readers.noneRead') : tr('readers.allRead')} />}
           {members.slice(0, limit).map((member, index) => (
             <ProductListRow
               small
@@ -97,11 +99,11 @@ function SessionReaders ({ id, messageID, seq }: Props) {
               title={member.nickname || member.userID}
               subtitle={
                 roles.find(person => person.userID === member.userID)?.roleLevel === 100
-                  ? '群主'
+                  ? tr('role.owner')
                   : roles.find(person => person.userID === member.userID)?.roleLevel === 60
-                    ? '管理员'
+                    ? tr('role.admin')
                     : roles.some(person => person.userID === member.userID)
-                      ? '成员'
+                      ? tr('role.memberShort')
                       : undefined
               }
               leading={
@@ -116,10 +118,10 @@ function SessionReaders ({ id, messageID, seq }: Props) {
             />
           ))}
           {members.length > limit && (
-            <HeaderAction title='加载更多成员' onPress={() => setLimit(value => value + 50)} />
+            <HeaderAction title={tr('readers.loadMore')} onPress={() => setLimit(value => value + 50)} />
           )}
           {!!result.excludedJoinedLater && (
-            <ProductHint>已排除发送后加入的 {result.excludedJoinedLater} 名成员</ProductHint>
+            <ProductHint>{tr('readers.excluded', { count: result.excludedJoinedLater })}</ProductHint>
           )}
         </>
       )}

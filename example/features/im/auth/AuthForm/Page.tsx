@@ -1,6 +1,7 @@
 import React from 'react'
 import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import { useT } from '../../i18n'
 import { ProductToast } from '../../shared/ProductToast'
 import { useProductLayout } from '../../ui/preferences'
 import { ProductHeader } from '../../ui/primitives'
@@ -20,6 +21,7 @@ export function AuthPage ({
   brand?: boolean
   onBack?: () => void
 }>) {
+  const tr = useT()
   const colors = useChatListColors()
   const t = useProductTheme()
   const { desktop } = useProductLayout()
@@ -49,7 +51,7 @@ export function AuthPage ({
             <Text style={[styles.subtitle, { color: colors.message }]}>{subtitle}</Text>
             <View style={styles.fields}>{children}</View>
             {brand && (
-              <Text style={[styles.footer, { color: t.text3 }]}>XIM · 让沟通更简单</Text>
+              <Text style={[styles.footer, { color: t.text3 }]}>{tr('auth.footer')}</Text>
             )}
           </View>
         </ScrollView>

@@ -3,6 +3,7 @@ import test from 'node:test'
 import { readFileSync } from 'node:fs'
 import { runInNewContext } from 'node:vm'
 import ts from 'typescript'
+import { withI18n } from '../../i18n/test-modules.mjs'
 
 function loadCreateNativeMedia ({ copy, sdk }) {
   class File {
@@ -24,6 +25,7 @@ function loadCreateNativeMedia ({ copy, sdk }) {
   runInNewContext(compiled, {
     exports,
     require: name => {
+      if (/shared\/(product-error|error-message)|i18n\/translate/.test(name)) return withI18n()(name)
       if (name === '@openim/rn-client-sdk')
         return sdk
       if (name === 'expo-file-system')

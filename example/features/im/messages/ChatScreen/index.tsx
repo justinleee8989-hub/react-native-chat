@@ -13,9 +13,12 @@ import {
 import LoginScreen from '../../auth/LoginScreen'
 import { startConversationCall } from '../../calls/CallControls'
 import type { IMMessage } from '../../domain/types'
+import { useT } from '../../i18n'
 import { traceChatEntryOnce } from '../../navigation/entry-performance'
 import { useChatEntryReady } from '../../navigation/useChatEntry'
 import { ConnectionStatus } from '../../shared/ConnectionStatus'
+import { errorMessage } from '../../shared/error-message'
+import { ProductError } from '../../shared/product-error'
 import { Confirm } from '../../shared/shared'
 import { useTask } from '../../shared/useTask'
 import { usePhotoWallpaperRender } from '../../ui/ChatWallpaperView'
@@ -58,6 +61,7 @@ export default function ChatScreen ({ id, messageID }: { id: string, messageID?:
 const EMPTY_MESSAGES: IMMessage[] = []
 
 function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
+  const tr = useT()
   const state = useOpenIM()
   const entryAccount = `${state.session?.userID}:${state.session?.imToken}`
   const { chatRef, locating, requestLocation } = useMessageLocation(id, messageID)
@@ -132,9 +136,9 @@ function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
   const requestCall = () => {
     void task.run(async () => {
       if (access.notice || access.error)
-        throw new Error(access.error || access.notice)
+        throw access.error || new ProductError(access.notice || 'error.generic')
       if (!conversation)
-        throw new Error('会话不可用，请返回列表重试')
+        throw new ProductError('chat.unavailable')
       await startConversationCall(conversation, id)
     })
   }
@@ -169,8 +173,8 @@ function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
         typing={
           composer.typingUsers.length
             ? conversation.groupID
-              ? `${composer.typingUsers[0].name} 正在输入…`
-              : '对方正在输入…'
+              ? tr('typing.someoneDots', { name: composer.typingUsers[0].name })
+              : tr('typing.peerDots')
             : ''
         }
         onCall={requestCall}
@@ -190,10 +194,10 @@ function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
       {revoke && (
         <Confirm
           error={task.error}
-          title='撤回这条消息？'
-          confirmLabel='撤回'
+          title={tr('revoke.confirmTitle')}
+          confirmLabel={tr('message.revoke')}
           danger
-          message='是否允许撤回由服务器的时限和权限规则决定。'
+          message={tr('revoke.hint')}
           busy={task.busy}
           onCancel={() => setRevoke(undefined)}
           onConfirm={() => {
@@ -207,14 +211,14 @@ function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
       )}
       <ConnectionStatus status={state.status} />
       <ChatNotices
-        accessError={access.error}
+        accessError={errorMessage(access.error, tr)}
         onRetryAccess={() => {
           void access.refresh()
         }}
         taskError={task.error}
         draftError={!!composer.draftError}
         onRetryDraft={composer.retryDraft}
-        storeError={state.error}
+        storeError={errorMessage(state.error, tr)}
         locating={locating}
       />
       <AttachmentBatchTray
@@ -232,13 +236,14 @@ function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
         darkTheme={theme}
         renderWallpaper={renderWallpaper}
         icons={productChatIcons}
-        labels={productChatLabels}
+        labels={productChatLabels(tr)}
         renderChatEmpty={rows.renderChatEmpty}
         renderDay={rows.renderDay}
         renderBubble={rows.renderBubble}
         renderMessage={rows.renderMessage}
-        renderInputToolbar={renderChatInputToolbar({ accessNotice: access.notice, selfID: sessionID, theme })}
+        renderInputToolbar={renderChatInputToolbar({ accessNotice: access.notice, selfID: sessionID, theme, tr })}
         {...chatHistoryProps({
+          tr,
           id,
           available: rawMessages.length > 0 && !state.historyEnd[id],
           loading: !!state.historyLoading?.[id],
@@ -264,7 +269,7 @@ function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
         }}
         chatRef={chatRef}
         mediaPlayback={{ isNowPlayingBarEnabled: false, isAutoPlayNextEnabled: false }}
-        locale='zh-CN'
+        locale={tr.locale}
         text={composer.text}
         onDraftChange={value => {
           const newlyTypedAt = value !== composer.text && /(^|\s)@$/.test(value)
@@ -274,7 +279,7 @@ function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
         }}
         textInputProps={{
           numberOfLines: 1,
-          placeholder: '消息',
+          placeholder: tr('composer.placeholder'),
           onFocus: composer.onFocus,
           onBlur: composer.onBlur,
         }}
@@ -307,8 +312,8 @@ function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
         audioRecording={{
           isViewOnceEnabled: false,
           onError: reportVoiceRecordingError,
-          onTooShort: () => reportError(new Error('录音时间太短，请重试')),
-          onPermissionDenied: () => reportError(new Error('请在系统设置中允许麦克风访问')),
+          onTooShort: () => reportError(new ProductError('recording.tooShort')),
+          onPermissionDenied: () => reportError(new ProductError('recording.allowMic')),
         }}
         videoRecording={false}
         onForwardMessage={message =>

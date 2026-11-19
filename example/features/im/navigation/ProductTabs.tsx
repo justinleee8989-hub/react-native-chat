@@ -2,6 +2,7 @@ import React from 'react'
 import { Tabs } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useOpenIM } from '../application/store'
+import { useT } from '../i18n'
 import { useProductLayout } from '../ui/preferences'
 import { ProductIcon } from '../ui/ProductIcon'
 import { useProductColors } from '../ui/theme'
@@ -9,6 +10,7 @@ import ProductShell from './ProductShell'
 import { usePendingRequests } from './usePendingRequests'
 
 export default function ProductTabs () {
+  const tr = useT()
   const { desktop } = useProductLayout()
   const pending = usePendingRequests(!desktop)
   const insets = useSafeAreaInsets()
@@ -42,7 +44,7 @@ export default function ProductTabs () {
         <Tabs.Screen
           name='chats'
           options={{
-            title: '消息',
+            title: tr('tab.chats'),
             tabBarBadge: unread ? (unread > 99 ? '99+' : unread) : undefined,
             tabBarIcon: ({ focused, size }) => (
               <ProductIcon name='chat' size={size} color={focused ? colors.badge : colors.date} />
@@ -52,7 +54,7 @@ export default function ProductTabs () {
         <Tabs.Screen
           name='calls'
           options={{
-            title: '通话',
+            title: tr('tab.calls'),
             tabBarIcon: ({ focused, size }) => (
               <ProductIcon name='phone' size={size} color={focused ? colors.badge : colors.date} />
             ),
@@ -61,7 +63,7 @@ export default function ProductTabs () {
         <Tabs.Screen
           name='contacts'
           options={{
-            title: '通讯录',
+            title: tr('tab.contacts'),
             tabBarBadge: pending ? (pending > 99 ? '99+' : pending) : undefined,
             tabBarIcon: ({ focused, size }) => (
               <ProductIcon name='users' size={size} color={focused ? colors.badge : colors.date} />
@@ -72,7 +74,7 @@ export default function ProductTabs () {
           name='groups'
           options={{
             href: null,
-            title: '群组',
+            title: tr('tab.groups'),
             tabBarIcon: ({ focused, size }) => (
               <ProductIcon name='users' size={size} color={focused ? colors.badge : colors.date} />
             ),
@@ -81,7 +83,7 @@ export default function ProductTabs () {
         <Tabs.Screen
           name='me'
           options={{
-            title: '我的',
+            title: tr('tab.me'),
             tabBarIcon: ({ focused, size }) => (
               <ProductIcon name='user' size={size} color={focused ? colors.badge : colors.date} />
             ),

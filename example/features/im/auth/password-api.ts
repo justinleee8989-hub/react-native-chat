@@ -1,11 +1,12 @@
 import md5 from 'md5'
 import type { Session } from '../domain/types'
+import { ProductError, ServerError } from '../shared/product-error.ts'
 
 export async function changePassword (session: Session, currentPassword: string, newPassword: string, baseURL: string, request: typeof fetch = fetch): Promise<void> {
   if (!session.chatToken)
-    throw new Error('请重新登录后修改密码')
+    throw new ProductError('auth.signInToChangePassword')
   if (!currentPassword || !newPassword || currentPassword === newPassword)
-    throw new Error('请填写当前密码，并使用不同的新密码')
+    throw new ProductError('auth.passwordsMustDiffer')
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), 15000)
   try {
@@ -16,9 +17,12 @@ export async function changePassword (session: Session, currentPassword: string,
     })
     const result = await response.json()
     if (!result || typeof result.errCode !== 'number')
-      throw new Error('ChatServer 响应格式不正确，请检查服务地址和版本')
+      throw new ProductError('error.badResponse')
+    // PasswordError here means the current password, not a sign-in.
+    if (result.errCode === 20001)
+      throw new ProductError('password.currentWrong')
     if (!response.ok || result.errCode)
-      throw new Error(result.errMsg || `修改密码失败 (${response.status})`)
+      throw new ServerError(result, response.status)
   } finally {
     clearTimeout(timeout)
   }

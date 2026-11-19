@@ -4,7 +4,7 @@ import { render } from '@testing-library/react-native'
 import { ProductContextMenu } from './ProductContextMenu'
 
 let mockBounds = { x: 0, y: 0, width: 800, height: 600 }
-jest.mock('../ui/preferences', () => ({ useProductLayout: () => ({ desktop: true }), useProductScheme: () => 'light' }))
+jest.mock('../ui/preferences', () => ({ useLanguageChoice: () => 'auto', useProductLayout: () => ({ desktop: true }), useProductScheme: () => 'light' }))
 jest.mock('../ui/theme', () => ({ useProductTheme: () => ({ surface: '#fff', surface2: '#eee', line: '#ddd', scrim: '#0006', text: '#111', text2: '#555', danger: '#f00', accentWeak: '#eef', shadow: 'shadow-token' }) }))
 jest.mock('../ui/ProductIcon', () => ({ ProductIcon: () => null }))
 jest.mock('../ui/ProductModal', () => ({ ProductModal: ({ children }: { children: React.ReactNode }) => children, useProductOverlayBounds: () => mockBounds }))

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Pressable, Text, View } from 'react-native'
 import { Message, type MessageProps, type IMessage } from '@kesha-antonov/react-native-chat'
+import { useT } from '../../i18n'
 import { useRowRenderCount } from '../../navigation/entry-performance'
 import { useProductLayout } from '../../ui/preferences'
 import { ProductAvatar } from '../../ui/primitives'
@@ -20,6 +21,7 @@ export function ProductMessage ({
   onRetry,
   ...props
 }: ProductMessageProps) {
+  const tr = useT()
   useRowRenderCount()
   const t = useProductTheme()
   // Over a wallpaper the date and system notices sit on a pill (外观 → 聊天壁纸).
@@ -47,17 +49,17 @@ export function ProductMessage ({
     next.user._id !== message.user._id ||
     new Date(next.createdAt).getTime() - date.getTime() > 5 * 60 * 1000
   const status = message.isFailed
-    ? '发送失败'
+    ? tr('message.sendFailed')
     : message.pending
-      ? '发送中…'
+      ? tr('message.sending')
       : message._id === lastOwnID
         ? group
           ? readCount === undefined
-            ? '查看已读成员'
-            : `${readCount} 人已读`
+            ? tr('message.viewReaders')
+            : tr('message.readByCount', { count: readCount })
           : message.received
-            ? '已读'
-            : '已发送'
+            ? tr('message.read')
+            : tr('message.sent')
         : ''
   return (
     <View
@@ -79,7 +81,7 @@ export function ProductMessage ({
               pill && { ...pill, alignSelf: 'center', overflow: 'hidden', borderRadius: 10, paddingHorizontal: 10, paddingVertical: 2 },
             ]}
           >
-            {messageTimestamp(date)}
+            {messageTimestamp(date, tr)}
           </Text>
         )}
         <View
@@ -94,7 +96,7 @@ export function ProductMessage ({
               {last && (
                 <Pressable
                   accessibilityRole='button'
-                  accessibilityLabel={`查看 ${message.user.name || message.user._id} 的资料`}
+                  accessibilityLabel={tr('message.viewProfileOf', { name: message.user.name || message.user._id })}
                   onPress={() =>
                     (
                       props as MessageProps<IMessage> & {
@@ -155,7 +157,7 @@ export function ProductMessage ({
           {message.isFailed && onRetry && (
             <Pressable
               accessibilityRole='button'
-              accessibilityLabel='重试发送消息'
+              accessibilityLabel={tr('message.retrySend')}
               onPress={() => onRetry(message)}
               style={{
                 width: 24,

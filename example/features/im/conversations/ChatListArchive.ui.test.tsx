@@ -22,7 +22,7 @@ jest.mock('../application/store', () => ({
 }))
 jest.mock('expo-router', () => ({ usePathname: () => '/chats', useFocusEffect: () => {}, useRouter: () => mockRouter }))
 jest.mock('../navigation/DesktopNavigation', () => ({ useDesktopNavigation: () => ({ canGoBackInSection: true }), useMasterNavigation: () => jest.fn() }))
-jest.mock('../ui/preferences', () => ({ useProductScheme: () => 'light', useProductLayout: () => ({ desktop: true }) }))
+jest.mock('../ui/preferences', () => ({ useLanguageChoice: () => 'auto', useProductScheme: () => 'light', useProductLayout: () => ({ desktop: true }) }))
 jest.mock('../ui/theme', () => ({ useProductTheme: () => mockPalette }))
 jest.mock('../ui/ProductChatTheme', () => ({ useProductChatTheme: () => ({}) }))
 jest.mock('../shared/ConnectionStatus', () => ({ ConnectionStatus: () => null }))

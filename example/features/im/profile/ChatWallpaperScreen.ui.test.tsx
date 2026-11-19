@@ -9,7 +9,7 @@ import ChatWallpaperScreen from './ChatWallpaperScreen'
 const mockOpenMaster = jest.fn()
 let mockWallpaper = 'plain'
 let mockPhoto = ''
-jest.mock('../ui/preferences', () => ({
+jest.mock('../ui/preferences', () => ({ useLanguageChoice: () => 'auto',
   setChatWallpaper: jest.fn(),
   setChatWallpaperPhoto: jest.fn(),
   useChatWallpaper: () => mockWallpaper,

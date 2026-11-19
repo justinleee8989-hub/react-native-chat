@@ -7,6 +7,7 @@ import { createServerCallController } from '../calls/server-controller'
 import { encodeSignal } from '../calls/signaling'
 import { defaultConfig, platformID } from '../config'
 import type { GroupMessageReadGuard, ServerConfig, Session } from '../domain/types'
+import { isMessageKey, type MessageKey } from '../i18n/translate.ts'
 import { client } from '../infrastructure/openim/client'
 import { setDraftStorageScope } from '../infrastructure/openim/composer-storage'
 import { conversationService } from '../infrastructure/openim/conversation-client'
@@ -15,6 +16,7 @@ import { createHomeSnapshots } from '../infrastructure/storage/home-snapshot'
 import { storage } from '../infrastructure/storage/storage'
 import { createMessageProjectionService } from '../messages/projection'
 import { fetchServerHistory, type ServerHistoryRequest } from '../messages/server-history'
+import { ProductError } from '../shared/product-error.ts'
 import { offlineStatus, provideConnectionStatus } from './connection-status'
 import { createConversationActions } from './conversation-actions'
 import { subscribeEvents } from './events'
@@ -86,18 +88,18 @@ const messaging = createMessaging(runtime, client, async message => {
     return
   const { session, config } = runtime.state
   if (!session)
-    throw new Error('请先登录')
+    throw new ProductError('session.signInFirst')
   const calls = await callAuthority(session, config.chat, { action: 'inspect', room: invite.room })
   assertJoinableInvitation(calls[0])
 }, {
   async load (conversationID, messageIDs) {
     const { session, config } = runtime.state
     if (!session)
-      throw new Error('请先登录')
+      throw new ProductError('session.signInFirst')
     const epoch = runtime.generation
     const records = await createMessageProjectionService(session, config.chat).load(conversationID, messageIDs)
     if (epoch !== runtime.generation)
-      throw new Error('登录已改变，请重新加载消息')
+      throw new ProductError('session.changedReloadMessages')
     return records
   },
 }, attachmentOutbox, recheckAttachmentDelivery)
@@ -108,19 +110,19 @@ export const calls = createServerCallController({ request: async request => {
   const epoch = runtime.generation
   const { session, config } = runtime.state
   if (!session)
-    throw new Error('请先登录')
+    throw new ProductError('session.signInFirst')
   const result = await callAuthority(session, config.chat, request)
   if (epoch !== runtime.generation)
-    throw new Error('登录已改变')
+    throw new ProductError('session.changed')
   return result
 }, record: async (peer, signal) => {
   const epoch = runtime.generation
   if (!runtime.state.session)
-    throw new Error('请先登录')
+    throw new ProductError('session.signInFirst')
   const conversation = await client.conversation(peer, 1)
   const message = await client.createText(encodeSignal(signal))
   if (epoch !== runtime.generation)
-    throw new Error('登录已改变')
+    throw new ProductError('session.changed')
   const delivered = await client.send(message, conversation)
   if (epoch !== runtime.generation)
     return
@@ -165,7 +167,7 @@ async function connect (session: Session, config: ServerConfig, quiet = false) {
   stopHomeSnapshot()
   setDraftStorageScope(JSON.stringify([config.api, config.ws]))
   disposeEvents()
-  runtime.update(quiet ? { config } : { busy: true, error: '', status: '连接中', config })
+  runtime.update(quiet ? { config } : { busy: true, error: '', status: 'connecting', config })
   disposeEvents = subscribeEvents(client, runtime, { ...messaging, refresh }, logout, epoch, message => calls.receive(message))
   let sdkLoggedIn = false
   try {
@@ -175,34 +177,33 @@ async function connect (session: Session, config: ServerConfig, quiet = false) {
     sdkLoggedIn = true
     stopReconnecting()
     calls.reset(session.userID)
-    runtime.update({ session, offline: false, status: '收取中…', initialized: true, startupSnapshot: undefined })
+    runtime.update({ session, offline: false, status: 'fetching', initialized: true, startupSnapshot: undefined })
     stopHomeSnapshot()
     const homePersistence = watchHomeSnapshot(runtime, homeSnapshots, session.userID, config)
     stopHomeSnapshot = homePersistence.stop
     flushHomeSnapshot = homePersistence.flush
-    let recoveryWarning = ''
+    let recoveryWarning: ProductError | undefined
     try {
       await messaging.restoreAttachmentBatches()
     } catch {
-      recoveryWarning = '待发送附件恢复失败，原附件仍保留；可重试恢复或重新登录。'
+      recoveryWarning = new ProductError('sync.attachmentRestoreFailed')
     }
     if (epoch !== runtime.generation)
       return
     const syncResult = await refresh()
-    const warning = [recoveryWarning, syncResult?.projectionWarning].filter(Boolean).join(' ')
-    if (epoch === runtime.generation && warning)
-      runtime.update({ error: warning })
+    const warning = [recoveryWarning, syncResult?.projectionWarning].filter(Boolean)
+    if (epoch === runtime.generation && warning.length)
+      runtime.update({ error: warning.length === 1 ? warning[0] : warning })
   } catch (error) {
     if (epoch !== runtime.generation)
       return
     if (!sdkLoggedIn && isInvalidSDKLoginError(error)) {
       await homeSnapshots.remove(session.userID, config)
-      await logout('登录已失效，请重新登录')
+      await logout('session.expired')
       return
     }
     if (sdkLoggedIn) {
-      runtime.update({ busy: false, status: '同步暂时失败',
-        error: '已登录，但会话同步暂时失败。可下拉会话列表重试。' })
+      runtime.update({ busy: false, status: 'syncFailed', error: new ProductError('sync.signedInButFailed') })
       return
     }
     const recoveryEpoch = ++runtime.generation
@@ -241,13 +242,13 @@ export async function refresh () {
     // The SDK answers from its local database while the server is unreachable: a refresh that worked
     // says nothing about the connection, so it must not replace the failure with 已连接.
     if (session)
-      runtime.update({ status: runtime.state.status === offlineStatus ? offlineStatus : '已连接', error: projectionWarning || '' })
+      runtime.update({ status: runtime.state.status === offlineStatus ? offlineStatus : 'connected', error: projectionWarning || '' })
     return projectionWarning ? { projectionWarning } : undefined
   } catch (error) {
     if (epoch !== runtime.generation || session !== runtime.state.session)
       return
     if (session)
-      runtime.update({ status: '同步暂时失败', error: '会话同步暂时失败，可下拉会话列表重试。' })
+      runtime.update({ status: 'syncFailed', error: new ProductError('sync.chatsFailed') })
     throw error
   } finally {
     if (initial && epoch === runtime.generation && session === runtime.state.session)
@@ -335,10 +336,11 @@ async function restore (retry = false) {
       await storage.removeItem(signOutReasonKey).catch(() => {})
     if (epoch !== runtime.generation)
       return
-    runtime.update({ busy: false, ...(reason ? { error: reason } : {}) })
+    // The reason is saved as its text's key; anything else (an older build's wording) is dropped.
+    runtime.update({ busy: false, ...(reason && isMessageKey(reason) ? { error: new ProductError(reason) } : {}) })
   } catch {
     if (epoch === runtime.generation)
-      runtime.update({ busy: false, error: '无法读取已保存的登录信息，请重新登录' })
+      runtime.update({ busy: false, error: new ProductError('session.savedUnreadable') })
   } finally {
     runtime.update({ initialized: true })
   }
@@ -358,7 +360,7 @@ export async function retryRestore () {
       await refresh()
     } catch (error) {
       if (epoch === runtime.generation)
-        runtime.update({ error: error instanceof Error ? error.message : '恢复失败，请重试' })
+        runtime.update({ error: error || new ProductError('session.restoreFailed') })
       /* refresh preserves a retryable status and the current SDK session. */
     } finally {
       if (epoch === runtime.generation)
@@ -368,7 +370,9 @@ export async function retryRestore () {
   }
   await restore(true)
 }
-export async function logout (error = '') {
+/** `reason`: why the user is signed out, said on the login page (kept through a reload). */
+export async function logout (reason?: MessageKey) {
+  const error = reason ? new ProductError(reason) : ''
   const previousSession = runtime.state.session
   const previousConfig = runtime.state.config
   stopReconnecting()
@@ -385,7 +389,7 @@ export async function logout (error = '') {
     offline: false,
     startupSnapshot: undefined,
     busy: true,
-    status: '未登录',
+    status: 'signedOut',
     error,
     conversationsLoaded: false,
     conversations: [],
@@ -396,8 +400,8 @@ export async function logout (error = '') {
   })
   try {
     await storage.removeItem(key)
-    if (error)
-      await storage.setItem(signOutReasonKey, error)
+    if (reason)
+      await storage.setItem(signOutReasonKey, reason)
     if (previousSession)
       await homeSnapshots.remove(previousSession.userID, previousConfig)
   } catch {
@@ -433,12 +437,12 @@ export function prefetchConversationHistory (id: string) {
 export async function loadServerHistory (request: ServerHistoryRequest) {
   const { session, config } = runtime.state
   if (!session)
-    throw new Error('请先登录')
+    throw new ProductError('session.signInFirst')
   const epoch = runtime.generation
   const revision = runtime.historyRevision?.[request.conversationID] || 0
   const result = await fetchServerHistory(session, config.chat, request)
   if (epoch !== runtime.generation || revision !== (runtime.historyRevision?.[request.conversationID] || 0))
-    throw new Error('登录或会话已变化，请重新加载')
+    throw new ProductError('session.changedReload')
   return result
 }
 
@@ -451,17 +455,17 @@ export async function ensureMessageLoaded (id: string, messageID: string, isCurr
   const revision = runtime.historyRevision?.[id] || 0
   while (true) {
     if (!isCurrent() || epoch !== runtime.generation || revision !== (runtime.historyRevision?.[id] || 0))
-      throw new Error('页面或会话已变化，请重新打开消息')
+      throw new ProductError('history.pageChanged')
     const page = await loadServerHistory({ conversationID: id, cursor })
     if (!isCurrent() || epoch !== runtime.generation)
-      throw new Error('页面或登录已改变，请重新打开消息')
+      throw new ProductError('history.signInChanged')
     runtime.addMessages(id, page.messages)
     if (page.messages.some(message => message.clientMsgID === messageID))
       return
     if (!page.hasMore)
-      throw new Error('该消息已删除或不在当前账号可访问的历史中')
+      throw new ProductError('history.messageGone')
     if (visited.has(page.cursor))
-      throw new Error('历史分页未前进，请重试')
+      throw new ProductError('history.notAdvancing')
     visited.add(page.cursor)
     cursor = page.cursor
   }
@@ -473,7 +477,7 @@ async function recheckAttachmentDelivery (conversationID: string, message: impor
   const visited = new Set<string>()
   while (true) {
     if (epoch !== runtime.generation)
-      throw new Error('登录已改变，请重新恢复附件')
+      throw new ProductError('attachments.signInChanged')
     const page = await loadServerHistory({ conversationID, cursor })
     const delivered = page.messages.find(item => item.clientMsgID === message.clientMsgID)
     if (delivered)
@@ -481,7 +485,7 @@ async function recheckAttachmentDelivery (conversationID: string, message: impor
     if (!page.hasMore)
       return false
     if (visited.has(page.cursor))
-      throw new Error('无法确认附件投递状态，请稍后重试')
+      throw new ProductError('attachments.deliveryUnknown')
     visited.add(page.cursor)
     cursor = page.cursor
   }

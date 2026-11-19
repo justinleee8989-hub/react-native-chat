@@ -1,5 +1,6 @@
 import React from 'react'
 import { StyleSheet, Text, View } from 'react-native'
+import { useT } from '../i18n'
 import { useSelfProfile } from '../shared/useSelfProfile'
 import { ProductAvatar } from '../ui/primitives'
 import { useProductTheme } from '../ui/theme'
@@ -7,6 +8,7 @@ import { FriendQRCode } from './FriendQRCode'
 
 /** 我的 → 我的二维码: the user's avatar, name and ID over the QR code of their profile link. */
 export function MyQRCard ({ userID }: { userID: string }) {
+  const tr = useT()
   const t = useProductTheme()
   const self = useSelfProfile()
   const name = self?.nickname || userID
@@ -18,13 +20,13 @@ export function MyQRCard ({ userID }: { userID: string }) {
           <Text numberOfLines={1} style={[styles.name, { color: t.text }]}>
             {name}
           </Text>
-          <Text numberOfLines={1} style={[styles.id, { color: t.text2 }]}>{`ID：${userID}`}</Text>
+          <Text numberOfLines={1} style={[styles.id, { color: t.text2 }]}>{tr('common.idLabel', { id: userID })}</Text>
         </View>
       </View>
-      <View accessible accessibilityLabel={`${name}的二维码`} style={styles.code}>
+      <View accessible accessibilityLabel={tr('qr.codeOf', { name })} style={styles.code}>
         <FriendQRCode userID={userID} size={220} />
       </View>
-      <Text style={[styles.hint, { color: t.text3 }]}>扫描二维码，加我为好友。</Text>
+      <Text style={[styles.hint, { color: t.text3 }]}>{tr('qr.hint')}</Text>
     </View>
   )
 }

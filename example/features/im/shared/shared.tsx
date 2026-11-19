@@ -14,6 +14,7 @@ import { ChatListAvatar } from '@kesha-antonov/react-native-chat'
 import { useRouter } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import type { Person } from '@/features/im/domain/directory'
+import { useT } from '../i18n'
 import { ProductHeader } from '../ui/primitives'
 import { ProductModal } from '../ui/ProductModal'
 import { useProductColors as useChatListColors, useProductTheme } from '../ui/theme'
@@ -106,6 +107,7 @@ export function Page ({
   error,
   children,
 }: React.PropsWithChildren<{ title: string, busy: boolean, error: string, root?: boolean }>) {
+  const tr = useT()
   const router = useRouter()
   const colors = useChatListColors()
   return (
@@ -129,7 +131,7 @@ export function Page ({
         contentContainerStyle={styles.page}
         keyboardShouldPersistTaps='handled'
       >
-        {busy && <ActivityIndicator accessibilityLabel='正在处理' color={colors.attachment} />}
+        {busy && <ActivityIndicator accessibilityLabel={tr('common.processing')} color={colors.attachment} />}
         {!!error && (
           <Text accessibilityRole='alert' style={{ color: colors.draft }}>
             {error}
@@ -142,7 +144,7 @@ export function Page ({
 }
 export function Confirm ({
   title,
-  confirmLabel = '确认',
+  confirmLabel,
   danger = true,
   message,
   onConfirm,
@@ -161,6 +163,7 @@ export function Confirm ({
   busy: boolean
   error?: string
 }) {
+  const tr = useT()
   const colors = useChatListColors()
   const t = useProductTheme()
   const cancel = () => {
@@ -184,7 +187,7 @@ export function Confirm ({
         {!children && (
           <Pressable
             accessibilityRole='button'
-            accessibilityLabel='关闭确认框'
+            accessibilityLabel={tr('common.closeDialog')}
             disabled={busy}
             onPress={cancel}
             style={StyleSheet.absoluteFill}
@@ -224,11 +227,11 @@ export function Confirm ({
             )}
             {children}
             {!!error && (
-              <Text accessibilityRole='alert' style={{ color: colors.draft }}>
+              <Text accessibilityRole='alert' style={{ color: colors.draft, fontSize: 14, lineHeight: 21, textAlign: 'center' }}>
                 {error}
               </Text>
             )}
-            {busy && <ActivityIndicator accessibilityLabel='正在处理' color={colors.attachment} />}
+            {busy && <ActivityIndicator accessibilityLabel={tr('common.processing')} color={colors.attachment} />}
           </View>
           <View
             style={{
@@ -238,8 +241,8 @@ export function Confirm ({
             }}
           >
             {[
-              { title: '取消', action: cancel },
-              { title: confirmLabel, action: onConfirm },
+              { title: tr('common.cancel'), action: cancel },
+              { title: confirmLabel ?? tr('common.confirm'), action: onConfirm },
             ].map((item, index) => (
               <Pressable
                 key={item.title}

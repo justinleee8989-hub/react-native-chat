@@ -1,9 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Image, Linking, Pressable, Text, View } from 'react-native'
+import { Image, Linking, Pressable, View } from 'react-native'
 import { Href, useRouter } from 'expo-router'
 import { useOpenIM } from '../application/store'
 import LoginScreen from '../auth/LoginScreen'
 import { HeaderAction, ProductHint } from '../groups/group-ui'
+import type { MessageKey } from '../i18n'
+import { useT } from '../i18n'
+import { ProductError } from '../shared/product-error'
 import { useTask } from '../shared/useTask'
 import { ProductSegment, ProductSheet } from '../ui/primitives'
 import { ProductIcon } from '../ui/ProductIcon'
@@ -14,10 +17,10 @@ import { safeExternalHttpURL, type ConversationAsset, type ConversationAssetKind
 import { createConversationAssetsPager } from './assets-service'
 import { ProductImagePreview } from './ProductImagePreview'
 
-const tabs: { id: ConversationAssetKind, label: string }[] = [
-  { id: 'image', label: '图片' },
-  { id: 'file', label: '文件' },
-  { id: 'link', label: '链接' },
+const tabs: { id: ConversationAssetKind, labelKey: MessageKey, emptyKey: MessageKey }[] = [
+  { id: 'image', labelKey: 'assets.tabImages', emptyKey: 'assets.images' },
+  { id: 'file', labelKey: 'assets.tabFiles', emptyKey: 'assets.files' },
+  { id: 'link', labelKey: 'assets.tabLinks', emptyKey: 'assets.links' },
 ]
 
 export default function ConversationAssetsScreen ({ id }: { id: string }) {
@@ -28,6 +31,7 @@ export default function ConversationAssetsScreen ({ id }: { id: string }) {
 }
 
 function Assets ({ id }: { id: string }) {
+  const tr = useT()
   const state = useOpenIM()
   const conversation = state.conversations.find(item => item.conversationID === id)
   const t = useProductTheme()
@@ -87,24 +91,24 @@ function Assets ({ id }: { id: string }) {
 
   return (
     <ProductPage
-      title='图片、文件与链接'
+      title={tr('chatInfo.media')}
       white
       {...task}
       backHref='/chats'
       headerContent={
         <ProductSegment
-          options={tabs.map(item => ({ value: item.id, label: item.label }))}
+          options={tabs.map(item => ({ value: item.id, label: tr(item.labelKey) }))}
           value={tab}
           onChange={value => setTab(value as ConversationAssetKind)}
         />
       }
     >
       {!conversation ? (
-        <ProductHint>找不到此会话，请返回会话列表。</ProductHint>
+        <ProductHint>{tr('assets.chatMissing')}</ProductHint>
       ) : (
         <>
           {visible.length === 0 && !task.busy && !task.error && !hasMore && (
-            <ProductEmpty title={`暂无${tabs.find(item => item.id === tab)?.label}`} />
+            <ProductEmpty title={tr('assets.empty', { kind: tr(tabs.find(item => item.id === tab)?.emptyKey ?? 'assets.images') })} />
           )}
           {tab === 'image' ? (
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 2, padding: 2 }}>
@@ -112,7 +116,7 @@ function Assets ({ id }: { id: string }) {
                 <Pressable
                   key={asset.id}
                   accessibilityRole='button'
-                  accessibilityLabel='图片操作'
+                  accessibilityLabel={tr('assets.imageActions')}
                   onPress={() => setSelected(asset)}
                   style={{ width: '32.9%', aspectRatio: 1, backgroundColor: t.surface2 }}
                 >
@@ -131,8 +135,8 @@ function Assets ({ id }: { id: string }) {
                 titleWeight={tab === 'link' ? '500' : '600'}
                 last={index === visible.length - 1}
                 key={asset.id}
-                title={asset.title}
-                subtitle={`${asset.size ? `${Math.ceil(asset.size / 1024)} KB · ` : ''}${asset.senderName ? `${asset.senderName} · ` : ''}${asset.sendTime ? new Date(asset.sendTime).toLocaleDateString('zh-CN') : ''}`}
+                title={asset.title || tr(asset.kind === 'file' ? 'file.defaultName' : 'assets.image')}
+                subtitle={`${asset.size ? `${Math.ceil(asset.size / 1024)} KB · ` : ''}${asset.senderName ? `${asset.senderName} · ` : ''}${asset.sendTime ? new Date(asset.sendTime).toLocaleDateString(tr.locale) : ''}`}
                 leading={
                   <View
                     style={{
@@ -152,30 +156,31 @@ function Assets ({ id }: { id: string }) {
             ))
           )}
           {!!task.error && (
-            <HeaderAction title='重试加载' disabled={task.busy || !hasMore} onPress={loadNext} />
+            <HeaderAction title={tr('assets.retry')} disabled={task.busy || !hasMore} onPress={loadNext} />
           )}
           {hasMore && !task.error && (
             <HeaderAction
-              title={task.busy ? '正在加载…' : '加载更早内容'}
+              title={task.busy ? tr('assets.loading') : tr('assets.loadEarlier')}
               disabled={task.busy}
               onPress={loadNext}
             />
           )}
-          {!hasMore && items.length > 0 && <ProductHint>已加载全部可访问记录</ProductHint>}
+          {!hasMore && items.length > 0 && <ProductHint>{tr('assets.allLoaded')}</ProductHint>}
         </>
       )}
       {selected && (
         <ProductSheet
+          error={task.error}
           busy={task.busy}
           onClose={() => setSelected(undefined)}
           items={[
             {
               title:
                 selected.kind === 'image'
-                  ? '预览图片'
+                  ? tr('assets.previewImage')
                   : selected.kind === 'file'
-                    ? '打开文件'
-                    : '打开链接',
+                    ? tr('assets.openFile')
+                    : tr('assets.openLink'),
               onPress: () => {
                 if (task.busy)
                   return
@@ -187,7 +192,7 @@ function Assets ({ id }: { id: string }) {
                 const url = safeExternalHttpURL(selected.uri)
                 void run(async current => {
                   if (!url)
-                    throw new Error('链接不可用')
+                    throw new ProductError('assets.linkUnavailable')
                   await Linking.openURL(url)
                   if (current())
                     setSelected(undefined)
@@ -195,7 +200,7 @@ function Assets ({ id }: { id: string }) {
               },
             },
             {
-              title: '查看原消息',
+              title: tr('assets.viewMessage'),
               onPress: () => {
                 if (!task.busy) {
                   jumpToMessage(selected.messageID)
@@ -205,11 +210,6 @@ function Assets ({ id }: { id: string }) {
             },
           ]}
         >
-          {!!task.error && (
-            <Text accessibilityRole='alert' style={{ color: t.danger }}>
-              {task.error}
-            </Text>
-          )}
         </ProductSheet>
       )}
       {preview && <ProductImagePreview uri={preview} onClose={() => setPreview(undefined)} />}

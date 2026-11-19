@@ -3,6 +3,7 @@ import { Href, useRouter } from 'expo-router'
 import { directory } from '../application/directory'
 import { openConversation, refresh, useOpenIM } from '../application/store'
 import LoginScreen from '../auth/LoginScreen'
+import { useT } from '../i18n'
 import { FriendPicker } from '../shared/FriendPicker'
 import { showProductToast } from '../shared/ProductToast'
 import { useTask } from '../shared/useTask'
@@ -14,6 +15,7 @@ export default function CreateGroupScreen () {
   return session ? <CreateGroup key={`${session.userID}:${session.imToken}`} /> : <LoginScreen />
 }
 function CreateGroup () {
+  const tr = useT()
   const router = useRouter()
   const task = useTask()
   const [name, setName] = useState('')
@@ -21,11 +23,11 @@ function CreateGroup () {
   const [selected, setSelected] = useState<string[]>([])
   return (
     <ProductPage
-      title='创建群聊'
+      title={tr('chats.createGroup')}
       {...task}
       right={
         <HeaderAction
-          title={createdID ? '打开群聊' : '创建'}
+          title={createdID ? tr('createGroup.open') : tr('createGroup.create')}
           disabled={task.busy || !name.trim() || !selected.length}
           onPress={() => {
             void task.run(async current => {
@@ -38,7 +40,7 @@ function CreateGroup () {
                 return
               const id = await openConversation(groupID, 3)
               if (current()) {
-                showProductToast('群聊已创建')
+                showProductToast(tr('notice.groupCreated'))
                 router.replace(`/chats/${encodeURIComponent(id)}` as Href)
               }
             })
@@ -46,14 +48,14 @@ function CreateGroup () {
         />
       }
     >
-      <ProductSection>群名称</ProductSection>
+      <ProductSection>{tr('createGroup.name')}</ProductSection>
       <ProductInset>
         <ProductCard>
           <SettingField
             editable={!task.busy && !createdID}
             value={name}
             onChangeText={setName}
-            placeholder='给群聊起个名字'
+            placeholder={tr('createGroup.namePlaceholder')}
           />
         </ProductCard>
       </ProductInset>

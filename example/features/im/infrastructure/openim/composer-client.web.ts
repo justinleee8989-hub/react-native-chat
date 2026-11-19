@@ -1,4 +1,5 @@
 import { parseInputStatus } from '../../application/composer-state'
+import { ProductError } from '../../shared/product-error.ts'
 import { client, getSDKClient } from './client.web'
 import { getDraftStorageScope, readLocalDraft, writeLocalDraft } from './composer-storage'
 
@@ -58,13 +59,13 @@ export async function listGroupMembers (groupID: string) {
   const sdk = await getSDKClient() as ComposerSDK
   const self = dataOf(await sdk.getSelfUserInfo(operationID()))
   if (typeof self?.userID !== 'string')
-    throw new Error('无法确认当前账号，不能加载群成员')
+    throw new ProductError('composer.noAccount')
   const pageSize = 100
   const members = new Map<string, { userID: string, nickname: string, faceURL?: string, roleLevel?: number }>()
   for (let offset = 0; ; ) {
     const page = dataOf(await sdk.getGroupMemberList({ groupID, offset, count: pageSize, filter: 0 }, operationID()))
     if (!Array.isArray(page))
-      throw new Error('群成员列表响应格式不正确')
+      throw new ProductError('composer.badMembers')
     const previousCount = members.size
     for (const member of page)
       if (typeof member?.userID === 'string' && member.userID !== self.userID)

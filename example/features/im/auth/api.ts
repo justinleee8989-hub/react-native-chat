@@ -1,5 +1,6 @@
 import md5 from 'md5'
 import type { Session } from '../domain/types'
+import { ProductError, ServerError } from '../shared/product-error.ts'
 
 /** ChatServer owns authentication; IM tokens must only be used by the IM SDK. */
 export async function authenticate (
@@ -28,10 +29,9 @@ export async function authenticate (
       }),
     })
     const result = await response.json()
-    if (result.errCode === 20001)
-      throw new Error('账号或密码错误')
+    // 20001 (wrong account or password) and the rest are explained by their code.
     if (!response.ok || result.errCode)
-      throw new Error(result.errMsg || `登录失败 (${response.status})`)
+      throw new ServerError(result, response.status)
     const data = result.data
     if (
       !data ||
@@ -39,7 +39,7 @@ export async function authenticate (
         key => typeof data[key] === 'string' && data[key].length > 0
       )
     )
-      throw new Error('登录响应不完整，请检查 ChatServer 版本')
+      throw new ProductError('auth.badLoginResponse')
     return { userID: data.userID, imToken: data.imToken, chatToken: data.chatToken }
   } finally {
     clearTimeout(timeout)

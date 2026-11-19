@@ -1,4 +1,5 @@
 import type { IMMessage, Session } from '../domain/types'
+import { ProductError, ServerError } from '../shared/product-error.ts'
 
 export interface ServerHistoryRequest {
   conversationID: string
@@ -11,7 +12,7 @@ export interface ServerHistoryPage { messages: IMMessage[], hasMore: boolean, cu
 
 export async function fetchServerHistory (session: Session, baseURL: string, request: ServerHistoryRequest): Promise<ServerHistoryPage> {
   if (!session.chatToken)
-    throw new Error('登录已失效，请重新登录')
+    throw new ProductError('history.serverSignedOut')
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), 30000)
   try {
@@ -22,12 +23,13 @@ export async function fetchServerHistory (session: Session, baseURL: string, req
     })
     const result = await response.json()
     if (!response.ok || result.errCode !== 0)
-      throw new Error(result.errMsg || '读取服务端历史失败，请重试')
+      // A server failure is explained by its code; a reply that is not one is said by us.
+      throw result?.errCode ? new ServerError(result, response.status) : new ProductError('history.serverFailed')
     const page = result.data
     if (!Array.isArray(page?.messages) || typeof page.hasMore !== 'boolean' || typeof page.cursor !== 'string')
-      throw new Error('服务端历史响应不完整，请重试')
+      throw new ProductError('history.serverIncomplete')
     if (page.hasMore && (!page.cursor || page.cursor === request.cursor))
-      throw new Error('历史分页未前进，请重试')
+      throw new ProductError('history.notAdvancing')
     return page
   } finally {
     clearTimeout(timeout)

@@ -2,6 +2,7 @@ import React from 'react'
 import type { AttachmentsProps, ReplyMessage } from '@kesha-antonov/react-native-chat'
 import { reportError, sendAttachmentBatchChecked, sendCard, sendLocation } from '../../application/store'
 import type { Session } from '../../domain/types'
+import { ProductError } from '../../shared/product-error'
 import { ProductComposerMenu } from '../ProductComposerMenu'
 
 /**
@@ -43,7 +44,7 @@ export function chatAttachments ({ id, group, activeReply, batchSession, session
         const sendingReply = activeReply.current
         const sourceID = sendingReply ? String(sendingReply._id) : undefined
         if (batchSession.current !== session)
-          throw new Error('登录已改变，请重新发送附件')
+          throw new ProductError('attachments.signInChangedResend')
         await sendAttachmentBatchChecked(
           id,
           attachments

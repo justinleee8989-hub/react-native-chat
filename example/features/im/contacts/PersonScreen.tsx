@@ -7,6 +7,7 @@ import { profile } from '../application/profile'
 import { calls, openConversation, useOpenIM } from '../application/store'
 import LoginScreen from '../auth/LoginScreen'
 import type { Person } from '../domain/directory'
+import { useT } from '../i18n'
 import { profileEmail } from '../profile/profile-email'
 import { ProductPromptField } from '../shared/ProductPromptField'
 import { showProductToast } from '../shared/ProductToast'
@@ -39,6 +40,7 @@ export default function PersonScreen ({ more = false }: { more?: boolean }) {
   )
 }
 function PersonDetails ({ id, selfID, more }: { id: string, selfID: string, more: boolean }) {
+  const tr = useT()
   const router = useRouter()
   const t = useProductTheme()
   const task = useTask()
@@ -97,16 +99,16 @@ function PersonDetails ({ id, selfID, more }: { id: string, selfID: string, more
         !more && !self ? (
           <ContactIconButton
             name='more'
-            label='更多'
+            label={tr('common.more')}
             onPress={() => router.push(`/chats/people/${encodeURIComponent(id)}/more` as Href)}
           />
         ) : undefined
       }
     >
-      {loaded && !person && <Label>未找到该用户</Label>}
+      {loaded && !person && <Label>{tr('addFriend.notFound')}</Label>}
       {!!task.error && (
         <Action
-          title='刷新'
+          title={tr('common.refresh')}
           disabled={task.busy}
           onPress={() => {
             void refresh()
@@ -121,8 +123,8 @@ function PersonDetails ({ id, selfID, more }: { id: string, selfID: string, more
               <View>
                 <ProductCard>
                   <ProductRow
-                    title={person.isFriend ? '设置备注' : '备注'}
-                    trailing={value(person.isFriend ? person.remark || '未设置' : '仅好友可设置')}
+                    title={person.isFriend ? tr('contacts.setRemark') : tr('person.remark')}
+                    trailing={value(person.isFriend ? person.remark || tr('person.notSet') : tr('person.friendsOnly'))}
                     onPress={
                       person.isFriend && !self && !task.busy ? () => setEditing(true) : undefined
                     }
@@ -138,17 +140,17 @@ function PersonDetails ({ id, selfID, more }: { id: string, selfID: string, more
                       paddingTop: 8,
                     }}
                   >
-                    昵称由对方设置；备注只有你自己能看到。
+                    {tr('person.remarkHint')}
                   </Text>
                 )}
               </View>
               <View style={{ marginTop: 0 }}>
                 <ProductCard>
                   <ProductRow
-                    title='加入黑名单'
+                    title={tr('person.block')}
                     trailing={
                       <ProductSwitch
-                        accessibilityLabel='加入黑名单'
+                        accessibilityLabel={tr('person.block')}
                         disabled={task.busy || self}
                         value={blocked}
                         onValueChange={value => {
@@ -159,7 +161,7 @@ function PersonDetails ({ id, selfID, more }: { id: string, selfID: string, more
                               await profile.block(id, false)
                               if (current()) {
                                 setBlocked(false)
-                                setNotice('已移出黑名单')
+                                setNotice(tr('person.unblocked'))
                               }
                             })
                         }}
@@ -172,7 +174,7 @@ function PersonDetails ({ id, selfID, more }: { id: string, selfID: string, more
                 <View style={{ marginTop: 0 }}>
                   <ProductCard>
                     <ProductRow
-                      title='删除好友'
+                      title={tr('contacts.deleteFriend')}
                       danger
                       centered
                       onPress={!task.busy ? () => setConfirm('delete') : undefined}
@@ -210,7 +212,7 @@ function PersonDetails ({ id, selfID, more }: { id: string, selfID: string, more
                 selectable
                 style={{ color: t.text2, fontSize: 14, lineHeight: 20, marginTop: 4, textAlign: 'center' }}
               >
-                ID：{id}
+                {tr('common.idLabel', { id })}
               </Text>
             </View>
             {!self && (
@@ -225,13 +227,13 @@ function PersonDetails ({ id, selfID, more }: { id: string, selfID: string, more
               >
                 <ProfileAction
                   icon='chat'
-                  title='发消息'
+                  title={tr('contacts.message')}
                   disabled={disabled}
                   onPress={startMessage}
                 />
                 <ProfileAction
                   icon='phone'
-                  title='音视频通话'
+                  title={tr('contacts.call')}
                   disabled={disabled}
                   onPress={() => {
                     void run(async () => {
@@ -241,24 +243,24 @@ function PersonDetails ({ id, selfID, more }: { id: string, selfID: string, more
                 />
               </View>
             )}
-            <ContactSection>基本信息</ContactSection>
+            <ContactSection>{tr('person.basicInfo')}</ContactSection>
             <ContactInset>
               <ProductCard>
-                <ProductRow title='昵称' trailing={value(person.nickname || id)} />
+                <ProductRow title={tr('person.nickname')} trailing={value(person.nickname || id)} />
                 {person.isFriend && (
-                  <ProductRow title='备注' trailing={value(person.remark || '未设置')} />
+                  <ProductRow title={tr('person.remark')} trailing={value(person.remark || tr('person.notSet'))} />
                 )}
-                <ProductRow title='用户 ID' trailing={value(id)} />
-                {self && <ProductRow title='邮箱' trailing={value(profileEmail(person))} />}
+                <ProductRow title={tr('person.userID')} trailing={value(id)} />
+                {self && <ProductRow title={tr('person.email')} trailing={value(profileEmail(person))} />}
               </ProductCard>
               {blocked && (
-                <Text style={{ color: t.text2 }}>已加入黑名单，无法向对方发送消息或发起通话。</Text>
+                <Text style={{ color: t.text2 }}>{tr('person.blockedNotice')}</Text>
               )}
               {!self && !person.isFriend && (
                 <View style={{ marginTop: 0 }}>
                   <ProductButton
                     variant='soft'
-                    title='添加到通讯录'
+                    title={tr('person.addToContacts')}
                     disabled={task.busy}
                     onPress={() =>
                       router.push({ pathname: '/chats/add-friend', params: { id } } as Href)
@@ -271,9 +273,9 @@ function PersonDetails ({ id, selfID, more }: { id: string, selfID: string, more
         ))}
       {editing && (
         <Confirm
-          title='设置备注'
+          title={tr('contacts.setRemark')}
           message=''
-          confirmLabel='确定'
+          confirmLabel={tr('common.ok')}
           danger={false}
           busy={task.busy}
           error={task.error}
@@ -283,15 +285,15 @@ function PersonDetails ({ id, selfID, more }: { id: string, selfID: string, more
               await profile.remark(id, remark)
               if (current()) {
                 setPerson(user => user && { ...user, remark: remark.trim() })
-                setNotice('好友备注已保存')
+                setNotice(tr('person.remarkSaved'))
                 setEditing(false)
               }
             })
           }}
         >
           <ProductPromptField
-            accessibilityLabel='好友备注'
-            placeholder='留空则清除备注'
+            accessibilityLabel={tr('contacts.remark')}
+            placeholder={tr('contacts.remarkClearHint')}
             value={remark}
             onChangeText={setRemark}
             editable={!task.busy}
@@ -300,13 +302,13 @@ function PersonDetails ({ id, selfID, more }: { id: string, selfID: string, more
       )}
       {confirm && (
         <Confirm
-          title={confirm === 'delete' ? `删除好友 ${name}？` : '加入黑名单？'}
-          confirmLabel={confirm === 'delete' ? '删除' : '加入'}
+          title={confirm === 'delete' ? tr('contacts.deleteFriendTitle', { name }) : tr('person.blockTitle')}
+          confirmLabel={confirm === 'delete' ? tr('contacts.removeConfirm') : tr('person.blockConfirm')}
           error={task.error}
           message={
             confirm === 'delete'
-              ? '删除后需要重新申请才能添加。'
-              : '加入后将无法正常接收对方的消息。'
+              ? tr('contacts.deleteFriendMessage')
+              : tr('person.blockMessage')
           }
           busy={task.busy}
           onCancel={() => setConfirm(undefined)}
@@ -320,14 +322,14 @@ function PersonDetails ({ id, selfID, more }: { id: string, selfID: string, more
                 return
               setConfirm(undefined)
               if (confirm === 'delete') {
-                setNotice('已删除好友')
+                setNotice(tr('person.deleted'))
                 if (router.canGoBack())
                   router.dismiss(2)
                 else
                   router.replace('/(tabs)/contacts')
               } else {
                 setBlocked(!blocked)
-                setNotice(blocked ? '已移出黑名单' : '已加入黑名单')
+                setNotice(blocked ? tr('person.unblocked') : tr('person.blocked'))
               }
             })
           }}

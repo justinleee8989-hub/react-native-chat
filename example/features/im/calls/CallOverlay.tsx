@@ -2,12 +2,15 @@ import React, { useEffect, useRef, useSyncExternalStore } from 'react'
 import { AppState, Platform, View } from 'react-native'
 import { useRouter } from 'expo-router'
 import { calls, useOpenIM } from '../application/store'
+import { useT } from '../i18n'
+import { errorMessage } from '../shared/error-message'
 import { useTask } from '../shared/useTask'
 import { ProductModal } from '../ui/ProductModal'
 import { CallControl, CallPresentation } from './CallPresentation'
 import { useRingtone } from './useRingtone'
 
 export default function CallOverlay () {
+  const tr = useT()
   const { session, conversations } = useOpenIM()
   const state = useSyncExternalStore(calls.subscribe, calls.snapshot, calls.snapshot)
   const task = useTask()
@@ -43,7 +46,7 @@ export default function CallOverlay () {
   if (!session)
     return null
   const visible = !!call && call.phase !== 'connected'
-  const showNotice = !!state.error || state.notice === '连接中断，通话已结束'
+  const showNotice = !!state.error || state.notice === 'call.droppedEnded'
   if (!visible && !showNotice)
     return null
   const conversation =
@@ -71,33 +74,33 @@ export default function CallOverlay () {
       <CallPresentation
         group={!!call?.groupID}
         name={
-          visible ? conversation?.showName || call?.name || call?.peer || '音视频通话' : '通话提示'
+          visible ? conversation?.showName || call?.name || call?.peer || tr(call?.groupID ? 'call.group' : 'call.title') : tr('call.noticeTitle')
         }
         id={call?.groupID || call?.peer || ''}
         uri={conversation?.faceURL}
         status={
           visible
             ? call?.phase === 'incoming'
-              ? '邀请你进行音视频通话'
+              ? tr('call.inviting')
               : call?.phase === 'accepting'
-                ? '正在接听…'
-                : '正在呼叫…'
-            : state.notice
+                ? tr('call.answering')
+                : tr('call.ringing')
+            : state.notice ? tr(state.notice) : ''
         }
-        error={state.error || task.error}
+        error={errorMessage(state.error, tr) || task.error}
       >
         {visible ? (
           call?.phase === 'incoming' ? (
             <View style={{ flexDirection: 'row', gap: 72 }}>
               <CallControl
-                label='拒接'
+                label={tr('call.decline')}
                 icon='phone'
                 tone='red'
                 disabled={task.busy}
                 onPress={finish}
               />
               <CallControl
-                label='接听'
+                label={tr('call.accept')}
                 icon='phone'
                 tone='green'
                 disabled={task.busy}
@@ -110,7 +113,7 @@ export default function CallOverlay () {
             <>
               <View style={{ flexDirection: 'row', gap: 26, marginBottom: 34 }}>
                 <CallControl
-                  label={call?.media.microphone ? '麦克风' : '已静音'}
+                  label={call?.media.microphone ? tr('call.microphone') : tr('call.muted')}
                   icon={call?.media.microphone ? 'mic' : 'micOff'}
                   active={call?.media.microphone}
                   disabled={task.busy}
@@ -120,7 +123,7 @@ export default function CallOverlay () {
                   }}
                 />
                 <CallControl
-                  label={Platform.OS === 'web' ? '声音' : '扬声器'}
+                  label={Platform.OS === 'web' ? tr('call.sound') : tr('call.speaker')}
                   icon='speaker'
                   active={call?.media.speaker}
                   onPress={() => {
@@ -132,7 +135,7 @@ export default function CallOverlay () {
                   }}
                 />
                 <CallControl
-                  label='摄像头'
+                  label={tr('call.camera')}
                   icon='video'
                   active={call?.media.camera}
                   disabled={task.busy}
@@ -143,7 +146,7 @@ export default function CallOverlay () {
                 />
               </View>
               <CallControl
-                label='取消'
+                label={tr('common.cancel')}
                 icon='phone'
                 tone='red'
                 disabled={task.busy}
@@ -152,7 +155,7 @@ export default function CallOverlay () {
             </>
           )
         ) : (
-          <CallControl label='知道了' icon='check' onPress={calls.dismiss} />
+          <CallControl label={tr('call.gotIt')} icon='check' onPress={calls.dismiss} />
         )}
       </CallPresentation>
     </ProductModal>

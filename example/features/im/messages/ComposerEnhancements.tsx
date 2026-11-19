@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createComposerState } from '../application/composer-state'
 import { reportError } from '../application/store'
 import type { Conversation } from '../domain/types'
+import type { MessageKey } from '../i18n'
 import {
   changeInputState,
   createAtMessage,
@@ -16,6 +17,7 @@ import {
   readDraftMentions,
   writeDraftMentions,
 } from '../infrastructure/openim/composer-storage'
+import { ProductError } from '../shared/product-error'
 
 const drafts = createComposerState({
   getScope: getDraftStorageScope,
@@ -44,7 +46,8 @@ export function useComposerEnhancements (options: {
 }) {
   const { userID, conversation } = options
   const [text, setText] = useState('')
-  const [draftError, setDraftError] = useState<string | null>(null)
+  // Whether the draft or the typing status failed, as the key of what went wrong.
+  const [draftError, setDraftError] = useState<MessageKey | null>(null)
   const [draftRetry, setDraftRetry] = useState(0)
   const [members, setMembers] = useState<ComposerMember[]>([])
   const [membersLoading, setMembersLoading] = useState(false)
@@ -52,7 +55,7 @@ export function useComposerEnhancements (options: {
   const [membersRetry, setMembersRetry] = useState(0)
   const [selectedMentionIDs, setSelectedMentionIDs] = useState<string[]>([])
   const [typing, setTyping] = useState(false)
-  const [typingError, setTypingError] = useState<string | null>(null)
+  const [typingError, setTypingError] = useState<MessageKey | null>(null)
   const [typingUsers, setTypingUsers] = useState<string[]>([])
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const draftClearTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
@@ -109,9 +112,9 @@ export function useComposerEnhancements (options: {
         }
         setDraftError(null)
       })
-      .catch(error => {
+      .catch(() => {
         if (current)
-          setDraftError(error instanceof Error ? error.message : '草稿或提醒对象恢复失败')
+          setDraftError('composer.draftRestoreFailed')
       })
     return () => {
       current = false
@@ -129,8 +132,8 @@ export function useComposerEnhancements (options: {
             .catch(reportError)
       }, 0)
       if (userID && convID)
-        void changeInputState(convID, false).catch(error =>
-          setDraftError(error instanceof Error ? error.message : '草稿保存失败，请重试')
+        void changeInputState(convID, false).catch(() =>
+          setDraftError('composer.draftSaveFailed')
         )
     }
   }, [userID, serverScope, convID, draftRetry])
@@ -206,11 +209,11 @@ export function useComposerEnhancements (options: {
           typingFailureReported.current = false
           setTypingError(null)
         })
-        .catch(error => {
+        .catch(() => {
           if (typingFailureReported.current)
             return
           typingFailureReported.current = true
-          setTypingError(error instanceof Error ? error.message : '输入状态上报失败')
+          setTypingError('composer.typingFailed')
         })
     },
     [convID]
@@ -248,8 +251,8 @@ export function useComposerEnhancements (options: {
           clearTimeout(draftClearTimer.current)
         void drafts
           .save(convID, value)
-          .catch(error =>
-            setDraftError(error instanceof Error ? error.message : '草稿保存失败，请重试')
+          .catch(() =>
+            setDraftError('composer.draftSaveFailed')
           )
         startTyping()
       } else {
@@ -260,8 +263,8 @@ export function useComposerEnhancements (options: {
           if (!sending.current)
             void drafts
               .save(convID, '')
-              .catch(error =>
-                setDraftError(error instanceof Error ? error.message : '草稿保存失败，请重试')
+              .catch(() =>
+                setDraftError('composer.draftSaveFailed')
               )
         }, 750)
       }
@@ -280,7 +283,7 @@ export function useComposerEnhancements (options: {
       const draftAtSend = lastNonemptyDraft.current
       const reportCleanupError = () => {
         if (activeKey.current === requestKey)
-          reportError(new Error('消息已发送，草稿清理失败；请勿重复发送'))
+          reportError(new ProductError('composer.draftCleanupFailed'))
       }
       try {
         const result = await drafts.send(convID, sendMessage, reportCleanupError)
@@ -327,16 +330,16 @@ export function useComposerEnhancements (options: {
       selected = members.filter(member => selectedMentionIDs.includes(member.userID))
     ) => {
       if (!isGroup)
-        return Promise.reject(new Error('@ 提醒仅支持群聊'))
+        return Promise.reject(new ProductError('composer.mentionGroupOnly'))
       if (membersLoading)
-        return Promise.reject(new Error('群成员仍在加载'))
+        return Promise.reject(new ProductError('composer.membersLoading'))
       if (membersError)
-        return Promise.reject(new Error('群成员加载失败，请重试'))
+        return Promise.reject(new ProductError('composer.membersFailed'))
       const valid = selected.filter(member =>
         members.some(candidate => candidate.userID === member.userID)
       )
       if (!valid.length)
-        return Promise.reject(new Error('请选择当前群成员'))
+        return Promise.reject(new ProductError('composer.pickMember'))
       return createAtMessage(value, valid)
     },
     [isGroup, members, membersLoading, membersError, selectedMentionIDs]
@@ -351,8 +354,8 @@ export function useComposerEnhancements (options: {
       setSelectedMentionIDs(ids)
       void drafts
         .saveMentions(convID, ids)
-        .catch(error =>
-          setDraftError(error instanceof Error ? error.message : '草稿保存失败，请重试')
+        .catch(() =>
+          setDraftError('composer.draftSaveFailed')
         )
     },
     [convID, members]
@@ -363,8 +366,8 @@ export function useComposerEnhancements (options: {
     setSelectedMentionIDs([])
     void drafts
       .saveMentions(convID, [])
-      .catch(error =>
-        setDraftError(error instanceof Error ? error.message : '草稿保存失败，请重试')
+      .catch(() =>
+        setDraftError('composer.draftSaveFailed')
       )
   }, [convID])
   const selectedMentions = useMemo(
@@ -381,8 +384,8 @@ export function useComposerEnhancements (options: {
       .save(convID, textRef.current)
       .then(() => drafts.saveMentions(convID, mentionIDsRef.current))
       .then(() => setDraftError(null))
-      .catch(error =>
-        setDraftError(error instanceof Error ? error.message : '草稿保存失败，请重试')
+      .catch(() =>
+        setDraftError('composer.draftSaveFailed')
       )
   }, [convID])
   const restore = useCallback(async () => {

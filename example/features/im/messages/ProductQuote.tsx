@@ -2,6 +2,7 @@ import React from 'react'
 import { Text, View } from 'react-native'
 import { type BubbleProps, type IMessage } from '@kesha-antonov/react-native-chat'
 import { GestureDetector, useTapGesture } from 'react-native-gesture-handler'
+import { useT } from '../i18n'
 import { useSentPartColor } from '../ui/ProductChatTheme'
 import { useProductTheme } from '../ui/theme'
 
@@ -15,6 +16,7 @@ export function ProductQuote ({
   onPress,
   selfID,
 }: Parameters<QuoteRenderer>[0] & { selfID?: string | number }) {
+  const tr = useT()
   const t = useProductTheme()
   const sent = useSentPartColor()
   const media = replyMessage as Partial<IMessage>
@@ -33,7 +35,7 @@ export function ProductQuote ({
       <View
         accessible
         accessibilityRole='button'
-        accessibilityLabel='查看引用消息'
+        accessibilityLabel={tr('quote.view')}
         onAccessibilityTap={open}
         style={{
           marginTop: 7,
@@ -47,8 +49,8 @@ export function ProductQuote ({
       >
         <Text numberOfLines={1} style={{ color, fontSize: 13, lineHeight: 18, fontWeight: '600' }}>
           {selfID !== undefined && String(selfID) === String(replyMessage.user?._id)
-            ? '你'
-            : replyMessage.user?.name || replyMessage.user?._id || '未知联系人'}
+            ? tr('quote.you')
+            : replyMessage.user?.name || replyMessage.user?._id || tr('message.unknownSender')}
         </Text>
         <Text
           numberOfLines={1}
@@ -56,14 +58,14 @@ export function ProductQuote ({
         >
           {replyMessage.text ||
             (media.file
-              ? `[文件] ${media.file.name}`
+              ? tr('preview.file', { name: media.file.name })
               : media.video
-                ? '[视频]'
+                ? tr('preview.video')
                 : replyMessage.image
-                  ? '[图片]'
+                  ? tr('preview.image')
                   : replyMessage.audio
-                    ? '[语音]'
-                    : '[消息]')}
+                    ? tr('preview.voice')
+                    : tr('preview.message'))}
         </Text>
       </View>
     </GestureDetector>

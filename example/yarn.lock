@@ -3414,6 +3414,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/emscripten@npm:^1.41.6":
+  version: 1.41.6
+  resolution: "@types/emscripten@npm:1.41.6"
+  checksum: 10c0/b51a730b6cb2848ac5e3f0536707bf656b6887be21f20e96b01e74a59ed52319dd0942f49b1072b1ca6d38df19e2d633f540df54d6ba1f7216be14af7373a41f
+  languageName: node
+  linkType: hard
+
 "@types/esrecurse@npm:^4.3.1":
   version: 4.3.1
   resolution: "@types/esrecurse@npm:4.3.1"
@@ -4429,6 +4436,15 @@ __metadata:
   version: 4.0.4
   resolution: "balanced-match@npm:4.0.4"
   checksum: 10c0/07e86102a3eb2ee2a6a1a89164f29d0dbaebd28f2ca3f5ca786f36b8b23d9e417eb3be45a4acf754f837be5ac0a2317de90d3fcb7f4f4dc95720a1f36b26a17b
+  languageName: node
+  linkType: hard
+
+"barcode-detector@npm:^3.0.0":
+  version: 3.2.4
+  resolution: "barcode-detector@npm:3.2.4"
+  dependencies:
+    zxing-wasm: "npm:3.1.7"
+  checksum: 10c0/71999e91e72bc3484ec3cc72b2f78204523d21f0bdc8018e4f39f2271d1f6b4271534164919505e88b5686b5b432f1e829604012fae29a515a3ee032dfe90413
   languageName: node
   linkType: hard
 
@@ -5945,6 +5961,7 @@ __metadata:
     expo-audio: "npm:~58.0.10"
     expo-blur: "npm:~58.0.5"
     expo-build-properties: "npm:~58.0.11"
+    expo-camera: "npm:~58.0.14"
     expo-clipboard: "npm:~58.0.4"
     expo-constants: "npm:~58.0.14"
     expo-crypto: "npm:^58.0.8"
@@ -5957,6 +5974,7 @@ __metadata:
     expo-image-manipulator: "npm:~58.0.16"
     expo-image-picker: "npm:~58.0.10"
     expo-linking: "npm:~58.0.15"
+    expo-localization: "npm:~58.0.5"
     expo-location: "npm:~58.0.20"
     expo-media-library: "npm:~58.0.13"
     expo-router: "npm:~58.0.28"
@@ -6050,6 +6068,23 @@ __metadata:
   peerDependencies:
     expo: "*"
   checksum: 10c0/80fc143ed7c0e1faa034ffdcddc7c18d88d253e136c4fb6f7332a2246bcd20600d1461b4211d92531c82a23dfb3fbdadb91d970af3b358ec1afbed882ee9f586
+  languageName: node
+  linkType: hard
+
+"expo-camera@npm:~58.0.14":
+  version: 58.0.14
+  resolution: "expo-camera@npm:58.0.14"
+  dependencies:
+    barcode-detector: "npm:^3.0.0"
+  peerDependencies:
+    expo: "*"
+    react: "*"
+    react-native: "*"
+    react-native-web: "*"
+  peerDependenciesMeta:
+    react-native-web:
+      optional: true
+  checksum: 10c0/a0bd03124f46d0a7b01beb37525cb775864e64468d570f4a663de0ba5e09c1e1d8800056d77afff21b02c9140bb5cfae7c64691bd66a583f8ed6cf69dffe7b52
   languageName: node
   linkType: hard
 
@@ -6218,6 +6253,18 @@ __metadata:
     react: "*"
     react-native: "*"
   checksum: 10c0/f743006175951c80d60d958307c94dc985841030fc757a04a0c69a95cfa4d481d43b5c0e22ebb271727f36c8c441d6f065e92a6fa1680172809037fd80d8897b
+  languageName: node
+  linkType: hard
+
+"expo-localization@npm:~58.0.5":
+  version: 58.0.5
+  resolution: "expo-localization@npm:58.0.5"
+  dependencies:
+    rtl-detect: "npm:^1.0.2"
+  peerDependencies:
+    expo: "*"
+    react: "*"
+  checksum: 10c0/ea82b918a84ad9a5fd3eb220b5bd0f08cfa6960c99dbfdc27a1ae9fde1e37466415bb37e887617c44ae4a1196076c51badb2389952642f7ff70ef5bed4eb93da
   languageName: node
   linkType: hard
 
@@ -10102,6 +10149,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"rtl-detect@npm:^1.0.2":
+  version: 1.1.2
+  resolution: "rtl-detect@npm:1.1.2"
+  checksum: 10c0/1b92888aafca1593314f837e83fdf02eb208faae3e713ab87c176804728efd3b1980d53b64f65f1fa593348087e852c5cd729b7b9372950f6e9b7be489afc0ca
+  languageName: node
+  linkType: hard
+
 "rxjs@npm:*, rxjs@npm:7.8.2":
   version: 7.8.2
   resolution: "rxjs@npm:7.8.2"
@@ -10704,6 +10758,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"tagged-tag@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "tagged-tag@npm:1.0.0"
+  checksum: 10c0/91d25c9ffb86a91f20522cefb2cbec9b64caa1febe27ad0df52f08993ff60888022d771e868e6416cf2e72dab68449d2139e8709ba009b74c6c7ecd4000048d1
+  languageName: node
+  linkType: hard
+
 "terminal-link@npm:^2.1.1":
   version: 2.1.1
   resolution: "terminal-link@npm:2.1.1"
@@ -10837,6 +10898,15 @@ __metadata:
   version: 0.7.1
   resolution: "type-fest@npm:0.7.1"
   checksum: 10c0/ce6b5ef806a76bf08d0daa78d65e61f24d9a0380bd1f1df36ffb61f84d14a0985c3a921923cf4b97831278cb6fa9bf1b89c751df09407e0510b14e8c081e4e0f
+  languageName: node
+  linkType: hard
+
+"type-fest@npm:^5.10.0":
+  version: 5.10.0
+  resolution: "type-fest@npm:5.10.0"
+  dependencies:
+    tagged-tag: "npm:^1.0.0"
+  checksum: 10c0/313c5d0e37a3f1cc82e942f3228f897623c8b54a63a8a95532d0c2c21ab200793caa70bd8904a83fd713eb28d87ba32468b09b345ef6efa25cecb345b467226f
   languageName: node
   linkType: hard
 
@@ -11548,5 +11618,17 @@ __metadata:
   version: 3.25.76
   resolution: "zod@npm:3.25.76"
   checksum: 10c0/5718ec35e3c40b600316c5b4c5e4976f7fee68151bc8f8d90ec18a469be9571f072e1bbaace10f1e85cf8892ea12d90821b200e980ab46916a6166a4260a983c
+  languageName: node
+  linkType: hard
+
+"zxing-wasm@npm:3.1.7":
+  version: 3.1.7
+  resolution: "zxing-wasm@npm:3.1.7"
+  dependencies:
+    "@types/emscripten": "npm:^1.41.6"
+    type-fest: "npm:^5.10.0"
+  peerDependencies:
+    "@types/emscripten": ">=1.39.6"
+  checksum: 10c0/766cb7ec8a1bda6eacfb942819e4b8f2a5313efdb75942a15ba9dfb7176a67d0e18bd60a97467b96faf5b28617649f6b6860339b3999492b99a68e3e0b3d9065
   languageName: node
   linkType: hard

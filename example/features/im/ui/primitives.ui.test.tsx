@@ -7,7 +7,7 @@ import { productOverlayGeometry } from './ProductModal'
 import { ProductIconButton } from './ProductPage'
 
 let mockDesktop = false
-jest.mock('./preferences', () => ({ useProductLayout: () => ({ desktop: mockDesktop }), useProductScheme: () => 'light' }))
+jest.mock('./preferences', () => ({ useLanguageChoice: () => 'auto', useProductLayout: () => ({ desktop: mockDesktop }), useProductScheme: () => 'light' }))
 jest.mock('./theme', () => ({ useProductTheme: () => require('./tokens').productPalette.light }))
 jest.mock('./ProductIcon', () => ({ ProductIcon: () => null }))
 jest.mock('expo-router', () => ({ useRouter: () => ({ canGoBack: () => false, replace: jest.fn(), back: jest.fn() }) }))
@@ -162,4 +162,20 @@ it.each([false, true])('draws a section title the same on a phone and on PC (des
   } finally {
     mockDesktop = previous
   }
+})
+
+it('says a failed action centred under the sheet actions, as an alert', async () => {
+  const view = await render(<ProductSheet title='Bob' onClose={jest.fn()} items={[{ title: '设置备注', onPress: jest.fn() }]} error='操作失败' />)
+  const error = view.getByRole('alert')
+  expect(error.props.children).toBe('操作失败')
+  expect(StyleSheet.flatten(error.props.style)).toMatchObject({ textAlign: 'center', paddingHorizontal: 20 })
+})
+
+it('gives a centred title the whole bar but the back button when nothing is on the right', async () => {
+  const room = (view: Awaited<ReturnType<typeof render>>) =>
+    StyleSheet.flatten(view.getByRole('header').parent?.props.style)
+  const plain = await render(<ProductHeader title='Account security' onBack={jest.fn()} />)
+  expect(room(plain)).toMatchObject({ left: 56, right: 56 })
+  const withAction = await render(<ProductHeader title='Account security' onBack={jest.fn()} right={<Text>Save</Text>} />)
+  expect(room(withAction)).toMatchObject({ left: 92, right: 92 })
 })

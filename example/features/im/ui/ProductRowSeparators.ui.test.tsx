@@ -8,7 +8,7 @@ import { ProductListRow } from './primitives'
 import { productPalette as mockProductPalette } from './tokens'
 
 let mockDesktop = false
-jest.mock('./preferences', () => ({ useProductLayout: () => ({ desktop: mockDesktop }), useProductScheme: () => 'light' }))
+jest.mock('./preferences', () => ({ useLanguageChoice: () => 'auto', useProductLayout: () => ({ desktop: mockDesktop }), useProductScheme: () => 'light' }))
 jest.mock('./theme', () => ({ useProductTheme: () => mockProductPalette.light, useProductColors: () => ({ name: '#111', message: '#777', background: '#fff', headerBackground: '#fff', attachment: '#229af0', pressed: '#eee', draft: '#c00', divider: '#ddd' }) }))
 jest.mock('./ProductIcon', () => ({ ProductIcon: () => null }))
 jest.mock('../navigation/DesktopNavigation', () => ({ useDesktopNavigation: () => ({ canGoBackInSection: false }) }))

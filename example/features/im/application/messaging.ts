@@ -4,6 +4,7 @@ import type { AttachmentPersistence } from '../messages/attachment-batch'
 import { attachReply, validateLocation } from '../messages/composer'
 import type { MessageExtra } from '../messages/extras'
 import { projectMessage, searchableText, sdkMessageWithProjection } from '../messages/projection'
+import { ProductError } from '../shared/product-error.ts'
 import type { Runtime } from './runtime'
 
 export interface MessageProjectionService {
@@ -72,16 +73,16 @@ export function createMessaging (runtime: Runtime, client: IMClient, beforeRetry
     } while (page.length === 100)
     if (epoch === runtime.generation)
       runtime.update({ conversationsLoaded: true })
-    const projectionWarning = projectionUnavailable ? '部分会话的编辑信息暂时无法同步，请稍后刷新' : undefined
+    const projectionWarning = projectionUnavailable ? new ProductError('sync.editsUnavailable') : undefined
     if (projectionWarning && epoch === runtime.generation)
-      runtime.reportError(new Error(projectionWarning))
+      runtime.reportError(projectionWarning)
     return { projectionWarning }
   }
   async function openConversation (userID: string, sessionType = 1) {
     const epoch = runtime.generation
     const conversation = await client.conversation(userID.trim(), sessionType)
     if (epoch !== runtime.generation)
-      throw new Error('登录已改变，请重试')
+      throw new ProductError('session.changedRetry')
     runtime.mergeConversations([conversation])
     return conversation.conversationID
   }
@@ -137,7 +138,7 @@ export function createMessaging (runtime: Runtime, client: IMClient, beforeRetry
     let reachedEnd = false
     for (let page = 0; page < SEARCH_MAX_PAGES; page++) {
       if (epoch !== runtime.generation)
-        throw new Error('登录已改变，请重新打开消息')
+        throw new ProductError('session.changedReopenMessages')
       if ((runtime.state.messages[id] || []).some(message => message.clientMsgID === messageID))
         return
       const before = runtime.state.messages[id] || []
@@ -150,7 +151,7 @@ export function createMessaging (runtime: Runtime, client: IMClient, beforeRetry
       const requestKey = `${epoch}:${runtime.historyRevision?.[id] || 0}:${id}`
       await loadHistory(id, beforeCursor !== '')
       if (epoch !== runtime.generation)
-        throw new Error('登录已改变，请重新打开消息')
+        throw new ProductError('session.changedReopenMessages')
       if ((runtime.state.messages[id] || []).some(message => message.clientMsgID === messageID))
         return
       const after = runtime.state.messages[id] || []
@@ -160,12 +161,12 @@ export function createMessaging (runtime: Runtime, client: IMClient, beforeRetry
         break
       }
       if ((startCursor && afterCursor === startCursor) || seen.has(`${requestKey}:${afterCursor}`))
-        throw new Error('本地历史分页游标未前进，无法定位该消息')
+        throw new ProductError('history.localCursorStuck')
       seen.add(`${requestKey}:${afterCursor}`)
     }
     if (!reachedEnd)
-      throw new Error('本地同步记录过多，定位扫描达到安全上限；请先加载更多历史')
-    throw new Error('未能在本机同步记录中找到该消息')
+      throw new ProductError('history.localScanLimit')
+    throw new ProductError('history.messageNotLocal')
   }
   function focusConversation (id: string) {
     const epoch = runtime.generation
@@ -197,32 +198,32 @@ export function createMessaging (runtime: Runtime, client: IMClient, beforeRetry
   }
   async function sendTextChecked (id: string, text: string) {
     if (!text.trim())
-      throw new Error('消息不能为空')
+      throw new ProductError('send.empty')
     const epoch = runtime.generation
     const message = await client.createText(text)
     if (epoch !== runtime.generation)
-      throw new Error('登录已改变，请重新发送')
+      throw new ProductError('session.changedResend')
     await sendPreparedChecked(id, message)
   }
   async function sendPreparedChecked (id: string, message: IMMessage) {
     const conversation = runtime.state.conversations.find(item => item.conversationID === id)
     if (!conversation || !runtime.state.session)
-      throw new Error('会话或登录状态已失效')
+      throw new ProductError('session.invalid')
     if (runtime.state.messages[id]?.some(item => item.clientMsgID === message.clientMsgID && item.status === 2))
       return
     const epoch = runtime.generation
     if (sending.has(message.clientMsgID))
-      throw new Error('消息正在发送，请稍后重试')
+      throw new ProductError('send.inProgress')
     sending.add(message.clientMsgID)
     try {
       if (beforeRetry)
         await beforeRetry(message)
       if (epoch !== runtime.generation)
-        throw new Error('登录已改变，请重新发送')
+        throw new ProductError('session.changedResend')
       runtime.addMessages(id, [{ ...message, status: 1 }])
       const sent = await client.send(message, conversation)
       if (epoch !== runtime.generation)
-        throw new Error('登录已改变，请重新发送')
+        throw new ProductError('session.changedResend')
       runtime.addMessages(id, [sent])
     } catch (error) {
       if (epoch === runtime.generation)
@@ -235,44 +236,45 @@ export function createMessaging (runtime: Runtime, client: IMClient, beforeRetry
   async function sendQuote (id: string, text: string, sourceID: string) {
     const source = runtime.state.messages[id]?.find(item => item.clientMsgID === sourceID)
     if (!source || source.contentType === 2101)
-      throw new Error('引用消息已不可用，请取消回复后重试')
+      throw new ProductError('send.quoteGone')
     if (!runtime.state.session || !text.trim())
-      throw new Error('登录状态已失效或消息为空')
+      throw new ProductError('send.invalidOrEmpty')
     const epoch = runtime.generation
     const extra = projection ? (await projection.load(id, [sourceID]))[sourceID] : source.projection
     if (epoch !== runtime.generation)
-      throw new Error('登录已改变，请重新发送')
+      throw new ProductError('session.changedResend')
     const message = await client.createQuote(text, sdkMessageWithProjection(source, extra))
     if (epoch !== runtime.generation)
-      throw new Error('登录已改变，请重新发送')
+      throw new ProductError('session.changedResend')
     await sendPreparedChecked(id, message)
   }
   async function forwardMessage (id: string, source: IMMessage) {
     if (!runtime.state.session || source.status !== 2 || source.contentType >= 1000)
-      throw new Error('此消息不能转发')
+      throw new ProductError('forward.notAllowed')
     const epoch = runtime.generation
     const storedSource = Object.values(runtime.state.messages).flat().find(item => item.clientMsgID === source.clientMsgID) || source
     const sourceConversation = Object.entries(runtime.state.messages).find(([, messages]) => messages.some(item => item.clientMsgID === source.clientMsgID))?.[0]
     const extra = projection && sourceConversation ? (await projection.load(sourceConversation, [source.clientMsgID]))[source.clientMsgID] : storedSource.projection
     if (epoch !== runtime.generation)
-      throw new Error('登录已改变，请重试')
+      throw new ProductError('session.changedRetry')
     const message = await client.createForward(sdkMessageWithProjection(storedSource, extra))
     if (epoch !== runtime.generation)
-      throw new Error('登录已改变，请重试')
+      throw new ProductError('session.changedRetry')
     await retryMessage(id, message)
     if (runtime.state.messages[id]?.find(item => item.clientMsgID === message.clientMsgID)?.status !== 2)
-      throw new Error('转发失败，可到目标会话重试失败消息')
+      throw new ProductError('forward.failed')
   }
   async function revokeMessage (id: string, messageID: string) {
     const source = runtime.state.messages[id]?.find(item => item.clientMsgID === messageID)
     if (!source || source.sendID !== runtime.state.session?.userID || source.status !== 2)
-      throw new Error('只能撤回自己已发送的消息')
+      throw new ProductError('revoke.ownOnly')
     const epoch = runtime.generation
     const revision = runtime.historyRevision?.[id] || 0
     await client.revoke(id, messageID)
     if (epoch === runtime.generation && revision === (runtime.historyRevision?.[id] || 0))
       runtime.addMessages(id, [{ ...source, contentType: 2101,
-        notificationElem: { detail: JSON.stringify({ revokerNickname: '你' }) } }])
+        // The screen says 你撤回了… in the current language; no name is stored.
+        notificationElem: { detail: JSON.stringify({ revokedBySelf: true }) } }])
   }
   async function searchMessages (id: string, keyword: string, page = 1) {
     if (!runtime.state.session || !keyword.trim())
@@ -286,7 +288,7 @@ export function createMessaging (runtime: Runtime, client: IMClient, beforeRetry
     for (let index = 0; index < SEARCH_MAX_PAGES; index++) {
       const result = await client.history(id, cursor)
       if (epoch !== runtime.generation)
-        throw new Error('登录已改变，请重新搜索')
+        throw new ProductError('session.changedSearch')
       const batch = result.messageList || []
       for (const message of batch)
         if (message.clientMsgID)
@@ -298,12 +300,12 @@ export function createMessaging (runtime: Runtime, client: IMClient, beforeRetry
       const ordered = [...batch].sort(compareMessagesNewestFirst)
       const next = ordered[ordered.length - 1]?.clientMsgID
       if (!next || next === cursor || visitedCursors.has(next))
-        throw new Error('本地历史分页游标未前进，搜索已中止')
+        throw new ProductError('search.localCursorStuck')
       visitedCursors.add(next)
       cursor = next
     }
     if (!reachedEnd)
-      throw new Error('本地同步记录过多，搜索扫描达到安全上限；缩小范围后重试')
+      throw new ProductError('search.localScanLimit')
     const candidates = [...byID.values()]
     const eligible = candidates.filter(message => message.status === 2 && message.contentType < 1000)
     const projectionIDs = eligible.flatMap(message => [message.clientMsgID, ...(message.quoteElem?.quoteMessage?.clientMsgID ? [message.quoteElem.quoteMessage.clientMsgID] : [])])
@@ -311,7 +313,7 @@ export function createMessaging (runtime: Runtime, client: IMClient, beforeRetry
       ? await projection.load(id, projectionIDs)
       : {}
     if (epoch !== runtime.generation)
-      throw new Error('登录已改变，请重新搜索')
+      throw new ProductError('session.changedSearch')
     const matches = candidates.map(message => projectMessage(message, extras[message.clientMsgID], extras))
       .filter(message => searchableText(message).toLocaleLowerCase().includes(normalized))
       .sort((a, b) => b.sendTime - a.sendTime || b.clientMsgID.localeCompare(a.clientMsgID))
@@ -323,7 +325,7 @@ export function createMessaging (runtime: Runtime, client: IMClient, beforeRetry
       return undefined
     const source = runtime.state.messages[id]?.find(item => item.clientMsgID === sourceID)
     if (!source || source.status !== 2 || source.contentType >= 1000)
-      throw new Error('引用消息已不可用，请取消回复后重试')
+      throw new ProductError('send.quoteGone')
     const extra = projection ? (await projection.load(id, [sourceID]))[sourceID] : source.projection
     return sdkMessageWithProjection(source, extra)
   }
@@ -332,17 +334,17 @@ export function createMessaging (runtime: Runtime, client: IMClient, beforeRetry
     const source = await replySource(id, sourceID)
     const message = await client.createLocation(validateLocation(location))
     if (epoch !== runtime.generation)
-      throw new Error('登录已改变，请重新发送')
+      throw new ProductError('session.changedResend')
     await sendPreparedChecked(id, attachReply(message, source))
   }
   async function sendCard (id: string, card: ContactCard, sourceID?: string) {
     if (!card.userID.trim() || !card.nickname.trim())
-      throw new Error('请选择有效联系人')
+      throw new ProductError('send.pickValidContact')
     const epoch = runtime.generation
     const source = await replySource(id, sourceID)
     const message = await client.createCard(card)
     if (epoch !== runtime.generation)
-      throw new Error('登录已改变，请重新发送')
+      throw new ProductError('session.changedResend')
     await sendPreparedChecked(id, attachReply(message, source))
   }
   async function sendMedia (id: string, media: MediaInput, sourceID?: string) {
@@ -353,12 +355,12 @@ export function createMessaging (runtime: Runtime, client: IMClient, beforeRetry
       !runtime.state.session ||
       !runtime.state.conversations.some(item => item.conversationID === id)
     )
-      throw new Error('会话或登录状态已失效')
+      throw new ProductError('session.invalid')
     const epoch = runtime.generation
     const source = await replySource(id, sourceID)
     const message = attachReply(await client.createMedia(media), source)
     if (epoch !== runtime.generation)
-      throw new Error('登录已改变，请重新发送')
+      throw new ProductError('session.changedResend')
     return sendPreparedChecked(id, message)
   }
   async function sendAttachmentBatchChecked (id: string, media: MediaInput[], caption = '', sourceID?: string) {
@@ -367,11 +369,11 @@ export function createMessaging (runtime: Runtime, client: IMClient, beforeRetry
   }
   async function createAttachmentBatch (id: string, media: MediaInput[], caption = '', sourceID?: string) {
     if (!runtime.state.session || !runtime.state.conversations.some(item => item.conversationID === id))
-      throw new Error('会话或登录状态已失效')
+      throw new ProductError('session.invalid')
     const epoch = runtime.generation
     const source = await replySource(id, sourceID)
     if (epoch !== runtime.generation)
-      throw new Error('登录已改变，请重新发送')
+      throw new ProductError('session.changedResend')
     return persistence ? attachmentBatches.enqueue(id, media, caption, source) : attachmentBatches.create(id, media, caption, source)
   }
   function getAttachmentBatch (batchID: string) {

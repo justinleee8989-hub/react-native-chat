@@ -4,12 +4,13 @@ import { readFileSync } from 'node:fs'
 import { runInNewContext } from 'node:vm'
 import ts from 'typescript'
 import * as composerExports from './composer.ts'
+import { withI18n } from '../i18n/test-modules.mjs'
 const exports = {}
 const projectionExports = {}
-runInNewContext(ts.transpileModule(readFileSync(new URL('./projection.ts', import.meta.url), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText, { exports: projectionExports, Set, Object, require: () => ({ batchMessageIDs: () => [], messageExtras: async () => ({}) }) })
+runInNewContext(ts.transpileModule(readFileSync(new URL('./projection.ts', import.meta.url), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText, { exports: projectionExports, Set, Object, require: withI18n(() => ({ batchMessageIDs: () => [], messageExtras: async () => ({}) })) })
 const batchExports = {}
-runInNewContext(ts.transpileModule(readFileSync(new URL('./attachment-batch.ts', import.meta.url), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText, { exports: batchExports, Map, Set, Error, Promise, String })
-runInNewContext(ts.transpileModule(readFileSync(new URL('../application/messaging.ts', import.meta.url), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText, { exports, Set, Map, Error, require: path => path.includes('attachment-batch') ? batchExports : path.includes('composer') ? composerExports : projectionExports })
+runInNewContext(ts.transpileModule(readFileSync(new URL('./attachment-batch.ts', import.meta.url), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText, { exports: batchExports, Map, Set, Error, Promise, String, require: withI18n() })
+runInNewContext(ts.transpileModule(readFileSync(new URL('../application/messaging.ts', import.meta.url), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText, { exports, Set, Map, Error, require: withI18n(path => path.includes('attachment-batch') ? batchExports : path.includes('composer') ? composerExports : projectionExports) })
 function setup () {
   const original = { clientMsgID: 'one', status: 2, sendID: 'me', contentType: 101 }
   const runtime = { touchMessageCache: () => {}, pruneMessageCache: () => {}, generation: 1, historyRevision: {}, state: { config: { api: 'https://api', ws: 'wss://ws' }, session: { userID: 'me' }, conversations: [{ conversationID: 'chat' }], messages: { chat: [original] } }, addMessages: (_id, list) => { const map = new Map(runtime.state.messages.chat.map(item => [item.clientMsgID, item])); list.forEach(item => map.set(item.clientMsgID, item)); runtime.state.messages.chat = [...map.values()] }, mergeConversations: list => { runtime.state.conversations = list }, update: patch => { runtime.state = { ...runtime.state, ...patch } }, reportError: () => {} }
@@ -141,9 +142,9 @@ test('preview projection failure does not fail refresh and preserves previous ed
   const reported = []
   h.runtime.reportError = error => reported.push(error.message)
   const result = await exports.createMessaging(h.runtime, h.client, undefined, { load: async () => { throw new Error('offline') } }).refresh()
-  assert.match(result.projectionWarning, /编辑信息暂时无法同步/)
+  assert.match(result.projectionWarning.message, /编辑信息暂时无法同步/)
   assert.equal(JSON.parse(h.runtime.state.conversations[0].latestMsg).projection.text, 'edited')
-  assert.deepEqual(reported, [result.projectionWarning])
+  assert.deepEqual(reported, [result.projectionWarning.message])
 })
 
 test('failed forwards reject so recipient picker does not report success', async () => {
@@ -376,7 +377,7 @@ for (const stale of [false, true])
   })
 
 const eventsExports = {}
-runInNewContext(ts.transpileModule(readFileSync(new URL('../application/events.ts', import.meta.url), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText, { exports: eventsExports, require: () => ({ mergeMessages: (_old, incoming) => incoming }) })
+runInNewContext(ts.transpileModule(readFileSync(new URL('../application/events.ts', import.meta.url), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText, { exports: eventsExports, require: withI18n(() => ({ mergeMessages: (_old, incoming) => incoming })) })
 for (const stale of [false, true])
   test(`incoming message read failure is ${stale ? 'ignored after account change' : 'reported for current account'}`, async () => {
     const h = setup()

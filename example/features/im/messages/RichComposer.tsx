@@ -5,6 +5,8 @@ import { useOpenIM } from '../application/store'
 import { mergeDirectory, type Person } from '../domain/directory'
 import type { ContactCard, LocationInput } from '../domain/types'
 import { SettingField as ProductField } from '../groups/group-ui'
+import { useT } from '../i18n'
+import { ProductError } from '../shared/product-error'
 import { useTask } from '../shared/useTask'
 import { ProductAvatar, ProductButton, ProductCard } from '../ui/primitives'
 import { ProductListRow } from '../ui/ProductListRow'
@@ -23,6 +25,7 @@ export function RichComposer (props: Props) {
   return <SessionRichComposer key={`${session?.userID}:${session?.imToken}`} {...props} />
 }
 function SessionRichComposer ({ renderTrigger, onLocation, onCard }: Props) {
+  const tr = useT()
   const [mode, setMode] = useState<'location' | 'card'>()
   return (
     <>
@@ -31,10 +34,10 @@ function SessionRichComposer ({ renderTrigger, onLocation, onCard }: Props) {
       ) : (
         <View>
           <Pressable onPress={() => setMode('location')}>
-            <Text>发送位置</Text>
+            <Text>{tr('location.send')}</Text>
           </Pressable>
           <Pressable onPress={() => setMode('card')}>
-            <Text>发送名片</Text>
+            <Text>{tr('card.send')}</Text>
           </Pressable>
         </View>
       )}
@@ -46,49 +49,50 @@ function SessionRichComposer ({ renderTrigger, onLocation, onCard }: Props) {
   )
 }
 function LocationPicker ({ onClose, onSend }: { onClose: () => void, onSend: Props['onLocation'] }) {
+  const tr = useT()
   const t = useProductTheme()
   const task = useTask()
   const [label, setLabel] = useState(''),
         [latitude, setLatitude] = useState(''),
         [longitude, setLongitude] = useState('')
   return (
-    <ProductPickerModal title='发送位置' onClose={onClose} busy={task.busy}>
+    <ProductPickerModal title={tr('location.send')} onClose={onClose} busy={task.busy}>
       <ScrollView keyboardShouldPersistTaps='handled'>
-        <ProductSection>手动填写经纬度，不读取设备定位（WGS84）</ProductSection>
+        <ProductSection>{tr('location.manualHint')}</ProductSection>
         <View style={{ marginHorizontal: 16 }}>
           <ProductCard>
             <ProductField
-              label='地点名称'
-              placeholder='例如：公司前台'
+              label={tr('location.name')}
+              placeholder={tr('location.namePlaceholder')}
               value={label}
               onChangeText={setLabel}
             />
             <ProductField
-              label='纬度'
-              placeholder='-90 ～ 90'
+              label={tr('location.latitude')}
+              placeholder={tr('location.latitudeRange')}
               value={latitude}
               onChangeText={setLatitude}
             />
             <ProductField
-              label='经度'
-              placeholder='-180 ～ 180'
+              label={tr('location.longitude')}
+              placeholder={tr('location.longitudeRange')}
               value={longitude}
               onChangeText={setLongitude}
             />
           </ProductCard>
           <View style={{ height: 24 }} />
           <ProductButton
-            title='发送此位置'
+            title={tr('location.sendThis')}
             disabled={task.busy}
             onPress={() => {
               void task.run(async current => {
                 if (!latitude.trim() || !longitude.trim())
-                  throw new Error('请输入有效的经纬度')
+                  throw new ProductError('location.invalid')
                 await onSend(
                   validateLocation({
                     latitude: Number(latitude),
                     longitude: Number(longitude),
-                    description: label.trim() || '位置',
+                    description: label.trim() || tr('composer.location'),
                   })
                 )
                 if (current())
@@ -107,6 +111,7 @@ function LocationPicker ({ onClose, onSend }: { onClose: () => void, onSend: Pro
   )
 }
 function CardPicker ({ onClose, onSend }: { onClose: () => void, onSend: Props['onCard'] }) {
+  const tr = useT()
   const t = useProductTheme(),
         task = useTask(),
         load = useTask()
@@ -125,7 +130,7 @@ function CardPicker ({ onClose, onSend }: { onClose: () => void, onSend: Props['
     })
   }, [run])
   return (
-    <ProductPickerModal title='选择名片' onClose={onClose} busy={task.busy}>
+    <ProductPickerModal title={tr('card.choose')} onClose={onClose} busy={task.busy}>
       <ScrollView keyboardShouldPersistTaps='handled'>
         {people.map((person, index) => (
           <ProductListRow
@@ -158,7 +163,7 @@ function CardPicker ({ onClose, onSend }: { onClose: () => void, onSend: Props['
           />
         ))}
         {!people.length && !load.busy && !load.error && (
-          <Text style={{ textAlign: 'center', color: t.text3, paddingVertical: 72 }}>暂无好友</Text>
+          <Text style={{ textAlign: 'center', color: t.text3, paddingVertical: 72 }}>{tr('card.noFriends')}</Text>
         )}
         {load.busy && <ActivityIndicator color={t.accent} />}
         {!!(task.error || load.error) && (
@@ -182,7 +187,7 @@ function CardPicker ({ onClose, onSend }: { onClose: () => void, onSend: Props['
             style={{ padding: 16 }}
           >
             <Text style={{ textAlign: 'center', color: t.accent }}>
-              {load.error ? '重试加载好友' : '加载更多好友'}
+              {load.error ? tr('card.retryFriends') : tr('friendPicker.loadMore')}
             </Text>
           </Pressable>
         )}

@@ -10,6 +10,7 @@ import { useOpenIM } from '../application/store'
 import LoginScreen from '../auth/LoginScreen'
 import { mergeDirectory } from '../domain/directory'
 import { groupManagementPermissions, type GroupApplication } from '../domain/group-management'
+import { useT } from '../i18n'
 import { showProductToast } from '../shared/ProductToast'
 import { Action } from '../shared/shared'
 import { useDirectoryEvents } from '../shared/useDirectoryEvents'
@@ -48,6 +49,7 @@ function RequestList ({
   userID: string
   switchList: (received: boolean) => void
 }) {
+  const tr = useT()
   const t = useProductTheme()
   const task = useTask()
   const { run } = task
@@ -94,14 +96,14 @@ function RequestList ({
       await groupManagement.respond(item.groupID, item.userID, accept, '')
       if (!current())
         return
-      setNotice('申请已处理')
+      setNotice(tr('groupRequests.handled'))
       await load(current)
     })
   }
   return (
     <ProductPage
       white
-      title='入群申请'
+      title={tr('groups.joinRequests')}
       {...task}
       loading={!task.hasSucceeded}
       onRetry={() => {
@@ -110,8 +112,8 @@ function RequestList ({
       headerContent={
         <ProductSegment
           options={[
-            { value: 'in', label: '收到的申请' },
-            { value: 'out', label: '发出的申请' },
+            { value: 'in', label: tr('requests.received') },
+            { value: 'out', label: tr('requests.sent') },
           ]}
           value={received ? 'in' : 'out'}
           onChange={value => {
@@ -123,14 +125,14 @@ function RequestList ({
     >
       {/* The segment above is there from the first frame; only the rows wait. */}
       {!task.hasSucceeded && !task.error && <ProductSkeleton kind='list' small />}
-      {task.hasSucceeded && !items.length && !task.busy && <ProductEmpty title='暂无入群申请' />}
+      {task.hasSucceeded && !items.length && !task.busy && <ProductEmpty title={tr('groupRequests.none')} />}
       {items.map((item, index) => (
         <ProductListRow
           small
           last={index === items.length - 1}
           key={`${item.groupID}:${item.userID}`}
           title={received ? item.nickname || item.userID : item.groupName || item.groupID}
-          subtitle={`${received ? `申请加入 ${item.groupName || item.groupID} · ` : ''}${item.reqMsg || '未填写申请理由'}${item.handledMsg ? ` · 处理说明：${item.handledMsg}` : ''}`}
+          subtitle={[received ? tr('groupRequests.wantsToJoin', { name: item.groupName || item.groupID }) : '', item.reqMsg || tr('groupRequests.noReason'), item.handledMsg ? tr('groupRequests.handledNote', { note: item.handledMsg }) : ''].filter(Boolean).join(' · ')}
           leading={
             received ? (
               <ProductAvatar
@@ -152,20 +154,20 @@ function RequestList ({
                 <ProductButton
                   compact
                   variant='gray'
-                  title='拒绝'
+                  title={tr('requests.decline')}
                   disabled={task.busy}
                   onPress={() => respond(item, false)}
                 />
                 <ProductButton
                   compact
-                  title='同意'
+                  title={tr('groupRequests.approve')}
                   disabled={task.busy}
                   onPress={() => respond(item, true)}
                 />
               </View>
             ) : (
               <Text style={{ fontSize: 13, color: t.text3 }}>
-                {item.handleResult === 0 ? '待处理' : item.handleResult === 1 ? '已通过' : '已拒绝'}
+                {item.handleResult === 0 ? tr('requests.pending') : item.handleResult === 1 ? tr('requests.approved') : tr('requests.rejected')}
               </Text>
             )
           }
@@ -173,7 +175,7 @@ function RequestList ({
       ))}
       {more && (
         <Action
-          title='加载更多申请'
+          title={tr('requests.loadMore')}
           disabled={task.busy}
           onPress={() => {
             void run(current => load(current, offset))

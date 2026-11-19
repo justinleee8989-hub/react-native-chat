@@ -4,6 +4,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react-nativ
 import { directory } from '../application/directory'
 import { checkGroupManagement, groupManagement } from '../application/group-management'
 import { openConversation, refresh } from '../application/store'
+import { ProductError } from '../shared/product-error'
 import CreateGroupScreen from './CreateGroupScreen'
 import GroupManagementScreen from './GroupManagementScreen'
 import GroupsScreen from './GroupsScreen'
@@ -109,11 +110,11 @@ it('uses back navigation after inviting when history exists', async () => {
   expect(directory.invite).toHaveBeenCalledWith('g1', ['friend'])
 })
 it('revalidates permission before direct full mute and blocks stale permissions', async () => {
-  jest.mocked(checkGroupManagement).mockRejectedValueOnce(new Error('权限已变化'))
+  jest.mocked(checkGroupManagement).mockRejectedValueOnce(new ProductError('group.permissionChanged'))
   await render(<GroupManagementScreen />)
   await waitFor(() => expect(screen.getByRole('switch', { name: '全员禁言' })).toBeTruthy())
   await fireEvent.press(screen.getByRole('switch', { name: '全员禁言' }))
-  await waitFor(() => expect(screen.getByText('权限已变化')).toBeTruthy())
+  await waitFor(() => expect(screen.getByText('群成员或权限已变化，请刷新后重试')).toBeTruthy())
   expect(groupManagement.muteGroup).not.toHaveBeenCalled()
   expect(screen.queryByRole('button', { name: '确认' })).toBeNull()
   await fireEvent.press(screen.getByRole('switch', { name: '全员禁言' }))

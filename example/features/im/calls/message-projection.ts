@@ -1,4 +1,5 @@
 import type { IMMessage } from '../domain/types'
+import type { Translate } from '../i18n/translate.ts'
 import { readReply } from '../messages/composer.ts'
 import { parseSignal } from './signaling.ts'
 
@@ -39,18 +40,18 @@ export function projectCallMessages (messages: IMMessage[], preservedIDs: string
     return preserved.has(message.clientMsgID) || !final || final === message || messageCallSignal(final)?.version !== 2 && message.sendTime > final.sendTime
   })
 }
-export function callMessageLabel (message: IMMessage, self: string) {
+export function callMessageLabel (message: IMMessage, self: string, tr: Translate) {
   const signal = messageCallSignal(message)
   if (!signal)
     return ''
   switch (signal.kind) {
-    case 'invite': return '音视频通话'
-    case 'accept': return '已接听通话'
-    case 'cancel': return '已取消'
-    case 'reject': return signal.version === 2 ? signal.callee === self ? '已拒接' : '对方已拒接' : message.sendID === self ? '已拒接' : '对方已拒接'
-    case 'busy': return '对方正在通话'
-    case 'missed': return '未接通话'
-    case 'end': return '音视频通话'
-    case 'disconnected': return '通话中断'
+    case 'invite': return tr('call.title')
+    case 'accept': return tr('call.answered')
+    case 'cancel': return tr('call.canceledShort')
+    case 'reject': return (signal.version === 2 ? signal.callee === self : message.sendID === self) ? tr('call.youRejected') : tr('call.theyRejected')
+    case 'busy': return tr('call.peerBusy')
+    case 'missed': return tr('call.missed')
+    case 'end': return tr('call.title')
+    case 'disconnected': return tr('call.interrupted')
   }
 }

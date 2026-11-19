@@ -9,6 +9,7 @@ import {
 } from '@kesha-antonov/react-native-chat'
 import { reportError, useOpenIM } from '../application/store'
 import type { ContactCard, LocationInput } from '../domain/types'
+import { useT } from '../i18n'
 import { useProductLayout } from '../ui/preferences'
 import { ProductIcon } from '../ui/ProductIcon'
 import { useProductTheme } from '../ui/theme'
@@ -27,6 +28,7 @@ export function ProductComposerMenu ({
   onLocation: (location: LocationInput) => Promise<void>
   onCard: (card: ContactCard) => Promise<void>
 }) {
+  const tr = useT()
   const t = useProductTheme()
   const { desktop } = useProductLayout()
   const { session } = useOpenIM()
@@ -81,9 +83,9 @@ export function ProductComposerMenu ({
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', rowGap: 18 }}>
                 {(
                   [
-                    { tab: 'gallery', icon: 'image', label: '相册' },
-                    { tab: 'camera', icon: 'camera', label: '拍摄' },
-                    { tab: 'file', icon: 'file', label: '文件' },
+                    { tab: 'gallery', icon: 'image', label: tr('scan.album') },
+                    { tab: 'camera', icon: 'camera', label: tr('composer.camera') },
+                    { tab: 'file', icon: 'file', label: tr('file.defaultName') },
                   ] as const
                 )
                   .filter(item => tabs.includes(item.tab))
@@ -99,7 +101,7 @@ export function ProductComposerMenu ({
                   ))}
                 <MenuTile
                   icon='loc'
-                  label='位置'
+                  label={tr('composer.location')}
                   onPress={() => {
                     onClose()
                     open('location')
@@ -107,7 +109,7 @@ export function ProductComposerMenu ({
                 />
                 <MenuTile
                   icon='card'
-                  label='名片'
+                  label={tr('composer.card')}
                   onPress={() => {
                     onClose()
                     open('card')
@@ -116,7 +118,7 @@ export function ProductComposerMenu ({
                 {onMention && (
                   <MenuTile
                     icon='at'
-                    label='提醒'
+                    label={tr('composer.mention')}
                     onPress={() => {
                       onClose()
                       onMention()

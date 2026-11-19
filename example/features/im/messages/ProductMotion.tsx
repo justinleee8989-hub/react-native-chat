@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Animated, Platform, View } from 'react-native'
+import { useT } from '../i18n'
 import { useProductLayout } from '../ui/preferences'
 import { ProductAvatar } from '../ui/primitives'
 import { useProductTheme } from '../ui/theme'
@@ -61,13 +62,14 @@ export function ProductTyping ({
   group: boolean
   user?: { _id: string | number, name?: string, avatar?: string }
 }) {
+  const tr = useT()
   const t = useProductTheme()
   const { desktop } = useProductLayout()
   if (!user)
     return null
   return (
     <View
-      accessibilityLabel={group ? `${user.name || user._id} 正在输入` : '对方正在输入'}
+      accessibilityLabel={group ? tr('typing.someone', { name: user.name || user._id }) : tr('typing.peer')}
       style={{
         flexDirection: 'row',
         alignItems: 'flex-end',

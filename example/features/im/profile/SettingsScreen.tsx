@@ -8,6 +8,7 @@ import LoginScreen from '../auth/LoginScreen'
 import type { Person } from '../domain/directory'
 import type { SelfProfile } from '../domain/profile'
 import { HeaderAction, SettingField, ProductHint } from '../groups/group-ui'
+import { useT } from '../i18n'
 import { showProductToast } from '../shared/ProductToast'
 import { useTask } from '../shared/useTask'
 import {
@@ -29,16 +30,17 @@ export default function SettingsScreen () {
   return session ? <Settings key={`${session.userID}:${session.imToken}`} session={session} chatURL={config.chat} /> : <LoginScreen />
 }
 function Settings ({ session, chatURL }: { session: NonNullable<ReturnType<typeof useOpenIM>['session']>, chatURL: string }) {
+  const tr = useT()
   const router = useRouter()
   const t = useProductTheme()
   const [avatarMenu, setAvatarMenu] = useState(false)
   const { section } = useLocalSearchParams<{ section?: string }>()
   const show = (name: string) => !section || section === name
   const titles: Record<string, string> = {
-    profile: '个人资料',
-    privacy: '隐私与黑名单',
-    notifications: '消息通知',
-    security: '账户安全',
+    profile: tr('settings.profile'),
+    privacy: tr('me.privacy'),
+    notifications: tr('me.notifications'),
+    security: tr('me.accountSecurity'),
   }
   const task = useTask()
   const { run } = task
@@ -73,7 +75,7 @@ function Settings ({ session, chatURL }: { session: NonNullable<ReturnType<typeo
       if (current()) {
         setFaceURL(url)
         setSelf(user => user && { ...user, faceURL: url })
-        setNotice('头像已上传并保存')
+        setNotice(tr('settings.avatarSaved'))
       }
     })
   }
@@ -82,7 +84,7 @@ function Settings ({ session, chatURL }: { session: NonNullable<ReturnType<typeo
       await profile.updateSelf(nickname, faceURL)
       if (current()) {
         setSelf(user => user && { ...user, nickname: nickname.trim(), faceURL: faceURL.trim() })
-        setNotice('资料已保存')
+        setNotice(tr('settings.saved'))
         if (router.canGoBack())
           router.back()
         else
@@ -93,7 +95,7 @@ function Settings ({ session, chatURL }: { session: NonNullable<ReturnType<typeo
   return (
     <ProductPage
       backHref='/(tabs)/me'
-      title={titles[section || ''] || '我的资料与设置'}
+      title={titles[section || ''] || tr('settings.title')}
       {...task}
       // The sections are there from the first frame; only the values and the blacklist wait.
       loading={!task.hasSucceeded}
@@ -103,7 +105,7 @@ function Settings ({ session, chatURL }: { session: NonNullable<ReturnType<typeo
       right={
         show('profile') ? (
           <HeaderAction
-            title='保存'
+            title={tr('common.save')}
             disabled={
               task.busy ||
               !self ||
@@ -119,8 +121,8 @@ function Settings ({ session, chatURL }: { session: NonNullable<ReturnType<typeo
         <ProductSheet
           onClose={() => setAvatarMenu(false)}
           items={[
-            { title: '从相册选择', onPress: () => pickAvatar('library') },
-            { title: '拍照', onPress: () => pickAvatar('camera') },
+            { title: tr('wallpaper.choosePhoto'), onPress: () => pickAvatar('library') },
+            { title: tr('settings.takePhoto'), onPress: () => pickAvatar('camera') },
           ]}
         />
       )}
@@ -139,7 +141,7 @@ function Settings ({ session, chatURL }: { session: NonNullable<ReturnType<typeo
             )}
             <View style={{ marginTop: 8 }}>
               <HeaderAction
-                title='更换头像'
+                title={tr('settings.changeAvatar')}
                 disabled={task.busy || !self}
                 onPress={() => setAvatarMenu(true)}
               />
@@ -149,13 +151,13 @@ function Settings ({ session, chatURL }: { session: NonNullable<ReturnType<typeo
             <ProductCard>
               <SettingField
                 editable={!task.busy}
-                label='昵称'
+                label={tr('person.nickname')}
                 value={nickname}
                 onChangeText={setNickname}
-                placeholder='朋友们如何称呼你'
+                placeholder={tr('settings.nicknamePlaceholder')}
               />
               <ProductRow
-                title='用户 ID'
+                title={tr('person.userID')}
                 trailing={
                   <Text
                     selectable
@@ -167,7 +169,7 @@ function Settings ({ session, chatURL }: { session: NonNullable<ReturnType<typeo
                 }
               />
               <ProductRow
-                title='邮箱'
+                title={tr('person.email')}
                 trailing={
                   <Text selectable style={{ color: t.text2, fontSize: 15, maxWidth: '58%' }}>
                     {profileEmail(self)}
@@ -176,23 +178,23 @@ function Settings ({ session, chatURL }: { session: NonNullable<ReturnType<typeo
               />
             </ProductCard>
           </ProductInset>
-          <ProductHint>用户 ID 和邮箱不可修改。</ProductHint>
+          <ProductHint>{tr('settings.idEmailFixed')}</ProductHint>
         </>
       )}
       {show('privacy') && (
         <>
-          <ProductSection>黑名单{task.hasSucceeded ? ` · ${blocked.length}` : ''}</ProductSection>
+          <ProductSection>{tr('settings.blocklist', { count: task.hasSucceeded ? ` · ${blocked.length}` : '' })}</ProductSection>
           <ProductInset>
             <ProductCard>
               {!task.hasSucceeded && !task.error && <ProductSkeleton kind='list' rows={2} small />}
-              {task.hasSucceeded && !blocked.length && !task.busy && <ProductEmpty title='暂无黑名单用户' />}
+              {task.hasSucceeded && !blocked.length && !task.busy && <ProductEmpty title={tr('settings.noBlocked')} />}
               {blocked.map(person => (
                 <ProductRow
                   trailingInteractive
                   chevron={false}
                   key={person.userID}
                   title={person.nickname || person.userID}
-                  subtitle={`ID：${person.userID}`}
+                  subtitle={tr('common.idLabel', { id: person.userID })}
                   leading={
                     <ProductAvatar
                       id={person.userID}
@@ -208,7 +210,7 @@ function Settings ({ session, chatURL }: { session: NonNullable<ReturnType<typeo
                     <ProductButton
                       compact
                       variant='gray'
-                      title='移出'
+                      title={tr('settings.unblock')}
                       disabled={task.busy}
                       onPress={() => {
                         void run(async current => {
@@ -217,7 +219,7 @@ function Settings ({ session, chatURL }: { session: NonNullable<ReturnType<typeo
                             setBlocked(items =>
                               items.filter(item => item.userID !== person.userID)
                             )
-                            setNotice('已移出黑名单')
+                            setNotice(tr('person.unblocked'))
                           }
                         })
                       }}
@@ -228,7 +230,7 @@ function Settings ({ session, chatURL }: { session: NonNullable<ReturnType<typeo
             </ProductCard>
           </ProductInset>
           <ProductHint>
-            加入黑名单后，将无法正常接收对方的消息。可在联系人资料的「更多」中添加。
+            {tr('settings.blockHint')}
           </ProductHint>
         </>
       )}
@@ -238,10 +240,10 @@ function Settings ({ session, chatURL }: { session: NonNullable<ReturnType<typeo
           <ProductInset>
             <ProductCard>
               <ProductRow
-                title='全局免打扰'
+                title={tr('me.doNotDisturb')}
                 trailing={
                   <ProductSwitch
-                    accessibilityLabel='全局免打扰'
+                    accessibilityLabel={tr('me.doNotDisturb')}
                     value={self?.globalRecvMsgOpt === 2}
                     disabled={task.busy || !self}
                     onValueChange={muted => {
@@ -249,7 +251,7 @@ function Settings ({ session, chatURL }: { session: NonNullable<ReturnType<typeo
                         await profile.muteNotifications(muted)
                         if (current()) {
                           setSelf(user => user && { ...user, globalRecvMsgOpt: muted ? 2 : 0 })
-                          setNotice(muted ? '已开启全局免打扰' : '已关闭全局免打扰')
+                          setNotice(muted ? tr('settings.dndOn') : tr('settings.dndOff'))
                         }
                       })
                     }}
@@ -260,11 +262,10 @@ function Settings ({ session, chatURL }: { session: NonNullable<ReturnType<typeo
           </ProductInset>
           <ProductHint>
             {self?.globalRecvMsgOpt === 2
-              ? '已开启：所有会话都不再提醒，消息仍会正常接收。'
+              ? tr('settings.dndOnHint')
               : self?.globalRecvMsgOpt === 1
-                ? '当前为不接收消息。'
-                : '正常接收消息通知。'}
-            此开关不修改系统通知权限。
+                ? tr('settings.notReceivingHint')
+                : tr('settings.receivingHint')}
           </ProductHint>
         </>
       )}

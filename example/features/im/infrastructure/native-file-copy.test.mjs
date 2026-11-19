@@ -3,6 +3,7 @@ import test from 'node:test'
 import { readFileSync } from 'node:fs'
 import { runInNewContext } from 'node:vm'
 import ts from 'typescript'
+import { withI18n } from '../i18n/test-modules.mjs'
 
 function loadModule (relativePath, dependencies) {
   const exports = {}
@@ -13,6 +14,7 @@ function loadModule (relativePath, dependencies) {
   runInNewContext(compiled, {
     exports,
     require: name => {
+      if (/shared\/(product-error|error-message)|i18n\/translate/.test(name)) return withI18n()(name)
       if (name in dependencies)
         return dependencies[name]
       throw new Error(`Unexpected import: ${name}`)

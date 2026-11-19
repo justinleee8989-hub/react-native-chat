@@ -1,8 +1,9 @@
-import React, { useCallback, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { AppState, StyleSheet, Text, View } from 'react-native'
-import { type Href, useFocusEffect, useRouter } from 'expo-router'
+import { type Href, useFocusEffect, useNavigation, useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { scanQRInPhoto } from '../application/scan-photo'
+import { useT } from '../i18n'
 import { ProductToast, showProductToast } from '../shared/ProductToast'
 import { ProductIcon } from '../ui/ProductIcon'
 import { ProductPressable as Pressable } from '../ui/ProductPressable'
@@ -12,16 +13,49 @@ import { QRScanner } from './QRScanner'
 // The same wrong code stays in view and is read many times a second: say so once a while.
 const NOTICE_GAP = 2000
 
+type LeavingEvent = { data?: { closing?: boolean } }
+interface NavigationWithLeaving {
+  addListener: (event: 'transitionStart' | 'gestureCancel', listener: (event: LeavingEvent) => void) => () => void
+  getParent?: () => NavigationWithLeaving | undefined
+}
+
+/**
+ * True from the moment this page starts to close (back, a swipe back, or a code that opens a
+ * profile) until a swipe back is given up. Focus is lost only when the closing ends, and the camera
+ * would run through the whole animation. The page is pushed in its own stack or arrives as the
+ * first page of one, so both stacks are listened to.
+ */
+function useLeaving () {
+  const navigation = useNavigation() as unknown as NavigationWithLeaving | undefined
+  const [leaving, setLeaving] = useState(false)
+  useEffect(() => {
+    if (!navigation?.addListener)
+      return
+    const navigators = [navigation, navigation.getParent?.()].filter(Boolean) as NavigationWithLeaving[]
+    const unsubscribes = navigators.flatMap(nav => [
+      nav.addListener('transitionStart', event => {
+        if (event?.data?.closing)
+          setLeaving(true)
+      }),
+      nav.addListener('gestureCancel', () => setLeaving(false)),
+    ])
+    return () => unsubscribes.forEach(unsubscribe => unsubscribe())
+  }, [navigation])
+  return leaving
+}
+
 /**
  * 扫一扫: the camera with a viewfinder. A 我的二维码 code opens that user's profile, where a friend
  * request is sent; any other code is reported and scanning goes on. 相册 reads a code from a photo. The camera runs only while
- * this page is in front and the app is active.
+ * this page is in front and the app is active, and stops as soon as the page starts to close.
  */
 export default function ScanScreen () {
+  const tr = useT()
   const router = useRouter()
   const insets = useSafeAreaInsets()
   const [focused, setFocused] = useState(false)
   const [foreground, setForeground] = useState(AppState.currentState === 'active')
+  const leaving = useLeaving()
   const handled = useRef(false)
   const lastNotice = useRef(0)
   useFocusEffect(useCallback(() => {
@@ -50,7 +84,7 @@ export default function ScanScreen () {
     }
     if (Date.now() - lastNotice.current > NOTICE_GAP) {
       lastNotice.current = Date.now()
-      showProductToast('不是好友二维码')
+      showProductToast(tr('scan.notFriendCode'))
     }
   }
   const fromPhoto = () => {
@@ -58,14 +92,14 @@ export default function ScanScreen () {
       if (value === undefined)
         return
       if (!value)
-        showProductToast('图片中没有识别到二维码')
+        showProductToast(tr('scan.noCodeInPhoto'))
       else
         scanned(value)
-    }, () => showProductToast('图片无法识别，请换一张试试'))
+    }, () => showProductToast(tr('scan.photoUnreadable')))
   }
   return (
     <View style={styles.page}>
-      <QRScanner active={focused && foreground} onScanned={scanned} />
+      <QRScanner active={focused && foreground && !leaving} onScanned={scanned} />
       <View pointerEvents='none' style={styles.overlay}>
         <View style={styles.frame}>
           <View style={[styles.corner, styles.topLeft]} />
@@ -73,21 +107,21 @@ export default function ScanScreen () {
           <View style={[styles.corner, styles.bottomLeft]} />
           <View style={[styles.corner, styles.bottomRight]} />
         </View>
-        <Text style={styles.hint}>将好友的二维码放入框内</Text>
+        <Text style={styles.hint}>{tr('scan.hint')}</Text>
       </View>
       <View style={[styles.header, { paddingTop: insets.top }]}>
-        <Pressable accessibilityRole='button' accessibilityLabel='返回' onPress={back} style={styles.back}>
+        <Pressable accessibilityRole='button' accessibilityLabel={tr('common.back')} onPress={back} style={styles.back}>
           <ProductIcon name='back' color='#FFFFFF' />
         </Pressable>
-        <Text style={styles.title}>扫一扫</Text>
+        <Text style={styles.title}>{tr('contacts.scan')}</Text>
         <View style={styles.back} />
       </View>
       <View style={[styles.footer, { paddingBottom: insets.bottom + 24 }]}>
-        <Pressable accessibilityRole='button' accessibilityLabel='从相册选择二维码' onPress={fromPhoto} style={styles.album}>
+        <Pressable accessibilityRole='button' accessibilityLabel={tr('scan.fromPhoto')} onPress={fromPhoto} style={styles.album}>
           <View style={styles.albumIcon}>
             <ProductIcon name='image' color='#FFFFFF' />
           </View>
-          <Text style={styles.albumText}>相册</Text>
+          <Text style={styles.albumText}>{tr('scan.album')}</Text>
         </Pressable>
       </View>
       <ProductToast />

@@ -2,6 +2,7 @@ import React from 'react'
 import { StyleSheet, Text } from 'react-native'
 import { expect, it, jest } from '@jest/globals'
 import { act, fireEvent, render } from '@testing-library/react-native'
+import type { ConnectionStatus } from '../application/connection-status'
 import { ProductIconButton, ProductPage } from './ProductPage'
 
 let mockDesktop = true
@@ -11,7 +12,7 @@ const mockBack = jest.fn()
 const mockReplace = jest.fn()
 jest.mock('react-native-safe-area-context', () => ({ ...jest.requireActual<object>('react-native-safe-area-context'), useSafeAreaInsets: () => ({ top: 0, right: 0, bottom: 0, left: 0 }) }))
 jest.mock('../navigation/DesktopNavigation', () => ({ useDesktopNavigation: () => ({ canGoBackInSection: mockCanGoBack }) }))
-jest.mock('./preferences', () => ({ useProductLayout: () => ({ desktop: mockDesktop }) }))
+jest.mock('./preferences', () => ({ useLanguageChoice: () => 'auto', useProductLayout: () => ({ desktop: mockDesktop }) }))
 jest.mock('./theme', () => ({ useProductTheme: () => ({}) }))
 jest.mock('../shared/ProductToast', () => ({ ProductToast: () => null }))
 jest.mock('./primitives', () => {
@@ -97,16 +98,16 @@ it('floats the refresh spinner over the content instead of taking space above it
 
 it('says only that the network is down when a page fails while the app is offline', async () => {
   const { provideConnectionStatus } = jest.requireActual<typeof import('../application/connection-status')>('../application/connection-status')
-  let status = '网络异常，无法连接服务器'
+  let status: ConnectionStatus = 'offline'
   provideConnectionStatus({ subscribe: () => () => {}, status: () => status })
   try {
     const view = await render(<ProductPage title='通讯录' busy={false} error='操作失败，请稍后重试' />)
     expect(view.getByRole('alert').props.children).toBe('网络异常，无法连接服务器')
-    status = '已连接'
+    status = 'connected'
     await view.rerender(<ProductPage title='通讯录' busy={false} error='操作失败，请稍后重试' />)
     expect(view.getByRole('alert').props.children).toBe('操作失败，请稍后重试')
   } finally {
-    provideConnectionStatus({ subscribe: () => () => {}, status: () => '' })
+    provideConnectionStatus({ subscribe: () => () => {}, status: () => 'signedOut' })
   }
 })
 

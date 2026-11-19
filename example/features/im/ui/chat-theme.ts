@@ -1,4 +1,5 @@
 import type { ViewStyle } from 'react-native'
+import type { MessageKey } from '../i18n/translate.ts'
 
 /**
  * Chat theme (聊天主题) presets: how sent messages look in every chat. Each sets the sent bubble's
@@ -25,7 +26,8 @@ export interface ChatThemeLook {
 
 export interface ChatThemePreset {
   id: ChatThemeId
-  label: string
+  /** The name shown under its thumbnail. */
+  labelKey: MessageKey
   radius: number
   /** The inner bottom corner of the last bubble in a group, pointing at its sender. */
   corner: number
@@ -38,7 +40,7 @@ const white = { text: '#FFFFFF', meta: '#FFFFFFAA', ticks: '#FFFFFF' }
 export const chatThemes: ChatThemePreset[] = [
   {
     id: 'default',
-    label: '默认',
+    labelKey: 'theme.default',
     radius: 20,
     corner: 6,
     light: { ...white, gradient: ['#6E6BF2', '#0087F2'], bubble: '#3366FF', accent: '#3366FF' },
@@ -47,7 +49,7 @@ export const chatThemes: ChatThemePreset[] = [
   // The chat library's own day and night colors, with its sharp tail corner.
   {
     id: 'classic',
-    label: '经典',
+    labelKey: 'theme.classic',
     radius: 17,
     corner: 2,
     light: { gradient: null, bubble: '#EFFFDE', text: '#000000', meta: '#70B15C', ticks: '#5DB050', link: '#2678B6', accent: '#229AF0' },
@@ -55,7 +57,7 @@ export const chatThemes: ChatThemePreset[] = [
   },
   {
     id: 'ocean',
-    label: '海洋',
+    labelKey: 'theme.ocean',
     radius: 20,
     corner: 6,
     light: { ...white, gradient: ['#1FC8DB', '#0E8FD6'], bubble: '#0E8FD6', accent: '#0E8FD6' },
@@ -63,7 +65,7 @@ export const chatThemes: ChatThemePreset[] = [
   },
   {
     id: 'sunset',
-    label: '日落',
+    labelKey: 'theme.sunset',
     radius: 20,
     corner: 6,
     light: { ...white, gradient: ['#FF9A62', '#F5487F'], bubble: '#F5487F', accent: '#F5487F' },
@@ -71,7 +73,7 @@ export const chatThemes: ChatThemePreset[] = [
   },
   {
     id: 'violet',
-    label: '紫罗兰',
+    labelKey: 'theme.violet',
     radius: 20,
     corner: 6,
     light: { ...white, gradient: ['#B388FF', '#7C4DFF'], bubble: '#7C4DFF', accent: '#7C4DFF' },
@@ -80,7 +82,7 @@ export const chatThemes: ChatThemePreset[] = [
   // Squarer bubbles in a neutral ink, for a quieter chat.
   {
     id: 'graphite',
-    label: '石墨',
+    labelKey: 'theme.graphite',
     radius: 10,
     corner: 3,
     light: { ...white, gradient: null, bubble: '#2B2B30', accent: '#2B2B30' },

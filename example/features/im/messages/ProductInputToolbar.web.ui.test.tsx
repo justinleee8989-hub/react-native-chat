@@ -8,7 +8,7 @@ let mockDesktop = false
 let mockComposerScrollHeight = 40
 jest.mock('../application/store', () => ({ reportError: jest.fn() }))
 jest.mock('../ui/theme', () => ({ useProductTheme: () => ({ bg: '#fff', line: '#ddd', text2: '#666' }) }))
-jest.mock('../ui/preferences', () => ({ useProductLayout: () => ({ desktop: mockDesktop }) }))
+jest.mock('../ui/preferences', () => ({ useLanguageChoice: () => 'auto', useProductLayout: () => ({ desktop: mockDesktop }) }))
 jest.mock('../ui/ProductIcon', () => ({ ProductIcon: () => null }))
 jest.mock('react-native-keyboard-controller', () => ({ useReanimatedKeyboardAnimation: () => ({ height: { value: 0 } }) }))
 jest.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 0, right: 0, bottom: 0, left: 0 }) }))

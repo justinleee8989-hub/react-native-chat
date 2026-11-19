@@ -1,6 +1,8 @@
 import { mergeMessages } from '../domain/model'
 import type { Conversation, IMClient, IMMessage } from '../domain/types'
+import type { MessageKey } from '../i18n/translate.ts'
 import { diagnostic } from '../shared/diagnostics'
+import { ProductError } from '../shared/product-error.ts'
 import { offlineStatus } from './connection-status'
 import { groupReadNotice } from './group-read-notice'
 import type { Messaging } from './messaging'
@@ -10,7 +12,7 @@ export function subscribeEvents (
   client: IMClient,
   runtime: Runtime,
   messaging: Messaging,
-  logout: (error: string) => Promise<void>,
+  logout: (reason?: MessageKey) => Promise<void>,
   epoch: number,
   receiveCall: (message: IMMessage) => void = () => {}
 ) {
@@ -38,13 +40,13 @@ export function subscribeEvents (
   // 连接中 and the failure. It says the failure until a connection succeeds.
   on('onConnecting', () => {
     if (runtime.state.status !== offlineStatus)
-      runtime.update({ status: '连接中' })
+      runtime.update({ status: 'connecting' })
   })
-  on('onConnectSuccess', () => runtime.update({ status: '已连接' }))
+  on('onConnectSuccess', () => runtime.update({ status: 'connected' }))
   on('onConnectFailed', () => runtime.update({ status: offlineStatus }))
-  on('onSyncServerStart', () => runtime.update({ status: '同步中' }))
+  on('onSyncServerStart', () => runtime.update({ status: 'syncing' }))
   on('onSyncServerFinish', () => {
-    runtime.update({ status: '已连接' })
+    runtime.update({ status: 'connected' })
     const id = runtime.activeID
     void messaging
       .refresh()
@@ -57,15 +59,15 @@ export function subscribeEvents (
           runtime.reportError(error)
       })
   })
-  on('onSyncServerFailed', () => runtime.update({ error: '同步失败，请刷新会话重试' }))
+  on('onSyncServerFailed', () => runtime.update({ error: new ProductError('sync.failedRefresh') }))
   // Said apart: a user signed out because the same account signed in elsewhere could not tell it
   // from an expired login or a network problem.
   on('onKickedOffline', () => {
-    void logout('该账号已在其他设备或浏览器标签页登录，当前登录已退出。')
+    void logout('session.kicked')
   })
   for (const event of ['onUserTokenExpired', 'onUserTokenInvalid'])
     on(event, () => {
-      void logout('登录已失效，请重新登录')
+      void logout('session.expired')
     })
   for (const event of ['onConversationChanged', 'onNewConversation'])
     on(event, data => runtime.mergeConversations(data as Conversation[]))

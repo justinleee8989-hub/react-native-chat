@@ -1,8 +1,8 @@
 import { mergeMessages, routeMessages } from '../domain/model'
 import type { Conversation, GroupMessageReadGuard, GroupMessageReadInfo, IMMessage, ServerConfig, Session } from '../domain/types'
 import type { HomeSnapshot } from '../infrastructure/storage/home-snapshot'
-import { errorMessage } from '../shared/error-message'
-import { offlineStatus } from './connection-status'
+import { ProductError } from '../shared/product-error.ts'
+import { type ConnectionStatus, offlineStatus } from './connection-status'
 import { trimMessageCache } from './message-cache'
 
 interface State {
@@ -10,9 +10,10 @@ interface State {
   initialized: boolean
   session?: Session
   config: ServerConfig
-  status: string
+  status: ConnectionStatus
   busy: boolean
-  error: string
+  /** A failure or warning to show, as the failure itself (put into words by the screen); empty when none. */
+  error: unknown
   /** The account last signed in on this device, kept through sign-out to fill the login page. */
   lastAccount?: { account: string }
   /**
@@ -35,7 +36,7 @@ export function createRuntime (config: ServerConfig) {
   let state: State = {
     initialized: false,
     config,
-    status: '未登录',
+    status: 'signedOut',
     busy: false,
     error: '',
     conversationsLoaded: false,
@@ -58,7 +59,7 @@ export function createRuntime (config: ServerConfig) {
   }
   function reportError (error: unknown) {
     // Offline, every request fails, mostly with a generic SDK error: say why instead.
-    update({ error: state.status === offlineStatus ? offlineStatus : errorMessage(error) })
+    update({ error: state.status === offlineStatus ? new ProductError('status.offline') : error || new ProductError('error.generic') })
   }
   function mergeConversations (incoming: Conversation[]) {
     const map = new Map(state.conversations.map(item => [item.conversationID, item]))

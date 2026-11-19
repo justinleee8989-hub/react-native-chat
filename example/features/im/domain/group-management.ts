@@ -1,3 +1,5 @@
+import type { MessageKey, Translate } from '../i18n/translate.ts'
+import { ProductError } from '../shared/product-error.ts'
 import type { Person } from './directory'
 
 export interface GroupApplication {
@@ -35,26 +37,31 @@ export function assertGroupManagement (
   target?: Person
 ) {
   if (!current)
-    throw new Error('会话已变化，请重新操作')
+    throw new ProductError('group.chatChanged')
   if (!groupManagementPermissions(self, target)[permission])
-    throw new Error('群成员或权限已变化，请刷新后重试')
+    throw new ProductError('group.permissionChanged')
 }
 
 
-export function groupMuteLabel (status?: number) {
+/** The name of a member's role: 100 is the owner, 60 an admin, anything else a member. */
+export function roleKey (level?: number): MessageKey {
+  return level === 100 ? 'role.owner' : level === 60 ? 'role.admin' : 'role.member'
+}
+
+export function groupMuteLabel (status: number | undefined, tr: Translate) {
   if (status === undefined)
-    return '群状态尚未加载'
+    return tr('group.statusLoading')
   if (status === 3)
-    return '全员禁言已开启'
+    return tr('group.mutedAll')
   if (status === 0)
-    return '全员禁言未开启'
-  return status === 2 ? '群组已解散' : '群组当前不可用'
+    return tr('group.notMutedAll')
+  return status === 2 ? tr('group.dismissed') : tr('group.unavailable')
 }
 
-export function memberMuteLabel (endTime?: number, now = Date.now() / 1000) {
+export function memberMuteLabel (endTime: number | undefined, tr: Translate, now = Date.now() / 1000) {
   // SDK releases expose deadlines in milliseconds; accept seconds from older caches.
   const seconds = endTime && endTime > 100000000000 ? endTime / 1000 : endTime
   if (!seconds || seconds <= now)
-    return '未单独禁言'
-  return `单独禁言至 ${new Date(seconds * 1000).toLocaleString('zh-CN', { hour12: false })}`
+    return tr('group.memberNotMuted')
+  return tr('group.memberMutedUntil', { time: new Date(seconds * 1000).toLocaleString(tr.locale, { hour12: false }) })
 }

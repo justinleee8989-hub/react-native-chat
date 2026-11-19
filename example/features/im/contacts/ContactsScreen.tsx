@@ -6,6 +6,7 @@ import { groupApplicationEvents, groupManagement } from '../application/group-ma
 import { useOpenIM } from '../application/store'
 import LoginScreen from '../auth/LoginScreen'
 import { mergeDirectory, type Person } from '../domain/directory'
+import { useT } from '../i18n'
 import { useMasterNavigation } from '../navigation/DesktopNavigation'
 import { rememberedValue } from '../shared/remembered'
 import { Action } from '../shared/shared'
@@ -46,6 +47,7 @@ export default function ContactsScreen ({ root = false }: { root?: boolean }) {
   )
 }
 function Contacts ({ root, account }: { root: boolean, account: string }) {
+  const tr = useT()
   const router = useRouter()
   const openMaster = useMasterNavigation()
   const open = root ? openMaster : (href: Href) => router.push(href)
@@ -121,7 +123,7 @@ function Contacts ({ root, account }: { root: boolean, account: string }) {
       last={last}
       key={person.userID}
       title={nameOf(person)}
-      subtitle={person.remark ? `昵称：${person.nickname || person.userID}` : undefined}
+      subtitle={person.remark ? tr('contacts.nicknameIs', { name: person.nickname || person.userID }) : undefined}
       leading={
         <ProductAvatar
           id={person.userID}
@@ -164,7 +166,7 @@ function Contacts ({ root, account }: { root: boolean, account: string }) {
     <ContactLayout
       white
       root={root}
-      title='通讯录'
+      title={tr('tab.contacts')}
       {...task}
       // Search, 新的朋友 and 群聊 show from the first frame; only the friend rows wait for data. A
       // whole-page skeleton was swapped for a differently shaped page once friends arrived.
@@ -174,12 +176,12 @@ function Contacts ({ root, account }: { root: boolean, account: string }) {
       right={
         <ContactIconButton
           name='userPlus'
-          label='添加好友'
+          label={tr('addFriend.title')}
           onPress={() => open('/chats/add-friend' as Href)}
         />
       }
     >
-      <ProductSearch side={root} placeholder='搜索好友' value={query} onChangeText={setQuery} />
+      <ProductSearch side={root} placeholder={tr('contacts.searchFriends')} value={query} onChangeText={setQuery} />
       {!q && (
         <>
           <ProductListRow
@@ -187,7 +189,7 @@ function Contacts ({ root, account }: { root: boolean, account: string }) {
             side={root}
             chevron
             titleWeight='500'
-            title='新的朋友'
+            title={tr('contacts.newFriends')}
             leading={tile('userPlus')}
             trailing={pending ? badge(pending) : undefined}
             onPress={() => open('/chats/friend-requests' as Href)}
@@ -197,7 +199,7 @@ function Contacts ({ root, account }: { root: boolean, account: string }) {
             side={root}
             chevron
             titleWeight='500'
-            title='群聊'
+            title={tr('contacts.groupChats')}
             leading={tile('users')}
             trailing={
               <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
@@ -213,9 +215,9 @@ function Contacts ({ root, account }: { root: boolean, account: string }) {
         </>
       )}
       <ContactSection variant='list' side={root}>
-        {q ? '搜索结果' : '好友'}
+        {q ? tr('contacts.searchResults') : tr('contacts.friends')}
         {loading ? '' : ` · ${visible.length}`}
-        {more ? '（已加载）' : ''}
+        {more ? tr('contacts.loadedSoFar') : ''}
       </ContactSection>
       {loading && !task.error && <ProductSkeleton kind='list' small />}
       {indexed
@@ -232,13 +234,13 @@ function Contacts ({ root, account }: { root: boolean, account: string }) {
         : visible.map((person, index) => row(person, index === visible.length - 1))}
       {!loading && !visible.length && !task.busy && (
         <ProductEmpty
-          title={q ? '没有找到好友' : '还没有好友'}
-          subtitle={q ? undefined : '点右上角添加好友'}
+          title={q ? tr('contacts.noMatch') : tr('contacts.noFriends')}
+          subtitle={q ? undefined : tr('contacts.addHint')}
         />
       )}
       {more && (
         <Action
-          title='加载更多好友'
+          title={tr('friendPicker.loadMore')}
           disabled={task.busy}
           onPress={() => {
             void run(async current => {
@@ -254,7 +256,7 @@ function Contacts ({ root, account }: { root: boolean, account: string }) {
       )}
       {!!task.error && (
         <Action
-          title='重新加载'
+          title={tr('common.reload')}
           disabled={task.busy}
           onPress={() => {
             void refresh()

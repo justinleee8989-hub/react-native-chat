@@ -4,7 +4,10 @@ import { useFocusEffect } from 'expo-router'
 import { calls, openConversation, useOpenIM } from '../application/store'
 import LoginScreen from '../auth/LoginScreen'
 import { ProductHint } from '../groups/group-ui'
+import type { MessageKey } from '../i18n'
+import { useT } from '../i18n'
 import { shortTime } from '../messages/presentation'
+import { ProductError } from '../shared/product-error'
 import { rememberedValue } from '../shared/remembered'
 import { useTask } from '../shared/useTask'
 import { ProductAvatar } from '../ui/primitives'
@@ -15,14 +18,14 @@ import { startConversationCall } from './CallControls'
 import { isCallServiceUnavailable } from './errors'
 import type { ServerCall } from './server-controller'
 import { formatCallDuration } from './terminal-metadata'
-const labels: Record<string, string> = {
-  ringing: '等待接听',
-  accepted: '通话中',
-  ended: '已结束',
-  canceled: '已取消',
-  rejected: '已拒接',
-  missed: '未接通话',
-  disconnected: '异常断线已结束',
+const labels: Record<string, MessageKey> = {
+  ringing: 'callHistory.ringing',
+  accepted: 'callHistory.inCall',
+  ended: 'callHistory.ended',
+  canceled: 'call.canceledShort',
+  rejected: 'call.youRejected',
+  missed: 'call.missed',
+  disconnected: 'callHistory.dropped',
 }
 // Kept so that the list, mounted again on PC as navigation moves in and out of 通话, starts filled.
 const remembered = rememberedValue<ServerCall[]>()
@@ -53,6 +56,7 @@ function History ({
   session: NonNullable<ReturnType<typeof useOpenIM>['session']>
   url: string
 }) {
+  const tr = useT()
   const { conversations } = useOpenIM()
   const t = useProductTheme()
   const [kept] = useState(() => remembered.get(account))
@@ -86,7 +90,7 @@ function History ({
   }, [load]))
   return (
     <ProductPage
-      title='通话'
+      title={tr('tab.calls')}
       root
       white
       {...task}
@@ -102,7 +106,7 @@ function History ({
       right={Platform.OS === 'web' ? (
         <ProductIconButton
           name='retry'
-          label='刷新'
+          label={tr('common.refresh')}
           busy={task.busy}
           onPress={() => {
             void load()
@@ -117,9 +121,9 @@ function History ({
       }}
     >
       {unavailable && (
-        <ProductEmpty title='通话服务未启用' subtitle='当前服务器没有开启音视频通话，暂时无法查看通话记录或发起通话' />
+        <ProductEmpty title={tr('callHistory.disabledTitle')} subtitle={tr('callHistory.disabledHint')} />
       )}
-      {!unavailable && !records.length && (task.hasSucceeded || !!kept) && <ProductEmpty title='暂无通话记录' />}
+      {!unavailable && !records.length && (task.hasSucceeded || !!kept) && <ProductEmpty title={tr('callHistory.none')} />}
       {!unavailable && records.map((call, index) => {
         const peer = call.caller === session.userID ? call.callee : call.caller
         const conversation =
@@ -129,18 +133,18 @@ function History ({
             )
             : undefined
         const name =
-          conversation?.showName || (call.groupID ? `群通话 ${call.groupID}` : peer || '音视频通话')
+          conversation?.showName || (call.groupID ? tr('callHistory.groupNamed', { id: call.groupID }) : peer || tr('call.title'))
         return (
           <Pressable
             key={call.room}
             accessibilityRole='button'
-            accessibilityLabel={`再次呼叫 ${name}`}
+            accessibilityLabel={tr('callHistory.callAgain', { name })}
             disabled={task.busy}
             onPress={() => {
               void run(async current => {
                 const targetID = call.groupID || peer
                 if (!targetID)
-                  throw new Error('通话联系人不可用')
+                  throw new ProductError('callHistory.contactUnavailable')
                 const id =
                   conversation?.conversationID ||
                   (await openConversation(targetID, call.groupID ? 3 : 1))
@@ -191,12 +195,11 @@ function History ({
                   {name}
                 </Text>
                 <Text style={{ fontSize: 12, color: t.text3 }}>
-                  {shortTime(call.ended || call.created)}
+                  {shortTime(call.ended || call.created, tr)}
                 </Text>
               </View>
               <Text style={{ color: t.text2, fontSize: 13, lineHeight: 18 }}>
-                {call.groupID ? '群通话' : call.caller === session.userID ? '呼出' : '呼入'} ·{' '}
-                {labels[call.status] || call.status}
+                {[tr(call.groupID ? 'call.group' : call.caller === session.userID ? 'callHistory.outgoing' : 'callHistory.incoming'), labels[call.status] ? tr(labels[call.status]) : call.status].join(' · ')}
                 {call.connectedAt && call.durationSeconds !== undefined
                   ? ` · ${formatCallDuration(call.durationSeconds)}`
                   : ''}
@@ -205,7 +208,7 @@ function History ({
           </Pressable>
         )
       })}
-      {!unavailable && records.length > 0 && <ProductHint>近 24 小时，最多 100 条</ProductHint>}
+      {!unavailable && records.length > 0 && <ProductHint>{tr('callHistory.window')}</ProductHint>}
     </ProductPage>
   )
 }

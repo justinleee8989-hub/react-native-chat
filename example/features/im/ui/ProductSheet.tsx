@@ -1,6 +1,7 @@
 import React from 'react'
 import { Platform, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useT } from '../i18n'
 import { useProductLayout } from './preferences'
 import { ProductModal } from './ProductModal'
 import { ProductPressable as Pressable } from './ProductPressable'
@@ -23,7 +24,8 @@ export function ProductSheet ({
   title,
   subtitle,
   items,
-  cancelLabel = '取消',
+  cancelLabel,
+  error,
 }: React.PropsWithChildren<{
   onClose: () => void
   busy?: boolean
@@ -31,7 +33,10 @@ export function ProductSheet ({
   subtitle?: string
   items?: ProductSheetItem[]
   cancelLabel?: string
+  /** Why the last action failed: centred under the actions, as the title above them. */
+  error?: string
 }>) {
+  const tr = useT()
   const t = useProductTheme()
   const insets = useSafeAreaInsets()
   const { desktop } = useProductLayout()
@@ -56,7 +61,7 @@ export function ProductSheet ({
       >
         <Pressable
           accessibilityRole='button'
-          accessibilityLabel='关闭'
+          accessibilityLabel={tr('common.close')}
           disabled={busy}
           onPress={close}
           style={StyleSheet.absoluteFill}
@@ -147,6 +152,14 @@ export function ProductSheet ({
                 {item.trailing}
               </Pressable>
             ))}
+            {!!error && (
+              <Text
+                accessibilityRole='alert'
+                style={{ color: t.danger, fontSize: 14, lineHeight: 20, textAlign: 'center', paddingHorizontal: 20, paddingVertical: 12 }}
+              >
+                {error}
+              </Text>
+            )}
             {children && (
               <View
                 pointerEvents={busy ? 'none' : 'auto'}
@@ -158,7 +171,7 @@ export function ProductSheet ({
           </View>
           <Pressable
             accessibilityRole='button'
-            accessibilityLabel={cancelLabel}
+            accessibilityLabel={cancelLabel ?? tr('common.cancel')}
             accessibilityState={{ disabled: busy }}
             disabled={busy}
             onPress={close}
@@ -172,7 +185,7 @@ export function ProductSheet ({
               justifyContent: 'center',
             })}
           >
-            <Text style={{ fontSize: 17, fontWeight: '600', color: t.text }}>{cancelLabel}</Text>
+            <Text style={{ fontSize: 17, fontWeight: '600', color: t.text }}>{cancelLabel ?? tr('common.cancel')}</Text>
           </Pressable>
         </ScrollView>
       </View>

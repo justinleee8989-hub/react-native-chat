@@ -4,6 +4,8 @@ export const styles = StyleSheet.create({
   header: { minHeight: 52, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 6 },
   largeHeader: { paddingLeft: 20, paddingTop: 10, paddingBottom: 8, minHeight: 66 },
   centeredHeading: { position: 'absolute', left: 92, right: 92 },
+  // Header padding (6) and the back button (44), with a little air.
+  centeredHeadingNarrow: { left: 56, right: 56 },
   heading: { flex: 1, minWidth: 0 },
   // A section's own title (消息, 通讯录, 通话, 我的), the same on a phone and on PC: PC drew it at
   // 24/700, so the same page looked like a different product on the two.

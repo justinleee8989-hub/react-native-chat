@@ -1,12 +1,13 @@
 import type { Conversation } from '../domain/types'
 import type { ConversationService } from '../infrastructure/openim/conversation-service'
+import { ProductError } from '../shared/product-error.ts'
 import type { Runtime } from './runtime'
 
 export function createConversationActions (runtime: Runtime, service: ConversationService, flushSnapshot: () => Promise<void> = async () => {}) {
   const pending = new Set<string>()
   async function apply<T> (ids: string[], operation: string, remote: (id: string) => Promise<T>, local: (id: string, result: T) => void) {
     if (!runtime.state.session)
-      throw new Error('请先登录')
+      throw new ProductError('session.signInFirst')
     const epoch = runtime.generation
     for (const id of [...new Set(ids)]) {
       if (epoch !== runtime.generation)
@@ -65,11 +66,11 @@ export function createConversationActions (runtime: Runtime, service: Conversati
     setArchived: (ids: string[], archived: boolean) => {
       const userID = runtime.state.session?.userID
       if (!userID)
-        throw new Error('请先登录')
+        throw new ProductError('session.signInFirst')
       return apply(ids, 'archive', id => {
         const conversation = runtime.state.conversations.find(item => item.conversationID === id)
         if (!conversation)
-          throw new Error('会话不存在，请刷新后重试')
+          throw new ProductError('chat.notFound')
         return service.archive(id, conversation.ex, userID, archived, conversation.conversationType, conversation.groupID || conversation.userID || id)
       }, (id, ex) => patch(id, { ex, ...(archived ? { isPinned: false } : {}) }))
     },

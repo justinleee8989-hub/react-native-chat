@@ -1,6 +1,7 @@
 import React from 'react'
 import { Pressable, Text, View, useWindowDimensions } from 'react-native'
 import { usePathname } from 'expo-router'
+import { useT } from '../../i18n'
 import { useProductLayout, setPhonePreview } from '../../ui/preferences'
 import { useProductTheme } from '../../ui/theme'
 import { DesktopNavigationProvider } from '../DesktopNavigation'
@@ -8,6 +9,7 @@ import { isDesktopProduct } from '../layout'
 import { styles } from './styles'
 
 export function ProductFrame ({ children }: React.PropsWithChildren) {
+  const tr = useT()
   const { width } = useWindowDimensions()
   const t = useProductTheme()
   const layout = useProductLayout()
@@ -35,7 +37,7 @@ export function ProductFrame ({ children }: React.PropsWithChildren) {
               onPress={() => setPhonePreview(false)}
               style={{ padding: 8 }}
             >
-              <Text style={{ color: t.accent, textAlign: 'center' }}>返回电脑布局</Text>
+              <Text style={{ color: t.accent, textAlign: 'center' }}>{tr('shell.backToDesktop')}</Text>
             </Pressable>
           )}
           {children}

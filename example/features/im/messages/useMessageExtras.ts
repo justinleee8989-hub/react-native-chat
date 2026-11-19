@@ -3,6 +3,7 @@ import type { IMessage } from '@kesha-antonov/react-native-chat'
 import { refresh, reportError, useOpenIM, loadServerHistory } from '../application/store'
 import { parseCallInvitation } from '../calls/invitation'
 import type { IMMessage } from '../domain/types'
+import { ProductError } from '../shared/product-error.ts'
 import { applyExtras, batchMessageIDs, mergeMessageExtras, messageExtras, resolveExtraSequence } from './extras'
 import type { MessageExtra } from './extras'
 export function useMessageExtras (conversationID: string, messages: IMMessage[]) {
@@ -49,16 +50,16 @@ export function useMessageExtras (conversationID: string, messages: IMMessage[])
   }, [session, config.chat, conversationID, ids])
   const mutate = useCallback(async (message: IMessage, action: 'edit' | 'react', value: string) => {
     if (!session || pending.current.has(String(message._id)))
-      throw new Error('消息正在保存或登录已失效，请稍后重试')
+      throw new ProductError('extras.saving')
     const raw = messages.find(m => m.clientMsgID === message._id)
     if (!raw || raw.status !== 2 || raw.contentType >= 1000 || parseCallInvitation(raw.textElem?.content || ''))
-      throw new Error('这条消息当前无法修改')
+      throw new ProductError('extras.cantEdit')
     const id = raw.clientMsgID
     pending.current.add(id)
     try {
       const assertCurrent = () => {
         if (!mounted.current || activeContext.current.session !== session || activeContext.current.conversationID !== conversationID)
-          throw new Error('页面或登录已改变，请重新打开消息')
+          throw new ProductError('history.signInChanged')
       }
       const seq = await resolveExtraSequence(raw, async cursor => {
         assertCurrent()

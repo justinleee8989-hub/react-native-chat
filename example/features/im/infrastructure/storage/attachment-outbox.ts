@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Directory, File, Paths } from 'expo-file-system'
 import type { AttachmentBatch, AttachmentPersistence } from '../../messages/attachment-batch'
+import { ProductError } from '../../shared/product-error.ts'
 
 const prefix = 'im-attachment-outbox:v1:'
 const root = () => new Directory(Paths.document, 'im-attachment-outbox-v1')
@@ -16,7 +17,7 @@ export const attachmentOutbox: AttachmentPersistence = {
     folder.create({ intermediates: true, idempotent: true })
     const original = new File(media.uri)
     if (original.size > MAX_BYTES)
-      throw new Error('单个附件不能超过 100 MB')
+      throw new ProductError('outbox.tooLarge')
     const target = new File(folder, `${index}-${(media.name || original.name || media.type).replace(/[^a-zA-Z0-9._-]/g, '_')}`)
     await original.copy(target)
     return { ...media, uri: target.uri }

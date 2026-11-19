@@ -1,5 +1,6 @@
 import type { IMessage, ChatListItem } from '@kesha-antonov/react-native-chat'
 import { signalSummary } from '../calls/signaling.ts'
+import type { MessageKey, Translate } from '../i18n/translate.ts'
 import { readReply } from '../messages/composer.ts'
 import { applyExtras } from '../messages/extras.ts'
 import { isConversationArchived } from './conversation-archive.ts'
@@ -27,22 +28,27 @@ export function belongsToConversation (
       (message.sendID === self && message.recvID === conversation.userID))
   )
 }
-export function toMessage (message: IMMessage): IMessage {
-  const notices: Record<number, string> = {
-    1201: '已添加为好友', 1501: '群聊已创建', 1502: '群资料已更新',
-    1504: '有成员退出群聊', 1507: '群主已转让', 1508: '有成员被移出群聊',
-    1509: '已邀请新成员', 1510: '有新成员加入群聊', 1511: '群聊已解散',
-    1512: '群成员已被禁言', 1513: '群成员已解除禁言', 1514: '已开启全员禁言',
-    1515: '已关闭全员禁言', 1519: '群公告已更新', 1520: '群名称已更新',
-    1701: '阅后即焚设置已更新',
-  }
-  let notice = notices[message.contentType]
+const notices: Record<number, MessageKey> = {
+  1201: 'notice.friendAdded', 1501: 'notice.groupCreated', 1502: 'notice.groupInfoUpdated',
+  1504: 'notice.memberQuit', 1507: 'notice.ownerTransferred', 1508: 'notice.memberKicked',
+  1509: 'notice.membersInvited', 1510: 'notice.memberJoined', 1511: 'notice.groupDismissed',
+  1512: 'notice.memberMuted', 1513: 'notice.memberUnmuted', 1514: 'notice.groupMuted',
+  1515: 'notice.groupUnmuted', 1519: 'notice.announcementUpdated', 1520: 'notice.groupNameUpdated',
+  1701: 'notice.burnAfterReading',
+}
+
+/** The chat library's view of a message; every word it adds (notices, previews) is in `tr`'s language. */
+export function toMessage (message: IMMessage, tr: Translate): IMessage {
+  const key = notices[message.contentType]
+  let notice = key ? tr(key) : undefined
   if (message.contentType === 2101) {
-    let name = '对方'
+    let detail: { revokerNickname?: string, revokedBySelf?: boolean } = {}
     try {
-      name = JSON.parse(message.notificationElem?.detail || '{}').revokerNickname || '对方'
+      detail = JSON.parse(message.notificationElem?.detail || '{}')
     } catch { /* Old SDK records may have no structured revocation detail. */ }
-    notice = `${name} 撤回了一条消息`
+    notice = detail.revokedBySelf
+      ? tr('notice.revokedBySelf')
+      : tr('notice.revoked', { name: detail.revokerNickname || tr('notice.someone') })
   }
   if (notice)
     return { _id: message.clientMsgID, text: notice, system: true,
@@ -54,21 +60,21 @@ export function toMessage (message: IMMessage): IMessage {
     _id: message.clientMsgID,
     replyMessage: quoted ? toMessage({ ...quoted,
       ...(quoted.contentType === 114 ? { contentType: 101, textElem: { content: quoted.quoteElem?.text || '' } } : {}),
-      quoteElem: undefined, ex: undefined }) : undefined,
+      quoteElem: undefined, ex: undefined }, tr) : undefined,
     text:
       message.contentType === 106
         ? (message.atTextElem?.text ?? '')
         : message.contentType === 114
           ? (message.quoteElem?.text ?? '')
           : message.contentType === 101
-            ? signalSummary(message.textElem?.content ?? '')
+            ? signalSummary(message.textElem?.content ?? '', tr)
             : message.contentType === 108
-              ? `[名片] ${message.cardElem?.nickname || message.cardElem?.userID || ''}`
+              ? tr('preview.card', { name: message.cardElem?.nickname || message.cardElem?.userID || '' })
               : message.contentType === 109
-                ? `[位置] ${message.locationElem?.description || ''}`
+                ? tr('preview.location', { name: message.locationElem?.description || '' })
                 : [102, 103, 104, 105].includes(message.contentType)
                   ? ''
-                  : '[暂不支持的消息类型]',
+                  : tr('preview.unsupported'),
     createdAt: new Date(message.sendTime || message.createTime || Date.now()),
     user: {
       _id: message.sendID || 'unknown',
@@ -83,7 +89,7 @@ export function toMessage (message: IMMessage): IMessage {
     file: message.fileElem
       ? {
         uri: message.fileElem.sourceUrl || message.fileElem.filePath || '',
-        name: message.fileElem.fileName || '文件',
+        name: message.fileElem.fileName || tr('file.defaultName'),
         size: message.fileElem.fileSize,
       }
       : undefined,
@@ -101,11 +107,11 @@ export function toMessage (message: IMMessage): IMessage {
     received: message.status === 2 && !!message.isRead,
   }, message.projection)
 }
-export function toChat (conversation: Conversation, userID?: string): ChatListItem & { avatarID: string } {
+export function toChat (conversation: Conversation, tr: Translate, userID?: string): ChatListItem & { avatarID: string } {
   let lastMessage: IMessage | undefined
   try {
     if (conversation.latestMsg)
-      lastMessage = toMessage(JSON.parse(conversation.latestMsg))
+      lastMessage = toMessage(JSON.parse(conversation.latestMsg), tr)
   } catch {
     /* An invalid preview must not hide the conversation. */
   }

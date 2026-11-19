@@ -8,6 +8,8 @@ import LoginScreen from '../auth/LoginScreen'
 import type { Person } from '../domain/directory'
 import type { Session } from '../domain/types'
 import { SettingField } from '../groups/group-ui'
+import type { MessageKey } from '../i18n'
+import { useT } from '../i18n'
 import { showProductToast } from '../shared/ProductToast'
 import { useDirectoryEvents } from '../shared/useDirectoryEvents'
 import { useTask } from '../shared/useTask'
@@ -31,20 +33,21 @@ export default function AddFriendScreen () {
     <LoginScreen />
   )
 }
-const EMPTY: Record<ContactQuery['kind'], string> = {
-  id: '请检查用户 ID 是否完整',
-  email: '请检查邮箱是否完整',
-  phone: '请检查手机号是否完整',
+const EMPTY: Record<ContactQuery['kind'], MessageKey> = {
+  id: 'addFriend.checkID',
+  email: 'addFriend.checkEmail',
+  phone: 'addFriend.checkPhone',
 }
 
 function AddFriend ({ session, chatURL, initialID }: { session: Session, chatURL: string, initialID: string }) {
+  const tr = useT()
   const { userID } = session
   const router = useRouter()
   const t = useProductTheme()
   const task = useTask()
   const { run } = task
   const [query, setQuery] = useState(initialID)
-  const [message, setMessage] = useState('你好，希望添加你为好友')
+  const [message, setMessage] = useState(tr('addFriend.defaultMessage'))
   const [results, setResults] = useState<Person[]>([])
   const [searched, setSearched] = useState<ContactQuery['kind']>()
   const resultIDs = useRef<string[]>(initialID ? [initialID] : [])
@@ -103,17 +106,17 @@ function AddFriend ({ session, chatURL, initialID }: { session: Session, chatURL
   }
   return (
     <ContactLayout
-      title='添加好友'
+      title={tr('addFriend.title')}
       {...task}
       // 扫一扫 sits in the header, as a scan action does in most apps; a browser cannot scan.
       right={Platform.OS === 'web' ? undefined : (
-        <ContactIconButton name='scan' label='扫一扫' onPress={() => router.push('/chats/scan' as Href)} />
+        <ContactIconButton name='scan' label={tr('contacts.scan')} onPress={() => router.push('/chats/scan' as Href)} />
       )}
     >
       <View style={styles.search}>
         <ProductSearch
-          placeholder='用户 ID / 邮箱 / 手机号'
-          accessibilityLabel='用户 ID、邮箱或手机号'
+          placeholder={tr('addFriend.searchPlaceholder')}
+          accessibilityLabel={tr('addFriend.searchLabel')}
           returnKeyType='search'
           autoCapitalize='none'
           autoCorrect={false}
@@ -132,24 +135,24 @@ function AddFriend ({ session, chatURL, initialID }: { session: Session, chatURL
         />
       </View>
       {searched && !results.length && (
-        <ProductEmpty title='未找到该用户' subtitle={EMPTY[searched]} />
+        <ProductEmpty title={tr('addFriend.notFound')} subtitle={tr(EMPTY[searched])} />
       )}
       {results.map(person => {
         // Someone the user cannot add says why in light text on their row, instead of a disabled
         // button; only someone who can be added gets the note and the button.
         const status = person.userID === userID
-          ? '你自己'
+          ? tr('addFriend.yourself')
           : person.isFriend
-            ? '已是好友'
-            : sent.includes(person.userID) ? '已发送申请' : undefined
+            ? tr('addFriend.alreadyFriend')
+            : sent.includes(person.userID) ? tr('addFriend.requested') : undefined
         return (
           <React.Fragment key={person.userID}>
-            <ContactSection>查找结果</ContactSection>
+            <ContactSection>{tr('addFriend.results')}</ContactSection>
             <ContactInset>
               <ProductCard>
                 <ProductRow
                   title={person.nickname || person.userID}
-                  subtitle={`ID：${person.userID}`}
+                  subtitle={tr('common.idLabel', { id: person.userID })}
                   leading={
                     <ProductAvatar
                       id={person.userID}
@@ -165,9 +168,9 @@ function AddFriend ({ session, chatURL, initialID }: { session: Session, chatURL
                 />
                 {!status && (
                   <SettingField
-                    label='申请说明'
-                    accessibilityLabel='好友申请说明'
-                    placeholder='好友申请说明'
+                    label={tr('addFriend.note')}
+                    accessibilityLabel={tr('addFriend.noteLabel')}
+                    placeholder={tr('addFriend.noteLabel')}
                     value={message}
                     onChangeText={setMessage}
                     editable={!task.busy}
@@ -176,14 +179,14 @@ function AddFriend ({ session, chatURL, initialID }: { session: Session, chatURL
               </ProductCard>
               {!status && (
                 <ProductButton
-                  title='发送好友申请'
+                  title={tr('addFriend.send')}
                   disabled={task.busy}
                   onPress={() => {
                     void task.run(async current => {
                       await directory.add(person.userID, message)
                       if (current()) {
                         setSent(items => [...items, person.userID])
-                        showProductToast('好友申请已发送')
+                        showProductToast(tr('addFriend.sent'))
                       }
                     })
                   }}

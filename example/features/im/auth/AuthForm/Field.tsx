@@ -4,6 +4,7 @@ import { Platform, Pressable, Text, TextInput, View, type TextStyle, type TextIn
 
 
 
+import { useT } from '../../i18n'
 import { ProductIcon } from '../../ui/ProductIcon'
 import { useProductColors as useChatListColors, useProductTheme } from '../../ui/theme'
 import { styles } from './styles'
@@ -26,6 +27,7 @@ export function AuthField ({
   /** Reaches the input, so a page can focus it (React 19 passes `ref` as a prop). */
   ref?: React.Ref<React.ComponentRef<typeof TextInput>>
 }) {
+  const tr = useT()
   const colors = useChatListColors()
   const [visible, setVisible] = useState(false)
   const [focused, setFocused] = useState(false)
@@ -68,7 +70,7 @@ export function AuthField ({
         {password && reveal && (
           <Pressable
             accessibilityRole='button'
-            accessibilityLabel={visible ? `隐藏${label}` : `显示${label}`}
+            accessibilityLabel={visible ? tr('auth.hideField', { label }) : tr('auth.showField', { label })}
             onPress={() => setVisible(!visible)}
             style={styles.reveal}
           >

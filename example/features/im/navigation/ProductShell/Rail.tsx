@@ -3,6 +3,7 @@ import { Pressable, Text, View } from 'react-native'
 import { profile } from '../../application/profile'
 import { useOpenIM } from '../../application/store'
 import type { SelfProfile } from '../../domain/profile'
+import { useT } from '../../i18n'
 import { useProductScheme, setProductAppearance, setPhonePreview } from '../../ui/preferences'
 import { ProductAvatar } from '../../ui/primitives'
 import { ProductIcon } from '../../ui/ProductIcon'
@@ -13,13 +14,14 @@ import { useRailNavigation } from '../useRailNavigation'
 import { styles } from './styles'
 
 const items = [
-  { key: 'me', label: '我的', icon: 'user' },
-  { key: 'chats', label: '消息', icon: 'chat' },
-  { key: 'calls', label: '通话', icon: 'phone' },
-  { key: 'contacts', label: '通讯录', icon: 'users' },
+  { key: 'me', labelKey: 'tab.me', icon: 'user' },
+  { key: 'chats', labelKey: 'tab.chats', icon: 'chat' },
+  { key: 'calls', labelKey: 'tab.calls', icon: 'phone' },
+  { key: 'contacts', labelKey: 'tab.contacts', icon: 'users' },
 ] as const
 
 export function Rail ({ section }: { section: ProductSection }) {
+  const tr = useT()
   const pending = usePendingRequests()
   const navigate = useRailNavigation(section)
   const t = useProductTheme()
@@ -46,14 +48,14 @@ export function Rail ({ section }: { section: ProductSection }) {
   const unread = conversations.reduce((total, item) => total + (item.unreadCount || 0), 0)
   return (
     <View
-      accessibilityLabel='导航'
+      accessibilityLabel={tr('shell.navigation')}
       style={[styles.rail, { backgroundColor: t.bg, borderColor: t.line }]}
     >
       {items.map(item => (
         <Pressable
           key={item.key}
           accessibilityRole='tab'
-          accessibilityLabel={item.label}
+          accessibilityLabel={tr(item.labelKey)}
           accessibilityState={{ selected: section === item.key }}
           onPress={() => navigate(item.key)}
           style={[
@@ -76,7 +78,7 @@ export function Rail ({ section }: { section: ProductSection }) {
             >
               <ProductAvatar
                 id={session?.userID || ''}
-                title={self?.nickname || session?.userID || '我'}
+                title={self?.nickname || session?.userID || tr('shell.me')}
                 uri={self?.faceURL}
                 size={40}
               />
@@ -102,7 +104,7 @@ export function Rail ({ section }: { section: ProductSection }) {
       <View style={{ flex: 1 }} />
       <Pressable
         accessibilityRole='button'
-        accessibilityLabel='切换外观'
+        accessibilityLabel={tr('shell.toggleAppearance')}
         onPress={() => setProductAppearance(scheme === 'dark' ? 'light' : 'dark')}
         style={styles.railButton}
       >
@@ -110,7 +112,7 @@ export function Rail ({ section }: { section: ProductSection }) {
       </Pressable>
       <Pressable
         accessibilityRole='button'
-        accessibilityLabel='手机预览'
+        accessibilityLabel={tr('shell.phonePreview')}
         onPress={() => setPhonePreview(true)}
         style={styles.railButton}
       >

@@ -1,5 +1,6 @@
 import type { IMessage } from '@kesha-antonov/react-native-chat'
 import type { Session } from '../domain/types'
+import { ProductError, ServerError } from '../shared/product-error.ts'
 export interface MessageExtra {
   text?: string
   editedAt?: number
@@ -42,7 +43,8 @@ export async function messageExtras (session: Session, url: string, request: Rec
       headers: { 'Content-Type': 'application/json', token: session.chatToken || '', operationID: `message-${Date.now()}` }, body: JSON.stringify(request) })
     const result = await response.json()
     if (!response.ok || result.errCode)
-      throw new Error(result.errMsg || '消息增强服务不可用')
+      // A server failure is explained by its code; a reply that is not one is said by us.
+      throw result?.errCode ? new ServerError(result, response.status) : new ProductError('extras.unavailable')
     return (result.data?.records || {}) as Record<string, MessageExtra>
   } finally {
     clearTimeout(timer)
@@ -64,12 +66,12 @@ export async function resolveExtraSequence (
     if (found) {
       if (Number.isSafeInteger(found.seq) && (found.seq || 0) > 0)
         return found.seq!
-      throw new Error('消息尚未同步，请稍后重试')
+      throw new ProductError('extras.notSynced')
     }
     if (!page.hasMore)
-      throw new Error('消息尚未同步或已不可访问，请稍后重试')
+      throw new ProductError('extras.notAccessible')
     if (!page.cursor || visited.has(page.cursor))
-      throw new Error('历史分页未前进，请重试')
+      throw new ProductError('history.notAdvancing')
     visited.add(page.cursor)
     cursor = page.cursor
   }

@@ -1,25 +1,37 @@
 import React from 'react'
 import { AppState } from 'react-native'
 import { beforeEach, expect, it, jest } from '@jest/globals'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react-native'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native'
 import { scanQRInPhoto } from '../application/scan-photo'
 import { showProductToast } from '../shared/ProductToast'
 import ScanScreen from './ScanScreen'
 
 const mockReplace = jest.fn()
 let mockScanned: ((value: string) => void) | undefined
+let mockActive: boolean | undefined
+const mockListeners: Record<string, ((event: { data?: { closing?: boolean } }) => void)[]> = {}
+const mockNavigation = {
+  addListener: (event: string, listener: (event: { data?: { closing?: boolean } }) => void) => {
+    (mockListeners[event] ??= []).push(listener)
+    return () => {
+      mockListeners[event] = mockListeners[event].filter(item => item !== listener) 
+    }
+  },
+}
 jest.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 0, right: 0, bottom: 0, left: 0 }) }))
 jest.mock('expo-router', () => {
   const ReactModule = require('react')
   return {
     useRouter: () => ({ replace: mockReplace, back: jest.fn(), canGoBack: () => true }),
+    useNavigation: () => mockNavigation,
     // Focused at once, as when the page is pushed.
     useFocusEffect: (effect: () => void | (() => void)) => ReactModule.useEffect(effect, [effect]),
   }
 })
 jest.mock('./QRScanner', () => ({
-  QRScanner: ({ onScanned }: { onScanned: (value: string) => void }) => {
+  QRScanner: ({ active, onScanned }: { active: boolean, onScanned: (value: string) => void }) => {
     mockScanned = onScanned
+    mockActive = active
     return null
   },
 }))
@@ -29,6 +41,9 @@ jest.mock('../ui/ProductIcon', () => ({ ProductIcon: () => null }))
 
 beforeEach(() => {
   mockScanned = undefined
+  mockActive = undefined
+  for (const event of Object.keys(mockListeners))
+    delete mockListeners[event]
   // resetMocks clears React Native's mocked listener, which then returns nothing to remove.
   jest.spyOn(AppState, 'addEventListener').mockReturnValue({ remove: jest.fn() } as never)
 })
@@ -58,4 +73,17 @@ it('reads a code from an album photo, and says when the photo has none', async (
   jest.mocked(scanQRInPhoto).mockResolvedValueOnce('example:///chats/people/carol')
   await fireEvent.press(screen.getByRole('button', { name: '从相册选择二维码' }))
   await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/chats/people/carol'))
+})
+
+it('stops the camera as soon as the page starts to close, and starts it again if a swipe back is given up', async () => {
+  Object.defineProperty(AppState, 'currentState', { value: 'active', configurable: true })
+  await render(<ScanScreen />)
+  expect(mockActive).toBe(true)
+  // Opening transitions leave it running.
+  await act(() => mockListeners.transitionStart?.forEach(listener => listener({ data: { closing: false } })))
+  expect(mockActive).toBe(true)
+  await act(() => mockListeners.transitionStart?.forEach(listener => listener({ data: { closing: true } })))
+  expect(mockActive).toBe(false)
+  await act(() => mockListeners.gestureCancel?.forEach(listener => listener({})))
+  expect(mockActive).toBe(true)
 })

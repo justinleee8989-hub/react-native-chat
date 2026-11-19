@@ -4,6 +4,7 @@ import { Href, useFocusEffect, useRouter } from 'expo-router'
 import { profile } from '../application/profile'
 import { logout, useOpenIM } from '../application/store'
 import type { SelfProfile } from '../domain/profile'
+import { languageNames, useLanguage, useT } from '../i18n'
 import { rememberedValue } from '../shared/remembered'
 import { Confirm } from '../shared/shared'
 import { useTask } from '../shared/useTask'
@@ -23,6 +24,8 @@ export default function MyScreen () {
   ) : null
 }
 function MyAccount ({ userID, account }: { userID: string, account: string }) {
+  const tr = useT()
+  const language = useLanguage()
   const t = useProductTheme()
   const { desktop } = useProductLayout()
   const router = useRouter()
@@ -47,7 +50,7 @@ function MyAccount ({ userID, account }: { userID: string, account: string }) {
   }, [refresh]))
   return (
     // A phone opens on the profile card; PC keeps the title, as every master list there has one.
-    <ProductPage title='我的' root headerHidden={!desktop} {...task} loading={!task.hasSucceeded && !kept} onRetry={() => {
+    <ProductPage title={tr('tab.me')} root headerHidden={!desktop} {...task} loading={!task.hasSucceeded && !kept} onRetry={() => {
       void refresh()
     }}
     >
@@ -56,7 +59,7 @@ function MyAccount ({ userID, account }: { userID: string, account: string }) {
           <ProductRow
             big
             title={self?.nickname || userID}
-            subtitle={`ID：${userID}`}
+            subtitle={tr('common.idLabel', { id: userID })}
             leading={
               <ProductAvatar
                 id={userID}
@@ -68,43 +71,48 @@ function MyAccount ({ userID, account }: { userID: string, account: string }) {
             onPress={() => openMaster('/chats/settings?section=profile' as Href)}
             trailingInteractive
             trailing={
-              <ProductIconButton name='qr' label='我的二维码' onPress={() => openMaster('/chats/my-qr' as Href)} />
+              <ProductIconButton name='qr' label={tr('me.myQRCode')} onPress={() => openMaster('/chats/my-qr' as Href)} />
             }
           />
         </ProductCard>
         <ProductCard>
           <ProductRow
-            title='消息通知'
+            title={tr('me.notifications')}
             trailing={
               self?.globalRecvMsgOpt === 2 ? (
-                <Text style={{ color: t.text2, fontSize: 15 }}>全局免打扰</Text>
+                <Text style={{ color: t.text2, fontSize: 15 }}>{tr('me.doNotDisturb')}</Text>
               ) : undefined
             }
             onPress={() => openMaster('/chats/settings?section=notifications' as Href)}
           />
           <ProductRow
-            title='隐私与黑名单'
+            title={tr('me.privacy')}
             trailing={
               blacklistCount ? (
-                <Text style={{ color: t.text2, fontSize: 15 }}>{blacklistCount} 人</Text>
+                <Text style={{ color: t.text2, fontSize: 15 }}>{tr('me.blockedCount', { count: blacklistCount })}</Text>
               ) : undefined
             }
             onPress={() => openMaster('/chats/settings?section=privacy' as Href)}
           />
           <ProductRow
-            title='账户安全'
+            title={tr('me.accountSecurity')}
             onPress={() => openMaster('/chats/settings?section=security' as Href)}
           />
         </ProductCard>
         <ProductCard>
           <ProductRow
-            title='外观'
+            title={tr('me.appearance')}
             onPress={() => openMaster('/chats/appearance' as Href)}
+          />
+          <ProductRow
+            title={tr('language.title')}
+            trailing={<Text style={{ color: t.text2, fontSize: 15 }}>{languageNames[language]}</Text>}
+            onPress={() => openMaster('/chats/language' as Href)}
           />
         </ProductCard>
         <ProductCard>
           <ProductRow
-            title='退出登录'
+            title={tr('me.signOut')}
             danger
             centered
             onPress={() => {
@@ -116,9 +124,9 @@ function MyAccount ({ userID, account }: { userID: string, account: string }) {
       </View>
       {confirmLogout && (
         <Confirm
-          title='退出当前账户？'
-          message='你可以随时重新登录。'
-          confirmLabel='退出'
+          title={tr('me.signOutConfirmTitle')}
+          message={tr('me.signOutConfirmMessage')}
+          confirmLabel={tr('me.signOutConfirm')}
           busy={busy}
           onCancel={() => setConfirmLogout(false)}
           onConfirm={() => {

@@ -2,24 +2,25 @@ import React from 'react'
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg'
+import type { MessageKey } from '../i18n'
 import { useProductLayout } from '../ui/preferences'
 import { ProductAvatar } from '../ui/primitives'
 import { ProductIcon } from '../ui/ProductIcon'
 import { useProductOverlayBounds } from '../ui/ProductModal'
 
-export function callConnectionLabel (state: string): string {
+export function callConnectionLabel (state: string): MessageKey {
   switch (state) {
     case 'connected':
-      return '已连接'
+      return 'status.connected'
     case 'connecting':
-      return '正在连接…'
+      return 'call.connecting'
     case 'reconnecting':
     case 'signalReconnecting':
-      return '正在重连'
+      return 'call.reconnecting'
     case 'disconnected':
-      return '连接已断开'
+      return 'call.disconnected'
     default:
-      return '准备连接'
+      return 'call.preparing'
   }
 }
 

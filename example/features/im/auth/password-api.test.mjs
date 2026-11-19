@@ -17,8 +17,9 @@ test('legacy sessions and invalid password never reach network', async () => {
   await assert.rejects(changePassword({ userID: 'alice', imToken: 'im' }, 'old', 'new', '', request), /重新登录/)
   await assert.rejects(changePassword({ userID: 'alice', chatToken: 'chat' }, 'old', 'old', '', request), /不同/)
 })
-test('password rejection stays visible', async () => {
-  await assert.rejects(changePassword({ userID: 'alice', chatToken: 'chat' }, 'old', 'new', '', async () => ({ ok: true, json: async () => ({ errCode: 1, errMsg: 'wrong password' }) })), /wrong password/)
+test('a wrong current password is said as such; other rejections keep their code', async () => {
+  await assert.rejects(changePassword({ userID: 'alice', chatToken: 'chat' }, 'old', 'new', '', async () => ({ ok: true, json: async () => ({ errCode: 20001, errMsg: 'PasswordError' }) })), error => error.key === 'password.currentWrong')
+  await assert.rejects(changePassword({ userID: 'alice', chatToken: 'chat' }, 'old', 'new', '', async () => ({ ok: true, json: async () => ({ errCode: 1002, errMsg: 'NoPermissionError' }) })), error => error.errCode === 1002)
 })
 
 test('malformed password response is not success', async () => {

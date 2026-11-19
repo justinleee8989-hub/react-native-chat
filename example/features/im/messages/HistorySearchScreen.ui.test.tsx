@@ -8,7 +8,7 @@ jest.mock('react-native-safe-area-context', () => ({ ...jest.requireActual<objec
 jest.mock('../application/store', () => ({ useOpenIM: () => ({ session: { userID: 'self', imToken: 'token' }, conversations: [] }), loadServerHistory: (...args: unknown[]) => mockSearch(...args) }))
 jest.mock('../auth/LoginScreen', () => () => null)
 jest.mock('expo-router', () => ({ useRouter: () => ({ push: jest.fn(), dismissTo: mockPush, back: jest.fn(), canGoBack: () => true }) }))
-jest.mock('../ui/preferences', () => ({ useProductLayout: () => ({ desktop: false }), useProductScheme: () => 'light' }))
+jest.mock('../ui/preferences', () => ({ useLanguageChoice: () => 'auto', useProductLayout: () => ({ desktop: false }), useProductScheme: () => 'light' }))
 jest.mock('../ui/theme', () => ({ useProductTheme: () => ({ accent: '#3366ff', danger: '#e5484d', line: '#ddd', text: '#111', text2: '#555', text3: '#777', bg: '#fff' }) }))
 jest.mock('../ui/ProductIcon', () => ({ ProductIcon: () => null }))
 it('shows search result rows and navigates to the exact message', async () => {
@@ -61,11 +61,11 @@ it('ignores an older response after a query edit and keeps server pagination', a
   expect(view.getByLabelText('查看消息：new result')).toBeTruthy()
 })
 it('shows server failures and allows retry of the same query', async () => {
-  mockSearch.mockRejectedValueOnce(new Error('服务暂不可用')).mockResolvedValueOnce({ messages: [], hasMore: false, cursor: '' })
+  mockSearch.mockRejectedValueOnce({ errCode: 20202, errMsg: 'RetryLater' }).mockResolvedValueOnce({ messages: [], hasMore: false, cursor: '' })
   const view = await render(<HistorySearchScreen id='c1' />)
   await fireEvent.changeText(view.getByLabelText('输入关键词'), 'query')
   await fireEvent(view.getByLabelText('输入关键词'), 'submitEditing')
-  await waitFor(() => expect(view.getByText('服务暂不可用')).toBeTruthy())
+  await waitFor(() => expect(view.getByText('服务繁忙，请稍后重试')).toBeTruthy())
   await fireEvent.press(view.getByText('重试搜索'))
   await waitFor(() => expect(view.getByText('未找到匹配消息')).toBeTruthy())
 })

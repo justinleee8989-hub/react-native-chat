@@ -13,6 +13,8 @@ import {
   type Group,
 } from '../domain/directory'
 import { groupManagementPermissions, groupMuteLabel } from '../domain/group-management'
+import { useT } from '../i18n'
+import { ProductError } from '../shared/product-error'
 import { ProductPromptField } from '../shared/ProductPromptField'
 import { showProductToast } from '../shared/ProductToast'
 import { Action, Confirm } from '../shared/shared'
@@ -54,6 +56,7 @@ function Management ({
   userID: string
   membersPage: boolean
 }) {
+  const tr = useT()
   const router = useRouter()
   const t = useProductTheme()
   const { manage } = useLocalSearchParams<{ manage?: string }>()
@@ -108,7 +111,7 @@ function Management ({
         return
       setSelected(undefined)
       setPending(undefined)
-      setNotice('操作成功')
+      setNotice(tr('manage.done'))
       await reload(current)
     })
   }
@@ -125,7 +128,7 @@ function Management ({
       ): Pending => ({ message: '', permission, targetID: selected.userID, action })
       return [
         {
-          title: '查看资料',
+          title: tr('manage.viewProfile'),
           onPress: () => {
             setSelected(undefined)
             router.push(`/chats/people/${encodeURIComponent(selected.userID)}` as Href)
@@ -134,7 +137,7 @@ function Management ({
         ...(permissions.role
           ? [
             {
-              title: selected.roleLevel === 60 ? '取消管理员' : '设为管理员',
+              title: selected.roleLevel === 60 ? tr('manage.removeAdmin') : tr('manage.makeAdmin'),
               onPress: () =>
                 execute(
                   operation('role', () =>
@@ -147,15 +150,15 @@ function Management ({
         ...(permissions.transfer
           ? [
             {
-              title: '转让群主',
+              title: tr('manage.transferOwner'),
               onPress: () =>
                 setPending({
                   ...operation('transfer', () =>
                     groupManagement.transfer(groupID, selected.userID)
                   ),
-                  title: `将群主转让给 ${name}？`,
-                  message: '转让后你将成为普通成员。',
-                  confirmLabel: '转让',
+                  title: tr('manage.transferTitle', { name }),
+                  message: tr('manage.transferMessage'),
+                  confirmLabel: tr('manage.transfer'),
                 }),
             },
           ]
@@ -163,7 +166,7 @@ function Management ({
         ...(permissions.muteMember
           ? [
             {
-              title: muted ? '解除禁言' : '禁言 1 小时',
+              title: muted ? tr('manage.unmute') : tr('manage.muteHour'),
               onPress: () =>
                 execute(
                   operation('muteMember', () =>
@@ -176,14 +179,14 @@ function Management ({
         ...(canRemoveMember(self, selected)
           ? [
             {
-              title: '移出群组',
+              title: tr('manage.remove'),
               danger: true,
               onPress: () =>
                 setPending({
                   ...operation('muteMember', () => directory.kick(groupID, selected.userID)),
-                  title: `将 ${name} 移出群组？`,
+                  title: tr('manage.removeTitle', { name }),
                   message: '',
-                  confirmLabel: '移出',
+                  confirmLabel: tr('manage.removeConfirm'),
                 }),
             },
           ]
@@ -193,8 +196,8 @@ function Management ({
     : []
   return (
     <ProductPage
-      title={membersPage ? (managesMembers ? '成员管理' : '群成员') : '群管理'}
-      subtitle={membersPage ? `${group?.memberCount || members.length} 人` : undefined}
+      title={membersPage ? (managesMembers ? tr('manage.membersAdmin') : tr('manage.members')) : tr('group.manage')}
+      subtitle={membersPage ? tr('chatInfo.memberCount', { count: group?.memberCount || members.length }) : undefined}
       {...task}
       // Which sections show depends on this user's role, so the page waits whole.
       initialLoading={!task.hasSucceeded}
@@ -205,19 +208,19 @@ function Management ({
     >
       {unavailable && (
         <ProductEmpty
-          title={group?.status === 2 ? '群聊已解散' : '群聊当前不可用'}
-          subtitle='无法继续管理此群聊，请返回会话列表。'
+          title={group?.status === 2 ? tr('notice.groupDismissed') : tr('manage.unavailable')}
+          subtitle={tr('manage.cantManage')}
         />
       )}
       {!unavailable && !membersPage && group && (
         <>
           {groupManagementPermissions(self).manage && (
             <>
-              <ProductSection>群资料</ProductSection>
+              <ProductSection>{tr('manage.groupProfile')}</ProductSection>
               <ProductInset>
                 <ProductCard>
                   <ProductRow
-                    title='群聊名称'
+                    title={tr('manage.groupName')}
                     trailing={
                       <Text
                         numberOfLines={1}
@@ -232,13 +235,13 @@ function Management ({
                     }}
                   />
                   <ProductRow
-                    title='群公告'
+                    title={tr('chatInfo.announcement')}
                     trailing={
                       <Text
                         numberOfLines={1}
                         style={{ color: t.text2, fontSize: 15, maxWidth: '60%' }}
                       >
-                        {group.notification || '未设置'}
+                        {group.notification || tr('person.notSet')}
                       </Text>
                     }
                     onPress={() => {
@@ -250,12 +253,12 @@ function Management ({
               </ProductInset>
             </>
           )}
-          <ProductSection>成员</ProductSection>
+          <ProductSection>{tr('manage.membersHeading')}</ProductSection>
           <ProductInset>
             <ProductCard>
               {groupPermissions(self, group.needVerification).invite && (
                 <ProductRow
-                  title='邀请好友入群'
+                  title={tr('invite.title')}
                   onPress={() =>
                     router.push(`/chats/groups/invite?id=${encodeURIComponent(groupID)}` as Href)
                   }
@@ -263,10 +266,10 @@ function Management ({
               )}
               {groupManagementPermissions(self).manage && (
                 <ProductRow
-                  title='成员管理'
+                  title={tr('manage.membersAdmin')}
                   trailing={
                     <Text style={{ color: t.text2, fontSize: 15 }}>
-                      {group.memberCount || members.length} 人
+                      {tr('chatInfo.memberCount', { count: group.memberCount || members.length })}
                     </Text>
                   }
                   onPress={() =>
@@ -280,14 +283,14 @@ function Management ({
           </ProductInset>
           {groupManagementPermissions(self).manage ? (
             <>
-              <ProductSection>权限</ProductSection>
+              <ProductSection>{tr('manage.permissions')}</ProductSection>
               <ProductInset>
                 <ProductCard>
                   <ProductRow
-                    title='全员禁言'
+                    title={tr('manage.muteAll')}
                     trailing={
                       <ProductSwitch
-                        accessibilityLabel='全员禁言'
+                        accessibilityLabel={tr('manage.muteAll')}
                         value={group.status === 3}
                         disabled={task.busy}
                         onValueChange={value =>
@@ -303,8 +306,8 @@ function Management ({
                 </ProductCard>
               </ProductInset>
               <ProductHint>
-                开启后只有群主和管理员可以发言。
-                {group.status !== 0 && group.status !== 3 ? groupMuteLabel(group.status) : ''}
+                {tr('manage.muteAllHint')}
+                {group.status !== 0 && group.status !== 3 ? ` ${groupMuteLabel(group.status, tr)}` : ''}
               </ProductHint>
             </>
           ) : null}
@@ -314,7 +317,7 @@ function Management ({
               <ProductInset>
                 <ProductCard>
                   <ProductRow
-                    title={groupPermissions(self).dismiss ? '解散群组' : '退出群组'}
+                    title={groupPermissions(self).dismiss ? tr('manage.dismiss') : tr('manage.quit')}
                     danger
                     centered
                     onPress={() => setExit(true)}
@@ -327,7 +330,7 @@ function Management ({
       )}
       {!unavailable && membersPage && (
         <>
-          {managesMembers && <ProductHint>点成员可设置管理员、禁言或移出群组。</ProductHint>}
+          {managesMembers && <ProductHint>{tr('manage.memberHint')}</ProductHint>}
           {managesMembers && <View style={{ height: 12 }} />}
           <ProductInset>
             <ProductCard>
@@ -351,24 +354,20 @@ function Management ({
       )}
       {selected && (
         <ProductSheet
+          error={task.error}
           title={selected.nickname || selected.userID}
           subtitle={
-            selected.roleLevel === 100 ? '群主' : selected.roleLevel === 60 ? '管理员' : '群成员'
+            selected.roleLevel === 100 ? tr('role.owner') : selected.roleLevel === 60 ? tr('role.admin') : tr('role.member')
           }
           busy={task.busy}
           onClose={() => setSelected(undefined)}
           items={memberItems}
         >
-          {!!task.error && (
-            <Text accessibilityRole='alert' style={{ color: t.danger }}>
-              {task.error}
-            </Text>
-          )}
         </ProductSheet>
       )}
       {!unavailable && membersPage && more && (
         <Action
-          title='加载更多成员'
+          title={tr('manage.loadMore')}
           disabled={task.busy}
           onPress={() => {
             void run(current => reload(current, offset))
@@ -388,9 +387,9 @@ function Management ({
       )}
       {edit && (
         <Confirm
-          title={edit === 'name' ? '修改群聊名称' : '编辑群公告'}
+          title={edit === 'name' ? tr('manage.editName') : tr('manage.editAnnouncement')}
           message=''
-          confirmLabel='确定'
+          confirmLabel={tr('common.ok')}
           danger={false}
           busy={task.busy}
           error={task.error}
@@ -398,7 +397,7 @@ function Management ({
           onConfirm={() => {
             void run(async current => {
               if (edit === 'name' && !draft.trim())
-                throw new Error('请输入群名称')
+                throw new ProductError('manage.enterName')
               await checkGroupManagement(groupID, userID, current, 'manage')
               if (!current())
                 return
@@ -406,7 +405,7 @@ function Management ({
               if (!current())
                 return
               if (!latest)
-                throw new Error('群组不存在或无法访问')
+                throw new ProductError('group.notFound')
               await directory.update(
                 groupID,
                 edit === 'name' ? draft.trim() : latest.groupName,
@@ -415,13 +414,13 @@ function Management ({
               if (current()) {
                 setEdit(undefined)
                 await reload(current)
-                setNotice('群资料已更新')
+                setNotice(tr('notice.groupInfoUpdated'))
               }
             })
           }}
         >
           <ProductPromptField
-            placeholder={edit === 'name' ? '群名称' : '写点什么让大家知道'}
+            placeholder={edit === 'name' ? tr('createGroup.name') : tr('manage.announcementPlaceholder')}
             value={draft}
             onChangeText={setDraft}
             multiline={edit === 'notice'}
@@ -431,14 +430,14 @@ function Management ({
       )}
       {exit && (
         <Confirm
-          title={groupPermissions(self).dismiss ? '解散群组？' : '退出群组？'}
-          confirmLabel={groupPermissions(self).dismiss ? '解散' : '退出'}
+          title={groupPermissions(self).dismiss ? tr('manage.dismissTitle') : tr('manage.quitTitle')}
+          confirmLabel={groupPermissions(self).dismiss ? tr('manage.dismissConfirm') : tr('manage.quitConfirm')}
           error={task.error}
           busy={task.busy}
           message={
             groupPermissions(self).dismiss
-              ? '解散后所有成员将失去此群组，且无法恢复。'
-              : '退出后将不再接收此群的消息。'
+              ? tr('manage.dismissMessage')
+              : tr('manage.quitMessage')
           }
           onCancel={() => setExit(false)}
           onConfirm={() => {
@@ -451,13 +450,13 @@ function Management ({
                 (groupPermissions(self).dismiss && !p.dismiss) ||
                 (!groupPermissions(self).dismiss && !p.leave)
               )
-                throw new Error('群成员或权限已变化，请刷新后重试')
+                throw new ProductError('group.permissionChanged')
               if (p.dismiss)
                 await directory.dismiss(groupID)
               else
                 await directory.leave(groupID)
               if (current()) {
-                setNotice(p.dismiss ? '已解散群组' : '已退出群组')
+                setNotice(p.dismiss ? tr('manage.dismissed') : tr('manage.quitDone'))
                 router.replace('/(tabs)/contacts' as Href)
               }
             })

@@ -16,7 +16,7 @@ jest.mock('expo-router', () => ({ useRouter: () => ({ replace: mockReplace, back
 jest.mock('../application/store', () => ({ openConversation: jest.fn(), useOpenIM: () => ({ session: { userID: 'self', imToken: 'token' } }) }))
 jest.mock('../auth/LoginScreen', () => () => null)
 jest.mock('../application/directory', () => ({ directory: { users: jest.fn() } }))
-jest.mock('../ui/preferences', () => ({ useProductLayout: () => ({ desktop: mockDesktop }), useProductScheme: () => 'light' }))
+jest.mock('../ui/preferences', () => ({ useLanguageChoice: () => 'auto', useProductLayout: () => ({ desktop: mockDesktop }), useProductScheme: () => 'light' }))
 jest.mock('../ui/theme', () => ({ useProductTheme: () => mockProductPalette.light }))
 jest.mock('../ui/ProductIcon', () => ({ ProductIcon: () => null }))
 jest.mock('../shared/ProductToast', () => ({ ProductToast: () => null }))

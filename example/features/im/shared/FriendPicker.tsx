@@ -3,12 +3,14 @@ import { Pressable, Text, View } from 'react-native'
 import { directory } from '@/features/im/application/directory'
 import { mergeDirectory, type Person } from '@/features/im/domain/directory'
 import { useTask } from '@/features/im/shared/useTask'
+import { ProductHint } from '../groups/group-ui'
+import { useT } from '../i18n'
 import { ProductAvatar, ProductCard } from '../ui/primitives'
 import { ProductIcon } from '../ui/ProductIcon'
 import { ProductSection, ProductInset, ProductEmpty } from '../ui/ProductPage'
 import { productRowSeparatorStyle } from '../ui/ProductRowSeparator'
 import { useProductTheme } from '../ui/theme'
-import { Action, Label } from './shared'
+import { Action } from './shared'
 
 export function FriendPicker ({
   selected,
@@ -23,6 +25,7 @@ export function FriendPicker ({
   onChange: (ids: string[]) => void
   disabled?: boolean
 }) {
+  const tr = useT()
   const t = useProductTheme()
   const [people, setPeople] = useState<Person[]>([])
   const [offset, setOffset] = useState(0)
@@ -41,11 +44,10 @@ export function FriendPicker ({
   const visible = people.filter(person => !excluded.includes(person.userID))
   return (
     <>
-      <ProductSection>选择好友 · 已选 {selected.length} 人</ProductSection>
+      <ProductSection>{tr('friendPicker.title', { count: selected.length })}</ProductSection>
       {(!inviting || visible.length > 0) && (
         <ProductInset>
           <ProductCard>
-            {!!error && <Label>{error}</Label>}
             {visible.map((person, index, visible) => (
               <Pressable
                 key={person.userID}
@@ -102,17 +104,17 @@ export function FriendPicker ({
                 </View>
               </Pressable>
             ))}
-            {!busy && !inviting && !visible.length && <ProductEmpty title='暂无好友可选择' />}
+            {!busy && !inviting && !visible.length && <ProductEmpty title={tr('friendPicker.noFriends')} />}
           </ProductCard>
         </ProductInset>
       )}
       {inviting && !busy && !visible.length && (
-        <ProductEmpty title='没有可邀请的好友' subtitle='你的好友都已在群里' />
+        <ProductEmpty title={tr('friendPicker.noneToInvite')} subtitle={tr('friendPicker.allInGroup')} />
       )}
-      {inviting && !visible.length && !!error && <Label>{error}</Label>}
+      {!!error && <ProductHint error>{error}</ProductHint>}
       {more && (
         <Action
-          title={busy ? '加载中…' : '加载更多好友'}
+          title={busy ? tr('common.loading') : tr('friendPicker.loadMore')}
           disabled={busy || disabled}
           onPress={() => {
             void run(async current => {

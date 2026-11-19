@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { createServerCallController } from './server-controller.ts'
+import { zhT } from '../i18n/test-modules.mjs'
+import { errorMessage } from '../shared/error-message.ts'
 
 const room = 'imcall-55555555-5555-4555-8555-555555555555'
 
@@ -77,7 +79,7 @@ test('server terminal states end the active call and surface their matching noti
     current = call(status, { ended: 2_000 })
     await controller.poll()
     assert.equal(controller.snapshot().active, undefined, `${status}: terminal call should be removed`)
-    assert.equal(controller.snapshot().notice, notice, `${status}: terminal result should be visible`)
+    assert.equal(zhT(controller.snapshot().notice), notice, `${status}: terminal result should be visible`)
   }
 })
 
@@ -97,12 +99,12 @@ test('heartbeat failures retain a call during the grace period and stop it after
   now = 9_001
   await controller.poll()
   assert.equal(controller.snapshot().active.phase, 'connected')
-  assert.equal(controller.snapshot().error, '')
+  assert.equal(errorMessage(controller.snapshot().error, zhT), '')
 
   now = 16_001
   await controller.poll()
   assert.equal(controller.snapshot().active, undefined)
-  assert.match(controller.snapshot().error, /无法确认服务端通话状态/)
+  assert.match(errorMessage(controller.snapshot().error, zhT), /无法确认服务端通话状态/)
   assert.deepEqual(actions, ['list', 'list', 'heartbeat', 'list', 'heartbeat'])
 })
 
@@ -185,7 +187,7 @@ test('an older poll cannot replace a newer accepted call or resurrect a finished
   staleFinishPoll.resolve([call('accepted', { caller: 'me', callee: 'peer' })])
   await oldFinishPoll
   assert.equal(finishedController.snapshot().active, undefined)
-  assert.equal(finishedController.snapshot().notice, '通话已结束')
+  assert.equal(zhT(finishedController.snapshot().notice), '通话已结束')
 })
 
 test('an accept response arriving after finish cannot revive a rejected call', async () => {
@@ -207,7 +209,7 @@ test('an accept response arriving after finish cannot revive a rejected call', a
   await accepting
 
   assert.equal(controller.snapshot().active, undefined)
-  assert.equal(controller.snapshot().notice, '已拒接通话')
+  assert.equal(zhT(controller.snapshot().notice), '已拒接通话')
 })
 
 test('a group call clears when the server no longer lists the current user as a member', async () => {
@@ -231,5 +233,5 @@ test('a group call clears when the server no longer lists the current user as a 
   await controller.poll()
 
   assert.equal(controller.snapshot().active, undefined)
-  assert.equal(controller.snapshot().notice, '通话已结束')
+  assert.equal(zhT(controller.snapshot().notice), '通话已结束')
 })

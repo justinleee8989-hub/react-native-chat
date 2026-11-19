@@ -1,6 +1,7 @@
 import React from 'react'
 import { KeyboardAvoidingView, Platform, Pressable, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useT } from '../i18n'
 import { useProductLayout } from '../ui/preferences'
 import { ProductHeader } from '../ui/primitives'
 import { ProductModal, useProductOverlayBounds } from '../ui/ProductModal'
@@ -16,6 +17,7 @@ export function ProductPickerModal ({
   onClose: () => void
   busy?: boolean
 }>) {
+  const tr = useT()
   const t = useProductTheme()
   const { desktop } = useProductLayout()
   const bounds = useProductOverlayBounds()
@@ -67,7 +69,7 @@ export function ProductPickerModal ({
                   onPress={close}
                   style={{ padding: 12 }}
                 >
-                  <Text style={{ fontSize: 17, color: t.accent }}>取消</Text>
+                  <Text style={{ fontSize: 17, color: t.accent }}>{tr('common.cancel')}</Text>
                 </Pressable>
               }
             />

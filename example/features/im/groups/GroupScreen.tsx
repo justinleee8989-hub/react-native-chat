@@ -7,6 +7,9 @@ import LoginScreen from '@/features/im/auth/LoginScreen'
 import { type Group, type Person } from '@/features/im/domain/directory'
 import { useTask } from '@/features/im/shared/useTask'
 import { startConversationCall } from '../calls/CallControls'
+import { roleKey } from '../domain/group-management'
+import { useT } from '../i18n'
+import { ProductError } from '../shared/product-error'
 import { useDirectoryEvents } from '../shared/useDirectoryEvents'
 import { ProductCard, ProductRow } from '../ui/primitives'
 import { ProductIcon } from '../ui/ProductIcon'
@@ -28,6 +31,7 @@ export default function GroupScreen () {
   )
 }
 function GroupDetails ({ groupID, userID }: { groupID: string, userID: string }) {
+  const tr = useT()
   const router = useRouter()
   const task = useTask()
   const { run } = task
@@ -44,7 +48,7 @@ function GroupDetails ({ groupID, userID }: { groupID: string, userID: string })
       if (!current())
         return
       if (!info)
-        throw new Error('群组不存在或无法访问')
+        throw new ProductError('group.notFound')
       setGroup(info)
       setMembers(people)
       setSelf(member)
@@ -73,7 +77,7 @@ function GroupDetails ({ groupID, userID }: { groupID: string, userID: string })
         self ? (
           <ProductIconButton
             name='more'
-            label='群管理'
+            label={tr('group.manage')}
             onPress={() =>
               router.push(`/chats/groups/manage?id=${encodeURIComponent(groupID)}` as Href)
             }
@@ -107,10 +111,10 @@ function GroupDetails ({ groupID, userID }: { groupID: string, userID: string })
               {group.groupName}
             </Text>
             <Text style={{ color: t.text2, fontSize: 14, lineHeight: 20, textAlign: 'center' }}>
-              {group.memberCount || members.length} 位成员 ·{' '}
+              {tr('group.memberCountDot', { count: group.memberCount || members.length })}
               {self
-                ? `我是${self.roleLevel === 100 ? '群主' : self.roleLevel === 60 ? '管理员' : '群成员'}`
-                : '未加入'}
+                ? tr('group.myRole', { role: tr(roleKey(self.roleLevel)) })
+                : tr('group.notJoined')}
             </Text>
           </View>
           {self && (
@@ -124,8 +128,8 @@ function GroupDetails ({ groupID, userID }: { groupID: string, userID: string })
               }}
             >
               {[
-                { title: '发消息', icon: 'chat' as const },
-                { title: '音视频通话', icon: 'video' as const },
+                { title: tr('contacts.message'), icon: 'chat' as const },
+                { title: tr('contacts.call'), icon: 'video' as const },
               ].map(action => (
                 <Pressable
                   key={action.title}
@@ -163,7 +167,7 @@ function GroupDetails ({ groupID, userID }: { groupID: string, userID: string })
             </View>
           )}
 
-          <ProductSection>群公告</ProductSection>
+          <ProductSection>{tr('chatInfo.announcement')}</ProductSection>
           <ProductInset>
             <ProductCard>
               <Text
@@ -174,15 +178,15 @@ function GroupDetails ({ groupID, userID }: { groupID: string, userID: string })
                   color: group.notification ? t.text : t.text3,
                 }}
               >
-                {group.notification || '暂无群公告'}
+                {group.notification || tr('group.noAnnouncement')}
               </Text>
             </ProductCard>
           </ProductInset>
-          <ProductSection>基本信息</ProductSection>
+          <ProductSection>{tr('person.basicInfo')}</ProductSection>
           <ProductInset>
             <ProductCard>
               <ProductRow
-                title='群 ID'
+                title={tr('group.id')}
                 trailing={
                   <Text
                     selectable
@@ -195,7 +199,7 @@ function GroupDetails ({ groupID, userID }: { groupID: string, userID: string })
               />
             </ProductCard>
           </ProductInset>
-          <ProductSection>群成员 · {group.memberCount || members.length}</ProductSection>
+          <ProductSection>{tr('group.membersSection', { count: group.memberCount || members.length })}</ProductSection>
           <ProductInset>
             <ProductCard>
               {members.slice(0, 5).map(member => (
@@ -209,7 +213,7 @@ function GroupDetails ({ groupID, userID }: { groupID: string, userID: string })
               ))}
               {(group.memberCount || members.length) > 5 && (
                 <ProductRow
-                  title='查看全部成员'
+                  title={tr('group.viewAllMembers')}
                   onPress={() =>
                     router.push(`/chats/groups/members?id=${encodeURIComponent(groupID)}` as Href)
                   }

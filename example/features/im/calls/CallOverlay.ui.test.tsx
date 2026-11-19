@@ -3,8 +3,9 @@ import { AppState } from 'react-native'
 import { beforeEach, expect, it, jest } from '@jest/globals'
 import { fireEvent, render } from '@testing-library/react-native'
 import { calls } from '../application/store'
+import { ProductError } from '../shared/product-error'
 import CallOverlay from './CallOverlay'
-const mockSnapshot = { active: undefined, notice: '通话已取消', error: '' }
+const mockSnapshot: { active: undefined, notice: string, error: unknown } = { active: undefined, notice: 'call.canceled', error: '' }
 jest.mock('../application/store', () => ({ calls: { snapshot: () => mockSnapshot, subscribe: () => () => {}, tick: () => {}, finish: jest.fn(() => Promise.resolve()), accept: jest.fn(() => Promise.resolve()), setMediaPreference: jest.fn(), dismiss: () => {} }, useOpenIM: () => ({ session: { userID: 'me' }, conversations: [{ conversationID: 'c', userID: 'peer', showName: '真实联系人' }] }) }))
 jest.mock('expo-router', () => ({ useRouter: () => ({ push: () => {} }) }))
 jest.mock('./useRingtone', () => ({ useRingtone: () => () => {} }))
@@ -20,7 +21,7 @@ it('returns directly to chat after a normal call cancellation', async () => {
   expect(view.queryByText('知道了')).toBeNull()
 })
 it('keeps an actionable acknowledgement for real call errors', async () => {
-  mockSnapshot.error = '无法确认服务端通话状态'
+  mockSnapshot.error = new ProductError('call.serverUnconfirmed')
   const view = await render(<CallOverlay />)
   expect(view.getByText('知道了')).toBeTruthy()
   mockSnapshot.error = ''
@@ -29,16 +30,16 @@ it('keeps an actionable acknowledgement for real call errors', async () => {
 beforeEach(() => {
   jest.spyOn(AppState, 'addEventListener').mockReturnValue({ remove: () => {} })
   mockSnapshot.active = undefined
-  mockSnapshot.notice = '通话已取消'
+  mockSnapshot.notice = 'call.canceled'
   mockSnapshot.error = ''
   jest.mocked(calls.accept).mockClear()
   jest.mocked(calls.finish).mockClear()
 })
 it('keeps the server disconnection notice visible', async () => {
-  mockSnapshot.notice = '连接中断，通话已结束'
+  mockSnapshot.notice = 'call.droppedEnded'
   const view = await render(<CallOverlay />)
   expect(view.getByText('知道了')).toBeTruthy()
-  mockSnapshot.notice = '通话已取消'
+  mockSnapshot.notice = 'call.canceled'
 })
 
 const mockCall = (phase: 'incoming' | 'outgoing') => ({

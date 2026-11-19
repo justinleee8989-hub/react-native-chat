@@ -5,6 +5,7 @@ import LoginScreen from '@/features/im/auth/LoginScreen'
 import type { Conversation, IMMessage } from '@/features/im/domain/types'
 import { Confirm } from '@/features/im/shared/shared'
 import { useTask } from '@/features/im/shared/useTask'
+import { useT } from '../i18n'
 import { ProductAvatar } from '../ui/primitives'
 import { ProductListRow } from '../ui/ProductListRow'
 import { useProductTheme } from '../ui/theme'
@@ -23,6 +24,7 @@ export default function ForwardPicker (props: Props) {
 }
 
 function SessionForwardPicker ({ message, onClose }: Props) {
+  const tr = useT()
   const state = useOpenIM()
   const t = useProductTheme()
   const task = useTask()
@@ -33,7 +35,7 @@ function SessionForwardPicker ({ message, onClose }: Props) {
   }
   const conversations = state.conversations
   return (
-    <ProductPickerModal title='转发给' onClose={close} busy={task.busy}>
+    <ProductPickerModal title={tr('forward.to')} onClose={close} busy={task.busy}>
       {!!task.error && (
         <Text accessibilityRole='alert' style={{ color: t.danger, padding: 16 }}>
           {task.error}
@@ -71,7 +73,7 @@ function SessionForwardPicker ({ message, onClose }: Props) {
               paddingHorizontal: 40,
             }}
           >
-            暂无会话
+            {tr('forward.noChats')}
           </Text>
         )}
       </ScrollView>
@@ -79,8 +81,8 @@ function SessionForwardPicker ({ message, onClose }: Props) {
         <Confirm
           error={task.error}
           danger={false}
-          confirmLabel='转发'
-          title={`转发给 ${target.showName}？`}
+          confirmLabel={tr('forward.action')}
+          title={tr('forward.confirmTitle', { name: target.showName })}
           message=''
           busy={task.busy}
           onCancel={() => setTarget(undefined)}

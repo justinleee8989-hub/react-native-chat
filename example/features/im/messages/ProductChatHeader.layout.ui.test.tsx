@@ -7,7 +7,7 @@ import { ProductChatHeader } from './ProductChatHeader'
 jest.mock('expo-router', () => ({ useRouter: () => ({ push: jest.fn(), canGoBack: () => false }) }))
 jest.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 0, right: 0, bottom: 0, left: 0 }) }))
 jest.mock('../navigation/DesktopNavigation', () => ({ useDesktopNavigation: () => null }))
-jest.mock('../ui/preferences', () => ({ useProductLayout: () => ({ desktop: true }) }))
+jest.mock('../ui/preferences', () => ({ useLanguageChoice: () => 'auto', useProductLayout: () => ({ desktop: true }) }))
 jest.mock('../ui/theme', () => ({ useProductTheme: () => ({ page: '#page', bg: '#surface', line: '#line', text: '#text', text3: '#muted', accent: '#accent' }) }))
 jest.mock('../ui/primitives', () => {
   const Native = require('react-native')

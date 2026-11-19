@@ -2,7 +2,9 @@ import React, { useEffect, useRef, useState } from 'react'
 import type { TextInput } from 'react-native'
 import { useLocalSearchParams, useNavigation, useRouter, type Href } from 'expo-router'
 import { login, useOpenIM } from '../application/store'
+import { useT } from '../i18n'
 import { type NavigationWithTransitions, onOpeningTransition } from '../navigation/opening-transition'
+import { errorMessage } from '../shared/error-message'
 import {
   AuthButton,
   AuthField,
@@ -13,6 +15,7 @@ import {
 } from './AuthForm'
 
 export default function LoginScreen () {
+  const tr = useT()
   const router = useRouter()
   const params = useLocalSearchParams<{ email?: string }>()
   const state = useOpenIM()
@@ -54,10 +57,10 @@ export default function LoginScreen () {
       void login(account.trim(), password)
   }
   return (
-    <AuthPage title='欢迎回来' subtitle='登录你的账户，继续与朋友保持联系。'>
+    <AuthPage title={tr('auth.welcomeBack')} subtitle={tr('auth.loginSubtitle')}>
       <AuthField
-        label='邮箱账号'
-        placeholder='邮箱账号'
+        label={tr('auth.emailAccount')}
+        placeholder={tr('auth.emailAccount')}
         keyboardType='email-address'
         autoComplete='email'
         value={account}
@@ -65,8 +68,8 @@ export default function LoginScreen () {
         editable={!state.busy}
       />
       <AuthField
-        label='密码'
-        placeholder='密码'
+        label={tr('auth.password')}
+        placeholder={tr('auth.password')}
         password
         reveal
         autoComplete='current-password'
@@ -78,16 +81,16 @@ export default function LoginScreen () {
         returnKeyType='go'
         onSubmitEditing={submit}
       />
-      {!!state.error && <AuthNotice error>{state.error}</AuthNotice>}
+      {!!state.error && <AuthNotice error>{errorMessage(state.error, tr)}</AuthNotice>}
       <AuthButton
-        title={state.busy ? '正在连接…' : '登录'}
+        title={state.busy ? tr('auth.connecting') : tr('auth.signIn')}
         busy={state.busy}
         disabled={!account.trim() || !password}
         onPress={submit}
       />
       <AuthLinks>
-        <AuthLink title='忘记密码？' disabled={state.busy} onPress={() => navigate('reset')} />
-        <AuthLink title='注册新账户' disabled={state.busy} onPress={() => navigate('register')} />
+        <AuthLink title={tr('auth.forgotPassword')} disabled={state.busy} onPress={() => navigate('reset')} />
+        <AuthLink title={tr('auth.register')} disabled={state.busy} onPress={() => navigate('register')} />
       </AuthLinks>
     </AuthPage>
   )

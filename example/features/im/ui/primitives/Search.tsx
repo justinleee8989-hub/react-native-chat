@@ -1,11 +1,13 @@
 import React from 'react'
 import { Platform, TextInput, View, type TextStyle, type TextInputProps } from 'react-native'
+import { useT } from '../../i18n'
 import { useProductLayout } from '../preferences'
 import { ProductIcon } from '../ProductIcon'
 import { useProductTheme } from '../theme'
 import { styles } from './styles'
 
 export function ProductSearch ({ side = false, ...props }: TextInputProps & { side?: boolean }) {
+  const tr = useT()
   const { desktop } = useProductLayout()
   const t = useProductTheme()
   return (
@@ -17,7 +19,7 @@ export function ProductSearch ({ side = false, ...props }: TextInputProps & { si
     >
       <ProductIcon name='search' size={20} color={t.text3} />
       <TextInput
-        accessibilityLabel={props.placeholder || '搜索'}
+        accessibilityLabel={props.placeholder || tr('chats.search')}
         placeholderTextColor={t.text3}
         {...props}
         style={[

@@ -1,6 +1,7 @@
 import React from 'react'
 import { ScrollView, StyleSheet, Text, View } from 'react-native'
 import type { ContextMenuProps } from '@kesha-antonov/react-native-chat'
+import { useT } from '../i18n'
 import { useProductLayout } from '../ui/preferences'
 import { ProductIcon } from '../ui/ProductIcon'
 import { ProductModal, useProductOverlayBounds } from '../ui/ProductModal'
@@ -17,6 +18,7 @@ const icons = {
   retry: 'retry',
 } as const
 export function ProductContextMenu (props: ContextMenuProps) {
+  const tr = useT()
   const t = useProductTheme()
   const { desktop } = useProductLayout()
   const bounds = useProductOverlayBounds()
@@ -47,7 +49,7 @@ export function ProductContextMenu (props: ContextMenuProps) {
       <View style={{ flex: 1, backgroundColor: t.scrim }}>
         <Pressable
           accessibilityRole='button'
-          accessibilityLabel='关闭消息菜单'
+          accessibilityLabel={tr('message.closeMenu')}
           onPress={props.onDismiss}
           style={StyleSheet.absoluteFill}
         />

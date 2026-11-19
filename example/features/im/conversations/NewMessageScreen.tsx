@@ -5,6 +5,8 @@ import { directory } from '../application/directory'
 import { openConversation, useOpenIM } from '../application/store'
 import LoginScreen from '../auth/LoginScreen'
 import { ProductHint, SettingField } from '../groups/group-ui'
+import { useT } from '../i18n'
+import { ProductError } from '../shared/product-error'
 import { useTask } from '../shared/useTask'
 import { ProductButton, ProductCard } from '../ui/primitives'
 import { ProductInset, ProductPage, ProductSection } from '../ui/ProductPage'
@@ -18,6 +20,7 @@ export default function NewMessageScreen () {
   )
 }
 function NewMessage ({ self }: { self: string }) {
+  const tr = useT()
   const router = useRouter()
   const [userID, setUserID] = useState('')
   const task = useTask()
@@ -30,19 +33,19 @@ function NewMessage ({ self }: { self: string }) {
       if (!current())
         return
       if (!person)
-        throw new Error('没有找到该用户，请检查用户 ID 是否完整、正确。')
+        throw new ProductError('newChat.notFound')
       const id = await openConversation(target)
       if (current())
         router.replace(`/chats/${encodeURIComponent(id)}` as Href)
     })
   }
   return (
-    <ProductPage title='发起聊天' {...task} alwaysShowBack backHref='/(tabs)/chats'>
-      <ProductSection>输入已注册的用户 ID</ProductSection>
+    <ProductPage title={tr('newChat.title')} {...task} alwaysShowBack backHref='/(tabs)/chats'>
+      <ProductSection>{tr('newChat.heading')}</ProductSection>
       <ProductInset>
         <ProductCard>
           <SettingField
-            placeholder='用户 ID'
+            placeholder={tr('person.userID')}
             value={userID}
             onChangeText={setUserID}
             editable={!task.busy}
@@ -53,10 +56,10 @@ function NewMessage ({ self }: { self: string }) {
           />
         </ProductCard>
       </ProductInset>
-      <ProductHint>请输入对方的完整用户 ID。</ProductHint>
+      <ProductHint>{tr('newChat.hint')}</ProductHint>
       <View style={{ marginHorizontal: 16, marginTop: 24 }}>
         <ProductButton
-          title={task.busy ? '正在打开…' : '打开会话'}
+          title={task.busy ? tr('newChat.opening') : tr('newChat.open')}
           disabled={task.busy || !userID.trim() || userID.trim() === self}
           onPress={start}
         />

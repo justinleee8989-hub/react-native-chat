@@ -1,0 +1,9 @@
+{
+  "ios": {
+    "NSCameraUsageDescription": "需要使用相机，用于拍照、录制视频消息和扫描二维码。",
+    "NSMicrophoneUsageDescription": "需要使用麦克风，用于录制语音和视频消息。",
+    "NSPhotoLibraryUsageDescription": "需要访问相册，用于发送照片和在附件菜单中显示最近的照片。",
+    "NSPhotoLibraryAddUsageDescription": "用于把你选择的照片保存到相册。",
+    "NSLocationWhenInUseUsageDescription": "需要获取你的位置，用于在聊天中发送位置。"
+  }
+}

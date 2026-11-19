@@ -1,4 +1,5 @@
 import type { IMMessage, LocationInput } from '../domain/types'
+import { ProductError } from '../shared/product-error.ts'
 
 export function readReply (message: IMMessage): IMMessage | undefined {
   try {
@@ -37,9 +38,9 @@ export function attachReply (message: IMMessage, reply?: IMMessage): IMMessage {
 
 export function validateLocation (location: LocationInput): LocationInput {
   if (!Number.isFinite(location.latitude) || Math.abs(location.latitude) > 90 || !Number.isFinite(location.longitude) || Math.abs(location.longitude) > 180)
-    throw new Error('请输入有效经纬度：纬度 -90～90，经度 -180～180')
+    throw new ProductError('location.invalidRange')
   if (!location.description.trim())
-    throw new Error('请输入地点名称')
+    throw new ProductError('location.enterName')
   return { ...location, description: location.description.trim().slice(0, 500) }
 }
 

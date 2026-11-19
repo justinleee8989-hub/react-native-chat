@@ -3,13 +3,14 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { runInNewContext } from 'node:vm'
 import ts from 'typescript'
+import { withI18n } from '../../i18n/test-modules.mjs'
 
 function setup () {
   const values = new Map()
   const exports = {}
   const draftStorage = { getItem: async key => values.get(key) || null, setItem: async (key, value) => { values.set(key, value) } }
   const source = readFileSync(new URL('./composer-storage.ts', import.meta.url), 'utf8')
-  runInNewContext(ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText, { exports, require: () => ({ draftStorage }), Map, Set, JSON, Promise, encodeURIComponent, Error })
+  runInNewContext(ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText, { exports, require: withI18n(() => ({ draftStorage })), Map, Set, JSON, Promise, encodeURIComponent, Error })
   return exports
 }
 test('simultaneous local text and mentions writes preserve both fields', async () => {

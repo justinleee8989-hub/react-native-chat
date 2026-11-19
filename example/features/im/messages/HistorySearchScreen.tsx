@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router'
 import { useOpenIM } from '@/features/im/application/store'
 import LoginScreen from '@/features/im/auth/LoginScreen'
 import { HeaderAction, ProductHint } from '../groups/group-ui'
+import { useT } from '../i18n'
 import { ProductAvatar, ProductSearch } from '../ui/primitives'
 import { ProductEmpty, ProductPage, ProductSection } from '../ui/ProductPage'
 import { useProductTheme } from '../ui/theme'
@@ -18,6 +19,7 @@ export default function HistorySearchScreen ({ id }: { id: string }) {
 }
 
 function SessionHistorySearch ({ id }: { id: string }) {
+  const tr = useT()
   const state = useOpenIM()
   const t = useProductTheme()
   const router = useRouter()
@@ -26,7 +28,7 @@ function SessionHistorySearch ({ id }: { id: string }) {
   const conversation = state.conversations.find(item => item.conversationID === id)
   return (
     <ProductPage
-      title='搜索聊天记录'
+      title={tr('chatInfo.searchHistory')}
       white
       {...task}
       backHref='/chats'
@@ -34,24 +36,24 @@ function SessionHistorySearch ({ id }: { id: string }) {
         <ProductSearch
           value={query}
           onChangeText={setQuery}
-          placeholder='输入关键词'
+          placeholder={tr('search.placeholder')}
           returnKeyType='search'
           onSubmitEditing={() => search()}
         />
       }
     >
-      {!!task.error && <HeaderAction title='重试搜索' onPress={() => search()} />}
+      {!!task.error && <HeaderAction title={tr('search.retry')} onPress={() => search()} />}
       {!searched && !task.error && (
-        <ProductEmpty title={`搜索 ${conversation?.showName || '此会话'} 的聊天记录`} />
+        <ProductEmpty title={tr('search.prompt', { name: conversation?.showName || tr('search.thisChat') })} />
       )}
       {!!searched &&
         !task.error &&
         (messages.length ? (
-          <ProductSection variant='list'>找到 {messages.length} 条相关消息</ProductSection>
+          <ProductSection variant='list'>{tr('search.found', { count: messages.length })}</ProductSection>
         ) : hasMore ? (
-          <ProductHint>本段记录没有匹配消息，可继续搜索更早记录</ProductHint>
+          <ProductHint>{tr('search.noneHere')}</ProductHint>
         ) : (
-          <ProductEmpty title='未找到匹配消息' />
+          <ProductEmpty title={tr('search.none')} />
         ))}
       {messages.map((message, index) => {
         const snippet =
@@ -60,12 +62,12 @@ function SessionHistorySearch ({ id }: { id: string }) {
           message.atTextElem?.text ??
           message.quoteElem?.text ??
           ''
-        const name = message.senderNickname || message.sendID || '未知联系人'
+        const name = message.senderNickname || message.sendID || tr('message.unknownSender')
         return (
           <Pressable
             key={message.clientMsgID}
             accessibilityRole='button'
-            accessibilityLabel={`查看消息：${snippet}`}
+            accessibilityLabel={tr('search.viewMessage', { text: snippet })}
             onPress={() =>
               router.dismissTo({
                 pathname: '/chats/[id]',
@@ -111,7 +113,7 @@ function SessionHistorySearch ({ id }: { id: string }) {
                   {name}
                 </Text>
                 <Text style={{ fontSize: 12, color: t.text3 }}>
-                  {message.sendTime ? shortTime(message.sendTime) : ''}
+                  {message.sendTime ? shortTime(message.sendTime, tr) : ''}
                 </Text>
               </View>
               <Text numberOfLines={1} style={{ flex: 1, fontSize: 15, lineHeight: 20, color: t.text }}>
@@ -122,7 +124,7 @@ function SessionHistorySearch ({ id }: { id: string }) {
         )
       })}
       {hasMore && (
-        <HeaderAction title='继续搜索更早记录' disabled={task.busy} onPress={() => search(true)} />
+        <HeaderAction title={tr('search.earlier')} disabled={task.busy} onPress={() => search(true)} />
       )}
     </ProductPage>
   )

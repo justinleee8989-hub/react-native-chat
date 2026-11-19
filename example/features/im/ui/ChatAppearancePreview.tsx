@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 import Animated, { FadeIn } from 'react-native-reanimated'
+import { useT } from '../i18n'
 import { chatThemeOf, sentFillStyle, type ChatThemeId } from './chat-theme'
 import type { ChatWallpaperId } from './chat-wallpaper'
 import { ChatWallpaperOf, useResolvedChatWallpaper } from './ChatWallpaperView'
@@ -17,6 +18,7 @@ export function ChatAppearancePreview ({ wallpaper, theme, height = 170, childre
   theme: ChatThemeId
   height?: number
 }>) {
+  const tr = useT()
   const t = useProductTheme()
   const preset = chatThemeOf(theme)
   const look = preset[useProductScheme()]
@@ -29,7 +31,7 @@ export function ChatAppearancePreview ({ wallpaper, theme, height = 170, childre
     setLayers({ under: layers.over, over: wallpaper })
   return (
     <View style={[styles.frame, { borderColor: t.line, backgroundColor: t.bg }]}>
-      <View accessible accessibilityLabel='聊天外观预览' style={{ height }}>
+      <View accessible accessibilityLabel={tr('appearance.previewLabel')} style={{ height }}>
         <ChatWallpaperOf id={layers.under} />
         <Animated.View key={layers.over} entering={FadeIn.duration(240)} style={StyleSheet.absoluteFill}>
           <ChatWallpaperOf id={layers.over} />
@@ -41,7 +43,7 @@ export function ChatAppearancePreview ({ wallpaper, theme, height = 170, childre
               { color: hasWallpaper ? t.text2 : t.text3, backgroundColor: hasWallpaper ? t.bar : 'transparent' },
             ]}
           >
-            今天
+            {tr('common.today')}
           </Text>
           <View
             style={[
@@ -50,11 +52,11 @@ export function ChatAppearancePreview ({ wallpaper, theme, height = 170, childre
               { backgroundColor: t.bubble, borderRadius: preset.radius, borderBottomLeftRadius: preset.corner },
             ]}
           >
-            <Text style={[styles.text, { color: t.text }]}>换了新主题，看看效果？</Text>
+            <Text style={[styles.text, { color: t.text }]}>{tr('appearance.previewIncoming')}</Text>
             <Text style={[styles.time, { color: t.text3 }]}>09:41</Text>
           </View>
           <View style={[styles.bubble, styles.outgoing, sentFillStyle(look), shape]}>
-            <Text style={[styles.text, { color: look.text }]}>很好看，就用这个吧</Text>
+            <Text style={[styles.text, { color: look.text }]}>{tr('appearance.previewOutgoing')}</Text>
             <Text style={[styles.time, { color: look.meta }]}>09:42 <Text style={{ color: look.ticks ?? look.meta }}>✓✓</Text></Text>
           </View>
         </View>

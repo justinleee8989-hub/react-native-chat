@@ -8,5 +8,6 @@ module.exports = {
   moduleNameMapper: {
     '^react$': '<rootDir>/node_modules/react',
     '^@/(.*)$': '<rootDir>/example/$1',
+    '^expo-localization$': '<rootDir>/example/features/im/i18n/expo-localization.jest.ts',
   },
 }

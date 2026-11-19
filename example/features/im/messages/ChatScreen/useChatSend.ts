@@ -1,20 +1,22 @@
 import { useCallback } from 'react'
 import type { IMessage, ReplyMessage } from '@kesha-antonov/react-native-chat'
 import { reportError, sendMedia, sendPreparedChecked, sendQuote, sendTextChecked } from '../../application/store'
+import type { MessageKey } from '../../i18n'
+import { ProductError } from '../../shared/product-error.ts'
 import type { useComposerEnhancements } from '../ComposerEnhancements'
 
 /** Sends what the composer produced: a voice note, a quoted reply, or text with its @mentions. */
 export function useChatSend ({ id, composer, accessNotice, accessError, setReply }: {
   id: string
   composer: ReturnType<typeof useComposerEnhancements>
-  accessNotice: string
-  accessError: string
+  accessNotice: MessageKey | ''
+  accessError: unknown
   setReply: (reply: ReplyMessage | null) => void
 }) {
   return useCallback(
     (messages: IMessage[]) => {
       if (accessNotice || accessError) {
-        reportError(accessError || accessNotice)
+        reportError(accessError || new ProductError(accessNotice || 'error.generic'))
         return
       }
       messages.forEach(message => {

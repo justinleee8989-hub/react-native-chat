@@ -1,6 +1,7 @@
 import React from 'react'
 import { beforeEach, expect, it, jest } from '@jest/globals'
 import { render } from '@testing-library/react-native'
+import { ProductError } from '../shared/product-error'
 import LoginScreen from './LoginScreen'
 
 let mockState: Record<string, unknown>
@@ -46,7 +47,7 @@ beforeEach(() => {
 })
 
 it('fills in the last account after an expired login, asking only the password', async () => {
-  mockState = { ...mockState, lastAccount: last, error: '登录已失效，请重新登录' }
+  mockState = { ...mockState, lastAccount: last, error: new ProductError('session.expired') }
   const view = await render(<LoginScreen />)
   expect(view.getByLabelText('邮箱账号').props.value).toBe('alice@example.com')
   expect(view.getByLabelText('密码').props.autoFocus).toBe(true)

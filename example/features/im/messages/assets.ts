@@ -1,4 +1,5 @@
 import type { IMMessage } from '../domain/types'
+import { ProductError } from '../shared/product-error.ts'
 import type { MessageExtra } from './extras'
 
 export type ConversationAssetKind = 'image' | 'file' | 'link'
@@ -77,7 +78,7 @@ export function extractAssets (
     if (message.contentType === 102) {
       const uri = imageSource(message)
       if (uri)
-        assets.push({ id: `image:${id}`, kind: 'image', messageID: id, sendTime, senderName, uri, title: '图片' })
+        assets.push({ id: `image:${id}`, kind: 'image', messageID: id, sendTime, senderName, uri, title: '' })
     }
     if (message.contentType === 105 && message.fileElem)
       assets.push({
@@ -87,7 +88,7 @@ export function extractAssets (
         messageID: id,
         sendTime,
         uri: safeExternalHttpURL(message.fileElem.sourceUrl),
-        title: message.fileElem.fileName || '文件',
+        title: message.fileElem.fileName || '',
         size: message.fileElem.fileSize,
       })
     if ([101, 106, 114].includes(message.contentType))
@@ -105,17 +106,17 @@ export function createAssetsPager (dependencies: AssetsPagerDependencies) {
   return {
     async loadNext (conversationID: string): Promise<{ assets: ConversationAsset[], done: boolean }> {
       if (!dependencies.isCurrent())
-        throw new Error('登录或页面已变化，请重新打开汇总页')
+        throw new ProductError('assets.pageChanged')
       if (done)
         return { assets: [], done: true }
       const requestedCursor = cursor
       const page = await dependencies.history(conversationID, requestedCursor)
       if (!dependencies.isCurrent())
-        throw new Error('登录或页面已变化，请重新打开汇总页')
+        throw new ProductError('assets.pageChanged')
       const messages = page.messageList || []
       if (!messages.length) {
         if (!page.isEnd)
-          throw new Error('本机历史分页未返回消息，请重试')
+          throw new ProductError('assets.noLocalPage')
         done = true
         return { assets: [], done }
       }
@@ -125,7 +126,7 @@ export function createAssetsPager (dependencies: AssetsPagerDependencies) {
       )
       const nextCursor = ordered[0]?.clientMsgID
       if (!page.isEnd && (!nextCursor || nextCursor === requestedCursor || seenCursors.has(nextCursor)))
-        throw new Error('本机历史分页游标未前进，请返回聊天后重试')
+        throw new ProductError('assets.cursorStuck')
       const unique = [...new Map(messages
         .filter(message => message.clientMsgID && !seenMessageIDs.has(message.clientMsgID))
         .map(message => [message.clientMsgID, message])).values()]
@@ -134,7 +135,7 @@ export function createAssetsPager (dependencies: AssetsPagerDependencies) {
         .map(message => message.clientMsgID)
       const extras = textIDs.length ? await dependencies.project(conversationID, textIDs) : {}
       if (!dependencies.isCurrent())
-        throw new Error('登录或页面已变化，请重新打开汇总页')
+        throw new ProductError('assets.pageChanged')
       const assets = extractAssets(unique, extras)
       unique.forEach(message => seenMessageIDs.add(message.clientMsgID))
       if (page.isEnd) {

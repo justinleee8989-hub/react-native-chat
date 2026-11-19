@@ -1,5 +1,6 @@
 import type { getSDK } from '@openim/wasm-client-sdk'
 import type { MediaInput } from '../../domain/types'
+import { ProductError } from '../../shared/product-error.ts'
 
 async function videoSnapshot (uri: string) {
   const video = document.createElement('video')
@@ -7,14 +8,14 @@ async function videoSnapshot (uri: string) {
   video.preload = 'auto'
   try {
     await new Promise<void>((resolve, reject) => {
-      const timer = setTimeout(() => reject(new Error('视频预览加载超时')), 20000)
+      const timer = setTimeout(() => reject(new ProductError('media.previewTimeout')), 20000)
       video.onloadeddata = () => {
         clearTimeout(timer)
         resolve()
       }
       video.onerror = () => {
         clearTimeout(timer)
-        reject(new Error('无法读取视频'))
+        reject(new ProductError('media.videoUnreadable'))
       }
       video.src = uri
     })
@@ -23,11 +24,11 @@ async function videoSnapshot (uri: string) {
     canvas.height = video.videoHeight
     const context = canvas.getContext('2d')
     if (!context)
-      throw new Error('无法创建视频预览')
+      throw new ProductError('media.previewFailed')
     context.drawImage(video, 0, 0)
     const blob = await new Promise<Blob>((resolve, reject) =>
       canvas.toBlob(
-        value => (value ? resolve(value) : reject(new Error('无法创建视频预览'))),
+        value => (value ? resolve(value) : reject(new ProductError('media.previewFailed'))),
         'image/jpeg'
       )
     )
@@ -46,7 +47,7 @@ async function videoSnapshot (uri: string) {
 export async function createWebMedia (sdk: ReturnType<typeof getSDK>, media: MediaInput) {
   const response = await fetch(media.uri)
   if (!response.ok)
-    throw new Error('无法读取附件，请重新选择文件')
+    throw new ProductError('media.attachmentUnreadable')
   const blob = await response.blob()
   const mime = media.mimeType || blob.type
   const extension = mime.split('/')[1]?.split(';')[0] || 'bin'

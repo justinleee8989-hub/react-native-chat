@@ -1,12 +1,16 @@
 import type { IMMessage } from '../domain/types'
+import type { MessageKey, Translate } from '../i18n/translate.ts'
+import { ProductError } from '../shared/product-error.ts'
 import { formatCallDuration, terminalMetadata, type TerminalMetadata } from './terminal-metadata.ts'
 
 export type SignalKind = 'invite' | 'accept' | 'reject' | 'busy' | 'cancel' | 'end' | 'missed' | 'disconnected'
 export interface CallSignal extends Partial<TerminalMetadata> { room: string, expires: number, kind: SignalKind, name?: string }
 export interface ActiveCall extends CallSignal { peer: string, phase: 'incoming' | 'outgoing' | 'accepting' | 'connected' }
-interface CallState { active?: ActiveCall, error: string, notice: string }
-const prefix = '[OpenIM 呼叫] '
-const labels: Record<SignalKind, string> = { invite: '音视频来电', accept: '已接听通话', reject: '已拒接通话', busy: '对方正在通话', cancel: '通话已取消', end: '通话已结束', missed: '未接通话', disconnected: '通话中断' }
+/** `notice` names what happened to the last call; `error` is a failure, put into words by the screen. */
+interface CallState { active?: ActiveCall, error: unknown, notice: MessageKey | '' }
+// Wire format the chat server also matches: never shown, never translated.
+const prefix = '[OpenIM 呼叫] ' // i18n-ignore
+const labels: Record<SignalKind, MessageKey> = { invite: 'call.incoming', accept: 'call.answered', reject: 'call.rejected', busy: 'call.peerBusy', cancel: 'call.canceled', end: 'call.ended', missed: 'call.missed', disconnected: 'call.interrupted' }
 export function encodeSignal (signal: CallSignal) {
   return prefix + JSON.stringify(signal)
 }
@@ -22,9 +26,9 @@ export function parseSignal (text: string): CallSignal | undefined {
       return { ...metadata, room: value.room, expires: value.expires, kind: value.kind, name: typeof value.name === 'string' ? value.name.slice(0, 80) : undefined }
   } catch { /* Non-protocol text remains an ordinary message. */ }
 }
-export function signalSummary (text: string) {
+export function signalSummary (text: string, tr: Translate) {
   const signal = parseSignal(text)
-  return signal ? [labels[signal.kind], signal.connectedAt ? formatCallDuration(signal.durationSeconds) : ''].filter(Boolean).join(' ') : text
+  return signal ? [tr(labels[signal.kind]), signal.connectedAt ? formatCallDuration(signal.durationSeconds) : ''].filter(Boolean).join(' ') : text
 }
 export function createCallController ({ send, now = Date.now }: { send: (peer: string, signal: CallSignal) => Promise<void>, now?: () => number }) {
   let state: CallState = { error: '', notice: '' }
@@ -35,7 +39,7 @@ export function createCallController ({ send, now = Date.now }: { send: (peer: s
   const update = (patch: Partial<CallState>) => {
     state = { ...state, ...patch }; listeners.forEach(listener => listener())
   }
-  const report = (error: unknown) => update({ error: error instanceof Error ? error.message : '通话信令发送失败，请检查连接' })
+  const report = (error: unknown) => update({ error: error || new ProductError('call.signalFailed') })
   const transmit = async (call: ActiveCall, kind: SignalKind) => {
     const generation = epoch
     try {
@@ -56,7 +60,7 @@ export function createCallController ({ send, now = Date.now }: { send: (peer: s
   return {
     reserveRoom (room: string) {
       if (room && (state.active || (reservedRoom && reservedRoom !== room)))
-        throw new Error('已有通话正在进行')
+        throw new ProductError('call.alreadyActive')
       reservedRoom = room
     },
     releaseRoom (room: string) {
@@ -75,9 +79,9 @@ export function createCallController ({ send, now = Date.now }: { send: (peer: s
     dismiss: () => update({ notice: '', error: '' }),
     async start (peer: string, name: string, room: string) {
       if (!self || !peer || peer === self)
-        throw new Error('请选择另一位联系人发起通话')
+        throw new ProductError('call.pickAnother')
       if (state.active || reservedRoom)
-        throw new Error('已有通话正在进行')
+        throw new ProductError('call.alreadyActive')
       const call: ActiveCall = { peer, name, room, expires: now() + 45_000, kind: 'invite', phase: 'outgoing' }
       update({ active: call, error: '', notice: '' })
       try {

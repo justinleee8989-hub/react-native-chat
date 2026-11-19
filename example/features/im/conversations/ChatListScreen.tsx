@@ -3,7 +3,6 @@ import { Pressable, Text, View } from 'react-native'
 import { ChatList, type ChatListItem } from '@kesha-antonov/react-native-chat'
 import { type Href, useFocusEffect, usePathname, useRouter } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { offlineStatus } from '../application/connection-status'
 import {
   refresh,
   prefetchConversationHistory,
@@ -16,11 +15,13 @@ import {
 } from '../application/store'
 import { parseCallInvitation } from '../calls/invitation'
 import { toChat } from '../domain/model'
+import { useT } from '../i18n'
 import { useDesktopNavigation, useMasterNavigation } from '../navigation/DesktopNavigation'
 import { traceChatEntry } from '../navigation/entry-performance'
 import { useStartupReadiness } from '../navigation/StartupReadiness'
 import { useChatEntry } from '../navigation/useChatEntry'
 import { ConnectionStatus } from '../shared/ConnectionStatus'
+import { errorMessage } from '../shared/error-message'
 import { Confirm } from '../shared/shared'
 import { useTask } from '../shared/useTask'
 import { useProductLayout, useProductScheme } from '../ui/preferences'
@@ -51,6 +52,7 @@ export default function ChatListScreen ({
   ) : null
 }
 function SessionChatList ({ archived, autoRefresh }: { archived: boolean, autoRefresh: boolean }) {
+  const tr = useT()
   const router = useRouter()
   const openMaster = useMasterNavigation()
   const navigation = useDesktopNavigation()
@@ -106,9 +108,9 @@ function SessionChatList ({ archived, autoRefresh }: { archived: boolean, autoRe
   if (!state.session)
     return null
   const chats = state.conversations.map(conversation => {
-    const chat = toChat(conversation, state.session?.userID)
+    const chat = toChat(conversation, tr, state.session?.userID)
     if (chat.lastMessage && parseCallInvitation(chat.lastMessage.text))
-      chat.lastMessage = { ...chat.lastMessage, text: '音视频通话邀请' }
+      chat.lastMessage = { ...chat.lastMessage, text: tr('chats.callInvitation') }
     return chat
   })
   const shown = chats.filter(
@@ -147,22 +149,22 @@ function SessionChatList ({ archived, autoRefresh }: { archived: boolean, autoRe
     return [
       {
         icon: 'pin' as const,
-        title: pinned ? '取消置顶' : '置顶',
+        title: pinned ? tr('chats.unpin') : tr('chats.pin'),
         press: () => run(() => setPinned(ids, !pinned)),
       },
       {
         icon: 'bellOff' as const,
-        title: muted ? '关闭免打扰' : '免打扰',
+        title: muted ? tr('chats.unmute') : tr('chats.mute'),
         press: () => run(() => setMuted(ids, !muted)),
       },
       {
         icon: 'archive' as const,
-        title: archived ? '取消归档' : '归档',
+        title: archived ? tr('chats.unarchive') : tr('chats.archive'),
         press: () => run(() => setArchived(ids, !archived)),
       },
       {
         icon: 'trash' as const,
-        title: '删除会话',
+        title: tr('chatInfo.deleteChat'),
         press: () => {
           setMenu(undefined)
           setDeleting(ids)
@@ -191,9 +193,9 @@ function SessionChatList ({ archived, autoRefresh }: { archived: boolean, autoRe
             }}
           >
             <Pressable onPress={() => setSelected(null)}>
-              <Text style={{ color: t.accent }}>取消</Text>
+              <Text style={{ color: t.accent }}>{tr('common.cancel')}</Text>
             </Pressable>
-            <Text style={{ color: t.text }}>已选择 {picked.length} 项</Text>
+            <Text style={{ color: t.text }}>{tr('chats.selectedCount', { count: picked.length })}</Text>
             <Pressable
               onPress={() =>
                 setSelected(
@@ -202,14 +204,14 @@ function SessionChatList ({ archived, autoRefresh }: { archived: boolean, autoRe
               }
             >
               <Text style={{ color: t.accent }}>
-                {picked.length === shown.length ? '全不选' : '全选'}
+                {picked.length === shown.length ? tr('chats.selectNone') : tr('chats.selectAll')}
               </Text>
             </Pressable>
           </View>
         ) : (
           <ProductHeader
             detail={archived}
-            title={archived ? '已归档会话' : '消息'}
+            title={archived ? tr('chats.archived') : tr('tab.chats')}
             large={!archived}
             backgroundColor={t.page}
             onBack={
@@ -219,17 +221,17 @@ function SessionChatList ({ archived, autoRefresh }: { archived: boolean, autoRe
             }
             right={
               !archived && (
-                <ProductIconButton name='compose' label='新建' onPress={() => setCreating(true)} />
+                <ProductIconButton name='compose' label={tr('chats.new')} onPress={() => setCreating(true)} />
               )
             }
           />
         )}
         {!selected && !archived && (
-          <ProductSearch side placeholder='搜索' value={query} onChangeText={setQuery} />
+          <ProductSearch side placeholder={tr('chats.search')} value={query} onChangeText={setQuery} />
         )}
         {!!query.trim() && (
           <Text style={{ color: t.text3, fontSize: 12, paddingHorizontal: 20, paddingBottom: 8 }}>
-            搜索会话名称和已加载消息；完整可访问历史请进入聊天信息搜索。
+            {tr('chats.searchHint')}
           </Text>
         )}
         <ConnectionStatus status={state.status} />
@@ -246,8 +248,8 @@ function SessionChatList ({ archived, autoRefresh }: { archived: boolean, autoRe
           theme={theme}
           darkTheme={theme}
           user={{ _id: state.session.userID }}
-          locale='zh-CN'
-          labels={{ chatListArchived: '已归档会话' }}
+          locale={tr.locale}
+          labels={{ chatListArchived: tr('chats.archived') }}
           isHeaderVisible={false}
           isArchiveOpen={archived}
           isLoading={initialLoading}
@@ -292,20 +294,20 @@ function SessionChatList ({ archived, autoRefresh }: { archived: boolean, autoRe
           )}
           renderEmpty={() => <View onLayout={homeLaidOut}>{!state.conversationsLoaded && !!state.error ? (
             <View style={{ padding: 24, alignItems: 'center' }}>
-              <Text style={{ color: t.text2 }}>会话加载失败，请重试</Text>
-              <Pressable accessibilityRole='button' accessibilityLabel='重新加载会话' disabled={state.busy} onPress={() => {
+              <Text style={{ color: t.text2 }}>{tr('chats.loadFailed')}</Text>
+              <Pressable accessibilityRole='button' accessibilityLabel={tr('chats.reload')} disabled={state.busy} onPress={() => {
                 void refresh().catch(reportError)
               }} style={{ padding: 16 }}
               >
-                <Text style={{ color: t.accent }}>重新加载</Text>
+                <Text style={{ color: t.accent }}>{tr('common.reload')}</Text>
               </Pressable>
             </View>
           ) : offlineEmpty && !query ? (
-            <ProductEmpty title={offlineStatus} subtitle='网络恢复后会自动重新连接' />
+            <ProductEmpty title={tr('status.offline')} subtitle={tr('chats.reconnectHint')} />
           ) : (
             <ProductEmpty
-              title={query ? '没有找到相关会话' : archived ? '没有已归档的会话' : '还没有会话'}
-              subtitle={query ? undefined : archived ? '长按会话可以归档' : '点右上角开始聊天'}
+              title={query ? tr('chats.noMatch') : archived ? tr('chats.noArchived') : tr('chats.none')}
+              subtitle={query ? undefined : archived ? tr('chats.archiveHint') : tr('chats.startHint')}
             />
           )}</View>}
           listProps={{
@@ -361,14 +363,14 @@ function SessionChatList ({ archived, autoRefresh }: { archived: boolean, autoRe
                 ? []
                 : [
                   {
-                    title: '多选',
+                    title: tr('chats.multiSelect'),
                     onPress: () => {
                       setSelected([String(menu.id)])
                       setMenu(undefined)
                     },
                   },
                 ]),
-              { title: '删除会话', danger: true, onPress: actionItems([menu])[3].press },
+              { title: tr('chatInfo.deleteChat'), danger: true, onPress: actionItems([menu])[3].press },
             ]}
           />
         )}
@@ -376,10 +378,10 @@ function SessionChatList ({ archived, autoRefresh }: { archived: boolean, autoRe
           <ProductSheet
             onClose={() => setCreating(false)}
             items={[
-              ['发起聊天', '/chats/new'],
-              ['创建群聊', '/chats/groups/create'],
-              ['添加好友', '/chats/add-friend'],
-              ['通过群 ID 加群', '/chats/groups/join'],
+              [tr('newChat.title'), '/chats/new'],
+              [tr('chats.createGroup'), '/chats/groups/create'],
+              [tr('addFriend.title'), '/chats/add-friend'],
+              [tr('chats.joinGroupByID'), '/chats/groups/join'],
             ].map(([title, href]) => ({
               title,
               onPress: () => {
@@ -391,13 +393,13 @@ function SessionChatList ({ archived, autoRefresh }: { archived: boolean, autoRe
         )}
         {!!(task.error || state.error) && (
           <Text accessibilityRole='alert' style={{ color: t.danger, padding: 12 }}>
-            {task.error || state.error}
+            {task.error || errorMessage(state.error, tr)}
           </Text>
         )}
         {!!deleting.length && (
           <Confirm
             error={task.error}
-            message={`删除 ${deleting.length} 个会话及其聊天记录？此操作无法撤销。`}
+            message={tr('chats.deleteSelected', { count: deleting.length })}
             busy={task.busy}
             onCancel={() => setDeleting([])}
             onConfirm={() =>

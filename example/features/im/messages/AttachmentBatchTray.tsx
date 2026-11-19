@@ -1,4 +1,5 @@
 import { Pressable, Text, View } from 'react-native'
+import { isMessageKey, useT } from '../i18n'
 import { useProductTheme } from '../ui/theme'
 import type { AttachmentBatch } from './attachment-batch'
 
@@ -9,6 +10,7 @@ interface AttachmentBatchTrayProps {
 }
 
 export function AttachmentBatchTray ({ batches, onRetry, onCancel }: AttachmentBatchTrayProps) {
+  const tr = useT()
   const colors = useProductTheme()
   const visible = batches.filter(
     batch => batch.status !== 'completed' && batch.status !== 'cancelled'
@@ -30,23 +32,23 @@ export function AttachmentBatchTray ({ batches, onRetry, onCancel }: AttachmentB
           >
             <Text style={{ color: colors.text, fontWeight: '500', fontSize: 13 }}>
               {blocked
-                ? '附件批次已暂停（登录已切换）'
+                ? tr('attachments.paused')
                 : sending
-                  ? `正在发送附件 ${done}/${total}`
-                  : `附件发送未完成 ${done}/${total}`}
+                  ? tr('attachments.sending', { done, total })
+                  : tr('attachments.unfinished', { done, total })}
             </Text>
-            {batch.error ? <Text style={{ color: colors.danger }}>{batch.error}</Text> : null}
+            {batch.error ? <Text style={{ color: colors.danger }}>{tr(isMessageKey(batch.error) ? batch.error : 'error.generic')}</Text> : null}
             {!sending ? (
               <View style={{ flexDirection: 'row', gap: 16 }}>
                 {!blocked ? (
                   <Pressable accessibilityRole='button' onPress={() => void onRetry(batch.id)}>
                     <Text style={{ color: colors.accent, fontWeight: '500', fontSize: 13 }}>
-                      继续发送
+                      {tr('attachments.continue')}
                     </Text>
                   </Pressable>
                 ) : null}
                 <Pressable accessibilityRole='button' onPress={() => onCancel(batch.id)}>
-                  <Text style={{ color: colors.text2 }}>取消剩余附件</Text>
+                  <Text style={{ color: colors.text2 }}>{tr('attachments.cancelRest')}</Text>
                 </Pressable>
               </View>
             ) : null}

@@ -2,6 +2,7 @@ import React from 'react'
 import { Platform } from 'react-native'
 import { AudioSession, registerGlobals, VideoTrack } from '@livekit/react-native'
 import { Track, type Participant, type TrackPublication } from 'livekit-client'
+import { ProductError } from '../shared/product-error'
 registerGlobals()
 export async function prepareAudio () {
   await AudioSession.startAudioSession()
@@ -20,7 +21,7 @@ export async function setCallSpeaker (enabled: boolean) {
         ? 'speaker'
         : ['earpiece', 'headset', 'bluetooth'].find(output => outputs.includes(output))
   if (!desired || !outputs.includes(desired))
-    throw new Error(enabled ? '当前设备没有可用扬声器' : '当前设备没有可用听筒或耳机')
+    throw new ProductError(enabled ? 'call.noSpeaker' : 'call.noEarpiece')
   await AudioSession.selectAudioOutput(desired)
 }
 export function MediaTrack ({

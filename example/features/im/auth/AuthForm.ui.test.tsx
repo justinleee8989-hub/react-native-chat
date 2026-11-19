@@ -4,7 +4,7 @@ import { render } from '@testing-library/react-native'
 import { AuthPage } from './AuthForm'
 
 let mockDesktop = true
-jest.mock('../ui/preferences', () => ({ useProductLayout: () => ({ desktop: mockDesktop }) }))
+jest.mock('../ui/preferences', () => ({ useLanguageChoice: () => 'auto', useProductLayout: () => ({ desktop: mockDesktop }) }))
 jest.mock('../ui/theme', () => ({ useProductTheme: () => ({ page: '#fff', bg: '#fff', text: '#111', text3: '#777' }), useProductColors: () => ({ name: '#111', message: '#777' }) }))
 jest.mock('../shared/ProductToast', () => ({ ProductToast: () => null }))
 jest.mock('../ui/primitives', () => {

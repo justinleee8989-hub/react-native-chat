@@ -1,5 +1,6 @@
 import React, { useLayoutEffect, useRef, useState } from 'react'
 import { PanResponder, StyleSheet, Text, View } from 'react-native'
+import { useT } from '../i18n'
 import { useProductTheme } from '../ui/theme'
 
 const ROW = 16
@@ -16,6 +17,7 @@ export function letterAt (offset: number, letters: string[]) {
  * do). Rendered over the list (`ProductPage`'s `overlay`), so it does not scroll with it.
  */
 export function LetterIndex ({ letters, onSelect }: { letters: string[], onSelect: (letter: string) => void }) {
+  const tr = useT()
   const t = useProductTheme()
   const [active, setActive] = useState<string>()
   const bar = useRef<React.ComponentRef<typeof View>>(null)
@@ -72,7 +74,7 @@ export function LetterIndex ({ letters, onSelect }: { letters: string[], onSelec
           onLayout={measure}
           accessible
           accessibilityRole='adjustable'
-          accessibilityLabel='按字母定位'
+          accessibilityLabel={tr('contacts.letterIndex')}
           accessibilityValue={{ text: active ?? letters[0] }}
           accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
           onAccessibilityAction={event => step(event.nativeEvent.actionName === 'increment' ? 1 : -1)}

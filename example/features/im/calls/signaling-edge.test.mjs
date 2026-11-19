@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { createCallController, encodeSignal, parseSignal } from './signaling.ts'
+import { zhT } from '../i18n/test-modules.mjs'
+import { errorMessage } from '../shared/error-message.ts'
 
 const room = 'imcall-33333333-3333-4333-8333-333333333333'
 const otherRoom = 'imcall-44444444-4444-4444-8444-444444444444'
@@ -46,13 +48,13 @@ test('local cancellation and remote rejection end only the matching outgoing cal
   await local.controller.finish('cancel')
   assert.equal(local.sent.at(-1).signal.kind, 'cancel')
   assert.equal(local.controller.snapshot().active, undefined)
-  assert.equal(local.controller.snapshot().notice, '通话已取消')
+  assert.equal(zhT(local.controller.snapshot().notice), '通话已取消')
 
   const remote = fixture()
   await remote.controller.start('peer', 'Peer', room)
   remote.receive('peer', { ...invitation, kind: 'reject' })
   assert.equal(remote.controller.snapshot().active, undefined)
-  assert.equal(remote.controller.snapshot().notice, '已拒接通话')
+  assert.equal(zhT(remote.controller.snapshot().notice), '已拒接通话')
 })
 
 test('a matching busy response ends the call; a busy peer sends busy for a different incoming room', async () => {
@@ -60,7 +62,7 @@ test('a matching busy response ends the call; a busy peer sends busy for a diffe
   await response.controller.start('peer', 'Peer', room)
   response.receive('peer', { ...invitation, kind: 'busy' })
   assert.equal(response.controller.snapshot().active, undefined)
-  assert.equal(response.controller.snapshot().notice, '对方正在通话')
+  assert.equal(zhT(response.controller.snapshot().notice), '对方正在通话')
 
   const overlapping = fixture()
   await overlapping.controller.start('peer', 'Peer', room)
@@ -76,7 +78,7 @@ test('an incoming call times out and reports missed', () => {
   setNow(invitation.expires)
   controller.tick()
   assert.equal(controller.snapshot().active, undefined)
-  assert.equal(controller.snapshot().notice, '未接通话')
+  assert.equal(zhT(controller.snapshot().notice), '未接通话')
   assert.equal(sent.at(-1).signal.kind, 'missed')
 })
 
@@ -119,7 +121,7 @@ test('send failures clear outgoing calls and failed accepts restore the incoming
   const failedStart = fixture(async () => { throw new Error('send unavailable') })
   await assert.rejects(failedStart.controller.start('peer', 'Peer', room), /send unavailable/)
   assert.equal(failedStart.controller.snapshot().active, undefined)
-  assert.equal(failedStart.controller.snapshot().error, 'send unavailable')
+  assert.equal(failedStart.controller.snapshot().error.message, 'send unavailable')
 
   let rejectAccept
   const failedAccept = fixture((peer, signal) => signal.kind === 'accept'
@@ -131,7 +133,7 @@ test('send failures clear outgoing calls and failed accepts restore the incoming
   rejectAccept(new Error('accept unavailable'))
   await accepting
   assert.equal(failedAccept.controller.snapshot().active.phase, 'incoming')
-  assert.equal(failedAccept.controller.snapshot().error, 'accept unavailable')
+  assert.equal(failedAccept.controller.snapshot().error.message, 'accept unavailable')
 })
 
 test('late send completion after logout cannot restore the previous account call state', async () => {

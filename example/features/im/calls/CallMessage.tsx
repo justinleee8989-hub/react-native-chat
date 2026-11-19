@@ -2,6 +2,7 @@ import React from 'react'
 import { Text, View } from 'react-native'
 import { GestureDetector, useTapGesture } from 'react-native-gesture-handler'
 import type { IMMessage } from '../domain/types'
+import { useT } from '../i18n'
 import { ProductIcon } from '../ui/ProductIcon'
 import { useProductTheme } from '../ui/theme'
 import { callMessageLabel, messageCallSignal } from './message-projection'
@@ -48,15 +49,16 @@ export function CallMessage ({
   self: string
   onCall: () => void
 }) {
+  const tr = useT()
   const t = useProductTheme()
   if (!message || !messageCallSignal(message))
     return null
   const signal = messageCallSignal(message)
   const duration = signal?.connectedAt ? formatCallDuration(signal.durationSeconds) : ''
-  const label = [callMessageLabel(message, self), duration].filter(Boolean).join(' ')
+  const label = [callMessageLabel(message, self, tr), duration].filter(Boolean).join(' ')
   const color = message.sendID === self ? t.onAccent : t.text
   return (
-    <CallMessageAction label={`${label}，再次呼叫`} onPress={onCall}>
+    <CallMessageAction label={tr('call.callAgainLabel', { label })} onPress={onCall}>
       <View
         style={{
           paddingVertical: 12,

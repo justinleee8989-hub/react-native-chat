@@ -1,16 +1,15 @@
 import React, { useState } from 'react'
-import { Text } from 'react-native'
 import * as Crypto from 'expo-crypto'
 import { type Href, useRouter } from 'expo-router'
 import { directory } from '../application/directory'
 import { profile } from '../application/profile'
 import { calls, openConversation } from '../application/store'
 import type { Person } from '../domain/directory'
+import { useT } from '../i18n'
 import { ProductPromptField } from '../shared/ProductPromptField'
 import { Confirm } from '../shared/shared'
 import { useTask } from '../shared/useTask'
 import { ProductSheet } from '../ui/primitives'
-import { useProductTheme } from '../ui/theme'
 
 export function ContactActions ({
   person,
@@ -21,8 +20,8 @@ export function ContactActions ({
   onClose: () => void
   onChanged: () => void
 }) {
+  const tr = useT()
   const router = useRouter()
-  const t = useProductTheme()
   const task = useTask()
   const [mode, setMode] = useState<'menu' | 'remark' | 'delete'>('menu')
   const [remark, setRemark] = useState(person.remark || '')
@@ -30,9 +29,9 @@ export function ContactActions ({
   if (mode === 'delete')
     return (
       <Confirm
-        title={`删除好友 ${name}？`}
-        message='删除后需要重新申请才能添加。'
-        confirmLabel='删除'
+        title={tr('contacts.deleteFriendTitle', { name })}
+        message={tr('contacts.deleteFriendMessage')}
+        confirmLabel={tr('contacts.removeConfirm')}
         busy={task.busy}
         error={task.error}
         onCancel={onClose}
@@ -50,9 +49,9 @@ export function ContactActions ({
   if (mode === 'remark')
     return (
       <Confirm
-        title='设置备注'
+        title={tr('contacts.setRemark')}
         message=''
-        confirmLabel='保存'
+        confirmLabel={tr('common.save')}
         danger={false}
         busy={task.busy}
         error={task.error}
@@ -68,8 +67,8 @@ export function ContactActions ({
         }}
       >
         <ProductPromptField
-          accessibilityLabel='好友备注'
-          placeholder='留空则清除备注'
+          accessibilityLabel={tr('contacts.remark')}
+          placeholder={tr('contacts.remarkClearHint')}
           value={remark}
           onChangeText={setRemark}
           editable={!task.busy}
@@ -78,12 +77,13 @@ export function ContactActions ({
     )
   return (
     <ProductSheet
+      error={task.error}
       title={name}
       busy={task.busy}
       onClose={onClose}
       items={[
         {
-          title: '发消息',
+          title: tr('contacts.message'),
           onPress: () => {
             void task.run(async current => {
               const id = await openConversation(person.userID)
@@ -95,7 +95,7 @@ export function ContactActions ({
           },
         },
         {
-          title: '音视频通话',
+          title: tr('contacts.call'),
           onPress: () => {
             void task.run(async current => {
               await calls.start(person.userID, name, `imcall-${Crypto.randomUUID()}`)
@@ -106,17 +106,12 @@ export function ContactActions ({
         },
         ...(person.isFriend
           ? [
-            { title: '设置备注', onPress: () => setMode('remark') },
-            { title: '删除好友', danger: true, onPress: () => setMode('delete') },
+            { title: tr('contacts.setRemark'), onPress: () => setMode('remark') },
+            { title: tr('contacts.deleteFriend'), danger: true, onPress: () => setMode('delete') },
           ]
           : []),
       ]}
     >
-      {!!task.error && (
-        <Text accessibilityRole='alert' style={{ color: t.danger }}>
-          {task.error}
-        </Text>
-      )}
     </ProductSheet>
   )
 }

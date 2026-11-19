@@ -1,5 +1,6 @@
 import React from 'react'
 import { Button, Text, View } from 'react-native'
+import { useT } from '../../i18n'
 import { styles } from './styles'
 
 /** The alerts above the message list: access, the last action, the draft, the store, locating. */
@@ -20,6 +21,7 @@ export function ChatNotices ({
   storeError?: string
   locating: boolean
 }) {
+  const tr = useT()
   return (
     <>
       {!!accessError && (
@@ -27,7 +29,7 @@ export function ChatNotices ({
           <Text accessibilityRole='alert' style={styles.error}>
             {accessError}
           </Text>
-          <Button title='重试同步会话权限' onPress={onRetryAccess} />
+          <Button title={tr('access.retry')} onPress={onRetryAccess} />
         </View>
       )}
       {!!taskError && (
@@ -38,9 +40,9 @@ export function ChatNotices ({
       {draftError && (
         <View>
           <Text accessibilityRole='alert' style={styles.error}>
-            草稿恢复失败，当前输入已保留
+            {tr('composer.draftRestoreKept')}
           </Text>
-          <Button title='重试恢复草稿' onPress={onRetryDraft} />
+          <Button title={tr('composer.retryDraft')} onPress={onRetryDraft} />
         </View>
       )}
       {!!storeError && (
@@ -48,7 +50,7 @@ export function ChatNotices ({
           {storeError}
         </Text>
       )}
-      {locating && <Text accessibilityRole='text'>正在定位消息…</Text>}
+      {locating && <Text accessibilityRole='text'>{tr('chat.locating')}</Text>}
     </>
   )
 }

@@ -12,7 +12,7 @@ jest.mock('react-native/Libraries/Components/Keyboard/KeyboardAvoidingView', () 
     mockKeyboard(props); return React.createElement(View, {}, props.children)
   } }
 })
-jest.mock('../ui/preferences', () => ({ useProductLayout: () => ({ desktop: mockDesktop }), useProductScheme: () => 'light' }))
+jest.mock('../ui/preferences', () => ({ useLanguageChoice: () => 'auto', useProductLayout: () => ({ desktop: mockDesktop }), useProductScheme: () => 'light' }))
 jest.mock('../ui/theme', () => ({ useProductTheme: () => mockProductPalette.light }))
 jest.mock('../ui/ProductIcon', () => ({ ProductIcon: () => null }))
 jest.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }) }))

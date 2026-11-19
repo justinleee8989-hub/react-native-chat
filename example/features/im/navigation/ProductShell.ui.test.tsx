@@ -6,7 +6,7 @@ import ProductShell from './ProductShell'
 let mockDesktop = false
 jest.mock('./useRailNavigation', () => ({ useRailNavigation: () => () => {} }))
 jest.mock('./usePendingRequests', () => ({ usePendingRequests: () => 0 }))
-jest.mock('../ui/preferences', () => ({ useProductLayout: () => ({ desktop: mockDesktop }), useProductScheme: () => 'light' }))
+jest.mock('../ui/preferences', () => ({ useLanguageChoice: () => 'auto', useProductLayout: () => ({ desktop: mockDesktop }), useProductScheme: () => 'light' }))
 jest.mock('../ui/theme', () => ({ useProductTheme: () => ({}) }))
 jest.mock('../application/profile', () => ({ profile: { self: jest.fn() } }))
 jest.mock('../application/store', () => ({ useOpenIM: () => ({ conversations: [] }) }))

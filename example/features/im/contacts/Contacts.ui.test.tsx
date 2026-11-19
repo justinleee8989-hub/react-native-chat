@@ -86,11 +86,11 @@ it('keeps accept and reject buttons outside the profile navigation button', asyn
 })
 
 it('keeps request actions available after a real service error', async () => {
-  jest.mocked(directory.respond).mockRejectedValue(new Error('网络连接失败'))
+  jest.mocked(directory.respond).mockRejectedValue(new Error('network request failed'))
   await render(<FriendRequestsScreen />)
   await waitFor(() => expect(screen.getByText('接受')).toBeTruthy())
   await fireEvent.press(screen.getByText('接受'))
-  await waitFor(() => expect(screen.getByText('网络连接失败')).toBeTruthy())
+  await waitFor(() => expect(screen.getByText('连接暂时失败，请检查网络后重试')).toBeTruthy())
   expect(screen.getByText('接受')).toBeTruthy()
   expect(screen.queryByText('已接受好友申请')).toBeNull()
 })

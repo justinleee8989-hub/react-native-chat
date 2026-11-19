@@ -1,16 +1,17 @@
 import React, { useState } from 'react'
-import { Text, View } from 'react-native'
+import { View } from 'react-native'
 import { changePassword } from '../application/profile'
 import { logout, useOpenIM } from '../application/store'
 import { SettingField, ProductHint } from '../groups/group-ui'
-import { Confirm, Label } from '../shared/shared'
+import { useT } from '../i18n'
+import { ProductError } from '../shared/product-error'
+import { Confirm } from '../shared/shared'
 import { useTask } from '../shared/useTask'
 import { ProductCard, ProductButton } from '../ui/primitives'
 import { ProductSection, ProductInset } from '../ui/ProductPage'
-import { useProductTheme } from '../ui/theme'
 
 export default function PasswordForm () {
-  const t = useProductTheme()
+  const tr = useT()
   const { session, config } = useOpenIM()
   const task = useTask()
   const [oldPassword, setOldPassword] = useState('')
@@ -19,19 +20,19 @@ export default function PasswordForm () {
   const [confirm, setConfirm] = useState(false)
   return (
     <>
-      <ProductSection>修改密码</ProductSection>
+      <ProductSection>{tr('password.title')}</ProductSection>
       <ProductInset>
         <ProductCard>
           {[
-            { label: '当前密码', value: oldPassword, setter: setOldPassword },
-            { label: '新密码', value: password, setter: setPassword },
-            { label: '确认新密码', value: repeat, setter: setRepeat },
+            { label: tr('password.current'), value: oldPassword, setter: setOldPassword },
+            { label: tr('auth.newPassword'), value: password, setter: setPassword },
+            { label: tr('auth.confirmNewPassword'), value: repeat, setter: setRepeat },
           ].map(field => (
             <SettingField
               editable={!task.busy}
               key={field.label}
               accessibilityLabel={field.label}
-              placeholder={field.label === '新密码' ? '新密码（至少 6 位）' : field.label}
+              placeholder={field.label === tr('auth.newPassword') ? tr('auth.newPasswordHint') : field.label}
               secureTextEntry
               autoCapitalize='none'
               value={field.value}
@@ -40,26 +41,18 @@ export default function PasswordForm () {
           ))}
         </ProductCard>
       </ProductInset>
-      {!!repeat && password !== repeat ? (
-        <Text
-          style={{
-            color: t.danger,
-            fontSize: 13,
-            lineHeight: 18,
-            paddingHorizontal: 32,
-            paddingTop: 8,
-          }}
-        >
-          两次输入的密码不一致
-        </Text>
+      {/* One line under the fields: what is wrong, or else what changing it does. */}
+      {(!!repeat && password !== repeat) || task.error ? (
+        <ProductHint error>
+          {!!repeat && password !== repeat ? tr('auth.passwordMismatch') : task.error}
+        </ProductHint>
       ) : (
-        <ProductHint>修改成功会退出所有设备，请使用新密码重新登录。</ProductHint>
+        <ProductHint>{tr('password.signOutEverywhere')}</ProductHint>
       )}
-      {!!task.error && <Label>{task.error}</Label>}
       <View style={{ height: 24 }} />
       <ProductInset>
         <ProductButton
-          title='修改密码'
+          title={tr('password.title')}
           disabled={
             task.busy ||
             !oldPassword ||
@@ -72,8 +65,8 @@ export default function PasswordForm () {
       </ProductInset>
       {confirm && (
         <Confirm
-          title='确认修改密码并退出登录？'
-          confirmLabel='修改'
+          title={tr('password.confirmTitle')}
+          confirmLabel={tr('password.confirm')}
           error={task.error}
           message=''
           busy={task.busy}
@@ -81,10 +74,10 @@ export default function PasswordForm () {
           onConfirm={() => {
             void task.run(async current => {
               if (!session)
-                throw new Error('请重新登录')
+                throw new ProductError('password.signInAgain')
               await changePassword(session, oldPassword, password, config.chat)
               if (current())
-                await logout('密码已修改，请使用新密码登录')
+                await logout('password.changed')
             })
           }}
         />

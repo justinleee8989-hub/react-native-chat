@@ -1,10 +1,13 @@
 import React from 'react'
 import { Text } from 'react-native'
+import type { ConnectionStatus as Status } from '../application/connection-status'
+import { useT } from '../i18n'
 import { useProductTheme } from '../ui/theme'
 
-export function ConnectionStatus ({ status }: { status?: string }) {
+export function ConnectionStatus ({ status }: { status?: Status }) {
   const t = useProductTheme()
-  if (!status || status === '已连接')
+  const tr = useT()
+  if (!status || status === 'connected')
     return null
   return (
     <Text
@@ -18,7 +21,7 @@ export function ConnectionStatus ({ status }: { status?: string }) {
         fontSize: 13,
       }}
     >
-      {status}
+      {tr(`status.${status}`)}
     </Text>
   )
 }

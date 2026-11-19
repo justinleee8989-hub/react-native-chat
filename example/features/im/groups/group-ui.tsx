@@ -10,6 +10,7 @@ import {
   type TextInputProps,
 } from 'react-native'
 import type { Group, Person } from '../domain/directory'
+import { useT } from '../i18n'
 import { ProductAvatar, ProductRow, useProductRowSeparator } from '../ui/primitives'
 import { useProductTheme } from '../ui/theme'
 export function GroupAvatar ({ group, size }: { group: Group, size: number }) {
@@ -57,11 +58,13 @@ export function GroupAvatar ({ group, size }: { group: Group, size: number }) {
     </View>
   )
 }
-export function ProductHint ({ children }: React.PropsWithChildren) {
+/** The small text under a card: a note, or with `error` what went wrong, in red and announced. */
+export function ProductHint ({ children, error }: React.PropsWithChildren<{ error?: boolean }>) {
   const t = useProductTheme()
   return (
     <Text
-      style={{ color: t.text2, fontSize: 13, lineHeight: 19, paddingHorizontal: 32, paddingTop: 8 }}
+      accessibilityRole={error ? 'alert' : undefined}
+      style={{ color: error ? t.danger : t.text2, fontSize: 13, lineHeight: 19, paddingHorizontal: 32, paddingTop: 8 }}
     >
       {children}
     </Text>
@@ -141,15 +144,16 @@ export function SettingField ({ label, ...props }: TextInputProps & { label?: st
   )
 }
 export function MemberRow ({ member, onPress }: { member: Person, onPress: () => void }) {
+  const tr = useT()
   const t = useProductTheme()
   const role =
     member.roleLevel === 100
-      ? '群主'
+      ? tr('role.owner')
       : member.roleLevel === 60
-        ? '管理员'
+        ? tr('role.admin')
         : (member.muteEndTime || 0) / ((member.muteEndTime || 0) > 100000000000 ? 1000 : 1) >
             Date.now() / 1000
-          ? '禁言中'
+          ? tr('role.muted')
           : ''
   return (
     <ProductRow

@@ -1,4 +1,5 @@
 import type { Session } from '../../domain/types'
+import { ProductError, ServerError } from '../../shared/product-error.ts'
 
 export type ContactLookup = { email: string } | { areaCode: string, phoneNumber: string }
 
@@ -13,7 +14,7 @@ export async function findUserIDByContact (
   request: typeof fetch = fetch
 ): Promise<string | undefined> {
   if (!session.chatToken)
-    throw new Error('请重新登录后查找用户')
+    throw new ProductError('lookup.signInFirst')
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), 15000)
   try {
@@ -25,7 +26,8 @@ export async function findUserIDByContact (
     const result = await response.json()
     const user = result?.data?.user
     if (!response.ok || result?.errCode !== 0 || (user != null && typeof user.userID !== 'string'))
-      throw new Error(result?.errMsg || '查找用户失败，请重试')
+      // A server failure is explained by its code; a reply that is not one is said by us.
+      throw result?.errCode ? new ServerError(result, response.status) : new ProductError('lookup.failed')
     return user?.userID || undefined
   } finally {
     clearTimeout(timeout)

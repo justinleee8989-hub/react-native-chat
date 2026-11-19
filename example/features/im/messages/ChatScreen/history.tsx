@@ -1,12 +1,14 @@
 import React from 'react'
 import type { ChatProps, IMessage } from '@kesha-antonov/react-native-chat'
 import { loadHistory, reportError } from '../../application/store'
+import type { Translate } from '../../i18n'
 import type { useProductChatTheme } from '../../ui/ProductChatTheme'
 import { HistoryLoadIndicator } from '../HistoryLoadIndicator'
 
 /** Earlier history: loaded as the list nears its top, with the pill shown while a page loads. */
-export function chatHistoryProps ({ id, available, loading, paging, theme }: {
+export function chatHistoryProps ({ id, available, loading, paging, theme, tr }: {
   id: string
+  tr: Translate
   available: boolean
   loading: boolean
   paging: boolean
@@ -21,7 +23,7 @@ export function chatHistoryProps ({ id, available, loading, paging, theme }: {
       onPress: () => {
         void loadHistory(id, true).catch(reportError)
       },
-      label: '加载更早消息',
+      label: tr('chat.loadEarlier'),
       containerStyle: { marginTop: 6, marginBottom: 10 },
       wrapperStyle: {
         backgroundColor: theme.colors.surface,

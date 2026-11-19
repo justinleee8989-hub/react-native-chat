@@ -60,7 +60,7 @@ it('a successful code request prevents immediate resends', async () => {
 })
 
 it('password reset failures remain visible without claiming success', async () => {
-  submit.mockRejectedValue(new Error('验证码错误'))
+  submit.mockRejectedValue({ errCode: 20006, errMsg: 'VerifyCodeNotMatch' })
   await render(<AccountScreen mode='reset' />)
   await fireEvent.changeText(screen.getByLabelText('邮箱'), 'person@example.com')
   await fireEvent.changeText(screen.getByLabelText('邮箱验证码'), 'wrong')

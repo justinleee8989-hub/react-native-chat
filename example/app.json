@@ -72,7 +72,7 @@
         "expo-image-picker",
         {
           "photosPermission": "$(PRODUCT_NAME) needs photo library access to send photos.",
-          "cameraPermission": "$(PRODUCT_NAME) needs camera access to take photos and record video messages.",
+          "cameraPermission": "$(PRODUCT_NAME) needs camera access to take photos, record video messages and scan QR codes.",
           "microphonePermission": "$(PRODUCT_NAME) needs microphone access to record video messages."
         }
       ],
@@ -101,6 +101,9 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "locales": {
+      "zh-Hans": "./locales/zh-Hans.json"
     }
   }
 }

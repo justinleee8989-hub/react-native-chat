@@ -1,6 +1,7 @@
 import React from 'react'
 import { ScrollView, StyleSheet, Text, View } from 'react-native'
 import { type Href } from 'expo-router'
+import { useT } from '../i18n'
 import { useMasterNavigation } from '../navigation/DesktopNavigation'
 import { type ChatThemePreset, chatThemes, sentFillStyle } from '../ui/chat-theme'
 import { ChatAppearancePreview } from '../ui/ChatAppearancePreview'
@@ -20,10 +21,11 @@ import { ProductPage, ProductSection } from '../ui/ProductPage'
 import { ProductPressable as Pressable } from '../ui/ProductPressable'
 import { useProductTheme } from '../ui/theme'
 
-const schemes = [{ value: 'light', label: '浅色' }, { value: 'dark', label: '深色' }] as const
+const schemes = [{ value: 'light', labelKey: 'appearance.light' }, { value: 'dark', labelKey: 'appearance.dark' }] as const
 
 /** A chat theme as it would look over the current wallpaper: a received and a sent bubble. */
 function ThemeCard ({ preset, selected, onPress }: { preset: ChatThemePreset, selected: boolean, onPress: () => void }) {
+  const tr = useT()
   const t = useProductTheme()
   const look = preset[useProductScheme()]
   const wallpaper = useChatWallpaper()
@@ -33,7 +35,7 @@ function ThemeCard ({ preset, selected, onPress }: { preset: ChatThemePreset, se
   return (
     <Pressable
       accessibilityRole='radio'
-      accessibilityLabel={preset.label}
+      accessibilityLabel={tr(preset.labelKey)}
       accessibilityState={{ selected, checked: selected }}
       onPress={onPress}
       style={styles.themeOption}
@@ -58,7 +60,7 @@ function ThemeCard ({ preset, selected, onPress }: { preset: ChatThemePreset, se
           />
         </View>
       </View>
-      <Text style={[styles.themeLabel, { color: selected ? t.accent : t.text2 }]}>{preset.label}</Text>
+      <Text style={[styles.themeLabel, { color: selected ? t.accent : t.text2 }]}>{tr(preset.labelKey)}</Text>
     </Pressable>
   )
 }
@@ -70,6 +72,7 @@ function ThemeCard ({ preset, selected, onPress }: { preset: ChatThemePreset, se
  * choice applies at once.
  */
 export default function AppearanceScreen () {
+  const tr = useT()
   const t = useProductTheme()
   const scheme = useProductScheme()
   const { desktop } = useProductLayout()
@@ -79,9 +82,9 @@ export default function AppearanceScreen () {
   const openMaster = useMasterNavigation()
   const followSystem = appearance === 'auto'
   return (
-    <ProductPage title='外观' backHref='/(tabs)/me' busy={false} error=''>
+    <ProductPage title={tr('me.appearance')} backHref='/(tabs)/me' busy={false} error=''>
       <View style={[styles.content, { paddingHorizontal: desktop ? 24 : 16 }]}>
-        <ProductSection variant='list'>聊天主题</ProductSection>
+        <ProductSection variant='list'>{tr('appearance.chatTheme')}</ProductSection>
         <ProductCard>
           <View>
             {/* Framed inside the card: drawn edge to edge, 默认's page color ran into the page around it. */}
@@ -99,25 +102,25 @@ export default function AppearanceScreen () {
               ))}
             </ScrollView>
           </View>
-          <ProductRow title='聊天壁纸' chevron onPress={() => openMaster('/chats/chat-wallpaper' as Href)} />
+          <ProductRow title={tr('wallpaper.title')} chevron onPress={() => openMaster('/chats/chat-wallpaper' as Href)} />
         </ProductCard>
-        <ProductSection variant='list'>深色模式</ProductSection>
+        <ProductSection variant='list'>{tr('appearance.darkMode')}</ProductSection>
         <ProductCard>
           <ProductRow
-            title='跟随系统'
+            title={tr('appearance.followSystem')}
             trailing={
               <ProductSwitch
-                accessibilityLabel='跟随系统'
+                accessibilityLabel={tr('appearance.followSystem')}
                 value={followSystem}
                 // Turned off, the app keeps the scheme it shows now until another is chosen.
                 onValueChange={on => setProductAppearance(on ? 'auto' : scheme)}
               />
             }
           />
-          {!followSystem && schemes.map(({ value, label }) => (
+          {!followSystem && schemes.map(({ value, labelKey }) => (
             <ProductRow
               key={value}
-              title={label}
+              title={tr(labelKey)}
               trailing={appearance === value ? <ProductIcon name='check' size={20} color={t.accent} /> : undefined}
               chevron={false}
               onPress={() => setProductAppearance(value)}
@@ -125,8 +128,7 @@ export default function AppearanceScreen () {
           ))}
         </ProductCard>
         <Text style={[styles.hint, { color: t.text3 }]}>
-          {followSystem ? '随系统的浅色或深色外观自动切换。' : '关闭跟随系统后，可以固定使用浅色或深色。'}
-          以上设置保存在本机，用于所有聊天。
+          {followSystem ? tr('appearance.followSystemHint') : tr('appearance.fixedHint')}
         </Text>
       </View>
     </ProductPage>

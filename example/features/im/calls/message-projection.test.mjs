@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { projectCallMessages, callMessageLabel } from './message-projection.ts'
 import { encodeSignal } from './signaling.ts'
+import { zhT } from '../i18n/test-modules.mjs'
 const room = 'imcall-11111111-1111-4111-8111-111111111111'
 const msg = (id, kind, extra = {}) => ({ clientMsgID: id, contentType: 101, status: 2, sendID: 'caller', recvID: 'callee', sendTime: 1000, textElem: { content: encodeSignal({ room, expires: 45000, kind }) }, ...extra })
 test('terminal projection keeps its original ID, sender, time and original data untouched', () => {
@@ -25,9 +26,9 @@ test('out of order duplicate lifecycle records choose latest terminal but keep f
  assert.deepEqual(projectCallMessages([older, future, msg('invite', 'invite'), end]), [future, end])
 })
 test('labels distinguish local and remote reject and never invent duration', () => {
- assert.equal(callMessageLabel(msg('reject', 'reject', { sendID: 'callee' }), 'caller'), '对方已拒接')
- assert.equal(callMessageLabel(msg('reject', 'reject', { sendID: 'callee' }), 'callee'), '已拒接')
- assert.equal(callMessageLabel(msg('end', 'end'), 'caller'), '音视频通话')
+ assert.equal(callMessageLabel(msg('reject', 'reject', { sendID: 'callee' }), 'caller', zhT), '对方已拒接')
+ assert.equal(callMessageLabel(msg('reject', 'reject', { sendID: 'callee' }), 'callee', zhT), '已拒接')
+ assert.equal(callMessageLabel(msg('end', 'end'), 'caller', zhT), '音视频通话')
 })
 test('explicitly located or quoted original IDs remain visible after folding', () => {
  const invite = msg('invite', 'invite'), end = msg('end', 'cancel', { sendTime: 2000 })

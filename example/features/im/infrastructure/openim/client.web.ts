@@ -1,6 +1,8 @@
 import type { getSDK, SdkEvent } from '@openim/wasm-client-sdk'
 import { platformID } from '../../config'
 import type { IMClient } from '../../domain/types'
+import type { MessageKey } from '../../i18n'
+import { ProductError } from '../../shared/product-error.ts'
 import { createWebMedia } from './media.web'
 import { endWebSession } from './web-session'
 
@@ -19,9 +21,9 @@ const state: WebRuntime = browserRuntime
   ? (browserRuntime.__openIMRuntime ??= { handlers: new Set() })
   : { handlers: new Set() }
 
-function withTimeout<T>(operation: Promise<T>, milliseconds: number, message: string): Promise<T> {
+function withTimeout<T>(operation: Promise<T>, milliseconds: number, timeout: MessageKey): Promise<T> {
   return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error(message)), milliseconds)
+    const timer = setTimeout(() => reject(new ProductError(timeout)), milliseconds)
     operation.then(
       value => {
         clearTimeout(timer)
@@ -39,7 +41,7 @@ function loadScript (src: string, module = false) {
     const script = document.createElement('script')
     const timer = setTimeout(() => {
       script.remove()
-      reject(new Error(`加载超时：${src}。请检查 Web 静态资源。`))
+      reject(new ProductError('web.resourceTimeout', { src }))
     }, 20000)
     script.src = src
     if (module)
@@ -51,7 +53,7 @@ function loadScript (src: string, module = false) {
     script.onerror = () => {
       clearTimeout(timer)
       script.remove()
-      reject(new Error(`无法加载 ${src}`))
+      reject(new ProductError('web.resourceFailed', { src }))
     }
     document.head.appendChild(script)
   })
@@ -66,7 +68,7 @@ function ready () {
           OpenIMWebSDK?: typeof import('@openim/wasm-client-sdk')
         }
         if (!browser.OpenIMWebSDK)
-          throw new Error('XIM Web SDK 加载失败，请检查 /openim-sdk-loader.js')
+          throw new ProductError('web.sdkLoadFailed')
         state.sdk = browser.OpenIMWebSDK.getSDK({
           coreWasmPath: '/openim.wasm',
           sqlWasmPath: '/sql-wasm.wasm',
@@ -87,8 +89,8 @@ export const client: IMClient = {
     const key = JSON.stringify([session.userID, session.imToken, platformID, config.api, config.ws])
     if (state.login) {
       if (state.login.key !== key)
-        throw new Error('另一个账户正在连接，请稍后重试')
-      return withTimeout(state.login.promise, 30000, '连接超时，请检查网络后重试')
+        throw new ProductError('web.otherAccountConnecting')
+      return withTimeout(state.login.promise, 30000, 'web.connectTimeout')
     }
     const promise = (async () => {
       if (state.authenticatedKey === key && (await instance.getLoginStatus()).data === 3)
@@ -114,14 +116,14 @@ export const client: IMClient = {
     await withTimeout(
       promise,
       30000,
-      'XIM 连接超时，请检查服务地址与 SDK worker 静态资源'
+      'web.sdkTimeout'
     )
   },
   async logout() {
     state.authenticatedKey = undefined
     if (state.sdk)
       await endWebSession(
-        () => withTimeout(state.sdk!.logout(), 5000, 'XIM 退出超时'),
+        () => withTimeout(state.sdk!.logout(), 5000, 'web.logoutTimeout'),
         () => window.location.reload()
       )
   },

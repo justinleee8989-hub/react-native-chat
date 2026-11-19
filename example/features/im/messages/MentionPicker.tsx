@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import { ActivityIndicator, FlatList, Pressable, Text, View } from 'react-native'
+import { useT } from '../i18n'
 import { listGroupMembers } from '../infrastructure/openim/composer-client'
+import { errorMessage } from '../shared/error-message'
+import { ProductError } from '../shared/product-error'
 import { ProductAvatar } from '../ui/primitives'
 import { ProductListRow } from '../ui/ProductListRow'
 import { useProductTheme } from '../ui/theme'
@@ -16,15 +19,16 @@ export function MentionPicker ({
   onClose: () => void
   onSelect: (member: ComposerMember) => void
 }) {
+  const tr = useT()
   const t = useProductTheme()
   const [members, setMembers] = useState<ComposerMember[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  const [failure, setFailure] = useState<unknown>()
   const [attempt, setAttempt] = useState(0)
   useEffect(() => {
     let current = true
     setLoading(true)
-    setError('')
+    setFailure(undefined)
     void listGroupMembers(groupID)
       .then(value => {
         if (current) {
@@ -34,7 +38,7 @@ export function MentionPicker ({
       })
       .catch(failure => {
         if (current) {
-          setError(failure instanceof Error ? failure.message : '群成员加载失败')
+          setFailure(failure || new ProductError('mention.loadFailed'))
           setLoading(false)
         }
       })
@@ -42,8 +46,9 @@ export function MentionPicker ({
       current = false
     }
   }, [groupID, attempt])
+  const error = failure ? errorMessage(failure, tr) : ''
   return (
-    <ProductPickerModal title='提醒群成员' onClose={onClose}>
+    <ProductPickerModal title={tr('mention.title')} onClose={onClose}>
       <FlatList
         data={members}
         keyExtractor={member => member.userID}
@@ -54,7 +59,7 @@ export function MentionPicker ({
             last={index === members.length - 1}
             title={item.nickname}
             subtitle={
-              item.roleLevel === 100 ? '群主' : (item.roleLevel || 0) >= 60 ? '管理员' : '成员'
+              item.roleLevel === 100 ? tr('role.owner') : (item.roleLevel || 0) >= 60 ? tr('role.admin') : tr('role.memberShort')
             }
             leading={
               <ProductAvatar id={item.userID} title={item.nickname} uri={item.faceURL} size={44} />
@@ -71,12 +76,12 @@ export function MentionPicker ({
               <ActivityIndicator color={t.accent} />
             ) : (
               <Text style={{ color: error ? t.danger : t.text3 }}>
-                {error || '没有可提醒的群成员'}
+                {error || tr('mention.none')}
               </Text>
             )}
             {!!error && (
               <Pressable accessibilityRole='button' onPress={() => setAttempt(value => value + 1)} style={{ padding: 12 }}>
-                <Text style={{ color: t.accent }}>重新加载</Text>
+                <Text style={{ color: t.accent }}>{tr('common.reload')}</Text>
               </Pressable>
             )}
           </View>

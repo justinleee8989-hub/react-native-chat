@@ -8,11 +8,13 @@ import {
 } from '@kesha-antonov/react-native-chat'
 import * as Sharing from 'expo-sharing'
 import { GestureDetector, useTapGesture } from 'react-native-gesture-handler'
+import { useT } from '../i18n'
 import { useSentPartColor } from '../ui/ProductChatTheme'
 import { ProductIcon } from '../ui/ProductIcon'
 import { useProductTheme } from '../ui/theme'
 
 export function ProductFile (props: Partial<MessageFileProps<IMessage>>) {
+  const tr = useT()
   const t = useProductTheme()
   const sent = useSentPartColor()
   const [error, setError] = useState(false)
@@ -77,7 +79,7 @@ export function ProductFile (props: Partial<MessageFileProps<IMessage>>) {
         </View>
         {error && (
           <Text accessibilityRole='alert' style={{ color, fontSize: 12, marginTop: 8 }}>
-            文件暂时无法打开，请重试
+            {tr('file.openFailed')}
           </Text>
         )}
       </View>

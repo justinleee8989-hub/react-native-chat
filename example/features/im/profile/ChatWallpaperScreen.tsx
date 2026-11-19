@@ -2,6 +2,7 @@ import React from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 import { type Href } from 'expo-router'
 import { chooseWallpaperPhoto, forgetWallpaperPhoto, WallpaperPhotoTooLarge } from '../application/chat-wallpaper-photo'
+import { useT } from '../i18n'
 import { useMasterNavigation } from '../navigation/DesktopNavigation'
 import { showProductToast } from '../shared/ProductToast'
 import { useTask } from '../shared/useTask'
@@ -25,6 +26,7 @@ import { WallpaperGrid } from '../ui/WallpaperGrid'
  * picked photo first, then 默认 and the swirl gradients). A tap applies at once.
  */
 export default function ChatWallpaperScreen () {
+  const tr = useT()
   const t = useProductTheme()
   const scheme = useProductScheme()
   const { desktop } = useProductLayout()
@@ -36,7 +38,7 @@ export default function ChatWallpaperScreen () {
   const pickPhoto = () => {
     void task.run(async alive => {
       const uri = await chooseWallpaperPhoto().catch(reason => {
-        showProductToast(reason instanceof WallpaperPhotoTooLarge ? '图片太大，请换一张试试' : '图片无法使用，请换一张试试')
+        showProductToast(reason instanceof WallpaperPhotoTooLarge ? tr('wallpaper.tooLarge') : tr('wallpaper.unusable'))
         return undefined
       })
       if (!uri || !alive())
@@ -55,7 +57,7 @@ export default function ChatWallpaperScreen () {
   const photoTile = photo
     ? [{
       key: 'photo',
-      label: '相册图片',
+      label: tr('wallpaper.photo'),
       selected: wallpaper === 'photo',
       onPress: () => setChatWallpaper('photo'),
       content: <ChatWallpaperView wallpaper={{ kind: 'photo', uri: photo }} />,
@@ -63,17 +65,17 @@ export default function ChatWallpaperScreen () {
     : []
   const presetTiles = [...chatWallpapersOf('plain'), ...chatWallpapersOf('gradient')].map(item => ({
     key: item.id,
-    label: item.label,
+    label: tr(item.labelKey),
     selected: item.id === wallpaper,
     onPress: () => setChatWallpaper(item.id),
     content: <ChatWallpaperOf id={item.id} />,
   }))
   return (
-    <ProductPage title='聊天壁纸' backHref='/chats/appearance' busy={task.busy} error=''>
+    <ProductPage title={tr('wallpaper.title')} backHref='/chats/appearance' busy={task.busy} error=''>
       <View style={[styles.content, { paddingHorizontal: desktop ? 24 : 16 }]}>
         <ProductCard>
           <ProductRow
-            title='设置颜色'
+            title={tr('wallpaper.setColor')}
             chevron
             trailing={
               resolved.kind === 'color'
@@ -82,11 +84,11 @@ export default function ChatWallpaperScreen () {
             }
             onPress={() => openMaster('/chats/chat-wallpaper-colors' as Href)}
           />
-          <ProductRow title={photo ? '更换相册图片' : '从相册选择'} chevron={false} onPress={pickPhoto} />
-          {!!photo && <ProductRow title='移除相册图片' danger chevron={false} onPress={removePhoto} />}
+          <ProductRow title={photo ? tr('wallpaper.changePhoto') : tr('wallpaper.choosePhoto')} chevron={false} onPress={pickPhoto} />
+          {!!photo && <ProductRow title={tr('wallpaper.removePhoto')} danger chevron={false} onPress={removePhoto} />}
         </ProductCard>
         <Text style={[styles.hint, { color: t.text3 }]}>
-          图片只保存在本机，不会上传。深色模式下壁纸自动换用深色配色，图片会调暗。
+          {tr('wallpaper.photoHint')}
         </Text>
         <WallpaperGrid items={[...photoTile, ...presetTiles]} />
       </View>

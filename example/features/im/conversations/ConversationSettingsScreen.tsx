@@ -13,6 +13,7 @@ import {
 import LoginScreen from '../auth/LoginScreen'
 import { isConversationArchived } from '../domain/conversation-archive'
 import type { Group, Person } from '../domain/directory'
+import { useT } from '../i18n'
 import { Confirm } from '../shared/shared'
 import { useTask } from '../shared/useTask'
 import { ProductAvatar, ProductCard, ProductRow, ProductSwitch } from '../ui/primitives'
@@ -30,6 +31,7 @@ export default function ConversationSettingsScreen () {
   )
 }
 function Settings ({ id }: { id: string }) {
+  const tr = useT()
   const state = useOpenIM()
   const router = useRouter()
   const task = useTask()
@@ -56,9 +58,9 @@ function Settings ({ id }: { id: string }) {
   const groupLink = () => router.push(`/chats/groups/${encodeURIComponent(groupID || '')}` as Href)
   const archived = isConversationArchived(conversation?.ex, state.session?.userID || '')
   return (
-    <ProductPage title='聊天信息' {...task} backHref='/chats'>
+    <ProductPage title={tr('chatInfo.title')} {...task} backHref='/chats'>
       {!conversation ? (
-        <Text style={{ color: t.text2, padding: 20 }}>会话不存在，请返回列表。</Text>
+        <Text style={{ color: t.text2, padding: 20 }}>{tr('chatInfo.notFound')}</Text>
       ) : (
         <View style={{ marginHorizontal: 16, marginTop: 12, gap: 24 }}>
           {groupID ? (
@@ -117,14 +119,14 @@ function Settings ({ id }: { id: string }) {
                     >
                       <ProductIcon name='plus' color={t.text3} />
                     </View>
-                    <Text style={{ color: t.text2, fontSize: 12 }}>邀请</Text>
+                    <Text style={{ color: t.text2, fontSize: 12 }}>{tr('chatInfo.invite')}</Text>
                   </Pressable>
                 </View>
                 <ProductRow
-                  title='全部成员'
+                  title={tr('chatInfo.allMembers')}
                   trailing={
                     <Text style={{ color: t.text2, fontSize: 15 }}>
-                      {group?.memberCount ?? members.length} 人
+                      {tr('chatInfo.memberCount', { count: group?.memberCount ?? members.length })}
                     </Text>
                   }
                   onPress={() =>
@@ -134,7 +136,7 @@ function Settings ({ id }: { id: string }) {
               </ProductCard>
               <ProductCard>
                 <ProductRow
-                  title='群聊资料'
+                  title={tr('chatInfo.groupProfile')}
                   trailing={
                     <Text
                       numberOfLines={1}
@@ -146,13 +148,13 @@ function Settings ({ id }: { id: string }) {
                   onPress={groupLink}
                 />
                 <ProductRow
-                  title='群公告'
+                  title={tr('chatInfo.announcement')}
                   trailing={
                     <Text
                       numberOfLines={1}
                       style={{ color: t.text2, fontSize: 15, maxWidth: '55%' }}
                     >
-                      {group?.notification || '未设置'}
+                      {group?.notification || tr('person.notSet')}
                     </Text>
                   }
                   onPress={groupLink}
@@ -163,7 +165,7 @@ function Settings ({ id }: { id: string }) {
             <ProductCard>
               <ProductRow
                 title={conversation.showName}
-                subtitle={`ID：${conversation.userID || ''}`}
+                subtitle={tr('common.idLabel', { id: conversation.userID || '' })}
                 leading={
                   <ProductAvatar
                     id={conversation.userID || id}
@@ -181,20 +183,20 @@ function Settings ({ id }: { id: string }) {
           )}
           <ProductCard>
             <ProductRow
-              title='搜索聊天记录'
+              title={tr('chatInfo.searchHistory')}
               onPress={() => router.push(`/chats/search/${encodeURIComponent(id)}` as Href)}
             />
             <ProductRow
-              title='图片、文件与链接'
+              title={tr('chatInfo.media')}
               onPress={() => router.push(`/chats/assets/${encodeURIComponent(id)}` as Href)}
             />
           </ProductCard>
           <ProductCard>
             <ProductRow
-              title='置顶聊天'
+              title={tr('chatInfo.pin')}
               trailing={
                 <ProductSwitch
-                  accessibilityLabel='置顶聊天'
+                  accessibilityLabel={tr('chatInfo.pin')}
                   disabled={task.busy}
                   value={!!conversation.isPinned}
                   onValueChange={value => {
@@ -206,10 +208,10 @@ function Settings ({ id }: { id: string }) {
               }
             />
             <ProductRow
-              title='消息免打扰'
+              title={tr('chatInfo.mute')}
               trailing={
                 <ProductSwitch
-                  accessibilityLabel='消息免打扰'
+                  accessibilityLabel={tr('chatInfo.mute')}
                   disabled={task.busy}
                   value={conversation.recvMsgOpt === 2}
                   onValueChange={value => {
@@ -221,10 +223,10 @@ function Settings ({ id }: { id: string }) {
               }
             />
             <ProductRow
-              title='归档会话'
+              title={tr('chatInfo.archive')}
               trailing={
                 <ProductSwitch
-                  accessibilityLabel='归档会话'
+                  accessibilityLabel={tr('chatInfo.archive')}
                   disabled={task.busy}
                   value={archived}
                   onValueChange={value => {
@@ -238,7 +240,7 @@ function Settings ({ id }: { id: string }) {
           </ProductCard>
           <ProductCard>
             <ProductRow
-              title='清空聊天记录'
+              title={tr('chatInfo.clearHistory')}
               danger
               centered
               onPress={() => {
@@ -247,7 +249,7 @@ function Settings ({ id }: { id: string }) {
               }}
             />
             <ProductRow
-              title='删除会话'
+              title={tr('chatInfo.deleteChat')}
               danger
               centered
               onPress={() => {
@@ -261,12 +263,12 @@ function Settings ({ id }: { id: string }) {
       {confirmation && (
         <Confirm
           error={task.error}
-          title={confirmation === 'delete' ? '删除会话？' : '清空聊天记录？'}
-          confirmLabel={confirmation === 'delete' ? '删除' : '清空'}
+          title={confirmation === 'delete' ? tr('chatInfo.deleteChatTitle') : tr('chatInfo.clearHistoryTitle')}
+          confirmLabel={confirmation === 'delete' ? tr('common.delete') : tr('chatInfo.clear')}
           message={
             confirmation === 'delete'
-              ? '确认删除这个会话及当前账号的聊天记录？此操作无法在界面中撤销，不会替对方删除消息。'
-              : '确认清空当前账号在此会话的聊天记录？此操作无法在界面中撤销。'
+              ? tr('chatInfo.deleteChatMessage')
+              : tr('chatInfo.clearHistoryMessage')
           }
           busy={task.busy}
           onCancel={() => setConfirmation(undefined)}

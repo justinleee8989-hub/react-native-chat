@@ -1,3 +1,4 @@
+import { ProductError } from '../shared/product-error.ts'
 const ARCHIVE_NAMESPACE = '$reactNativeChatArchive'
 const LEGACY_EX_KEY = '$legacyConversationEx'
 
@@ -30,11 +31,11 @@ export function isConversationArchived (ex: string | undefined, userID: string) 
 
 export function updateConversationArchiveEx (ex: string | undefined, userID: string, archived: boolean) {
   if (!userID)
-    throw new Error('缺少当前用户，无法更新归档状态')
+    throw new ProductError('archive.noUser')
   const value = parseEx(ex)
   const existing = value[ARCHIVE_NAMESPACE]
   if (existing !== undefined && (!isRecord(existing) || existing.version !== 1 || !isRecord(existing.archivedByUser)))
-    throw new Error('会话 ex 已包含未知的归档数据，拒绝覆盖')
+    throw new ProductError('archive.unknownData')
   const metadata = existing as ArchiveMetadata | undefined
   const archivedByUser = Object.assign(Object.create(null), metadata?.archivedByUser || {}) as Record<string, boolean>
   if (archived)

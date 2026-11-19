@@ -13,6 +13,7 @@ import { useReanimatedKeyboardAnimation } from 'react-native-keyboard-controller
 import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { reportError } from '../../application/store'
+import { useT } from '../../i18n'
 import { useProductLayout } from '../../ui/preferences'
 import { ProductIcon } from '../../ui/ProductIcon'
 import { useProductTheme } from '../../ui/theme'
@@ -24,6 +25,7 @@ import type { ProductInputToolbarProps } from './types'
 import { useComposerSize } from './useComposerSize'
 
 export function ProductInputToolbar (props: ProductInputToolbarProps) {
+  const tr = useT()
   const t = useProductTheme()
   const { desktop } = useProductLayout()
   const insets = useSafeAreaInsets()
@@ -121,7 +123,7 @@ export function ProductInputToolbar (props: ProductInputToolbarProps) {
                       : undefined
                   }
                   onSend={dispatch}
-                  sendButtonProps={{ accessibilityLabel: '发送' }}
+                  sendButtonProps={{ accessibilityLabel: tr('composer.send') }}
                 />
               )
             }
@@ -129,7 +131,7 @@ export function ProductInputToolbar (props: ProductInputToolbarProps) {
             renderActions={() => (
               <Pressable
                 accessibilityRole='button'
-                accessibilityLabel='更多附件'
+                accessibilityLabel={tr('composer.moreAttachments')}
                 onPress={() => toggle('more')}
                 style={[styles.actionButton, {
                   transform: [{ rotate: panel === 'more' ? '45deg' : '0deg' }],

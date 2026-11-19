@@ -7,7 +7,7 @@ import AppearanceScreen from './AppearanceScreen'
 const mockOpenMaster = jest.fn()
 let mockScheme: 'light' | 'dark' = 'light'
 let mockAppearance = 'auto'
-jest.mock('../ui/preferences', () => ({
+jest.mock('../ui/preferences', () => ({ useLanguageChoice: () => 'auto',
   setChatTheme: jest.fn(),
   setProductAppearance: jest.fn(),
   useChatTheme: () => 'classic',

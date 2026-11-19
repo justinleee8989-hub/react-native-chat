@@ -3,12 +3,13 @@ import test from 'node:test'
 import { readFileSync } from 'node:fs'
 import { runInNewContext } from 'node:vm'
 import ts from 'typescript'
+import { withI18n } from '../i18n/test-modules.mjs'
 
 function service (fetch) {
   const exports = {}
   runInNewContext(ts.transpileModule(readFileSync(new URL('./server-history.ts', import.meta.url), 'utf8'), {
     compilerOptions: { module: ts.ModuleKind.CommonJS },
-  }).outputText, { exports, fetch, AbortController, setTimeout, clearTimeout, Date, Error })
+  }).outputText, { exports, fetch, AbortController, setTimeout, clearTimeout, Date, Error, require: withI18n() })
   return exports.fetchServerHistory
 }
 const session = { chatToken: 'test-only-token' }

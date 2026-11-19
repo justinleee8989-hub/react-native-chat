@@ -8,6 +8,7 @@ import {
 } from '@kesha-antonov/react-native-chat'
 import { GestureDetector, useTapGesture } from 'react-native-gesture-handler'
 import { formatCallDuration } from '../calls/terminal-metadata'
+import { useT } from '../i18n'
 import { useSentPartColor } from '../ui/ProductChatTheme'
 import { ProductIcon } from '../ui/ProductIcon'
 import { useProductTheme } from '../ui/theme'
@@ -20,6 +21,7 @@ function AudioControls ({
   onToggle,
   color,
 }: AudioPlayerRenderProps & { color: string }) {
+  const tr = useT()
   const gesture = useTapGesture({
     runOnJS: true,
     cancelsTouchesInView: false,
@@ -33,7 +35,7 @@ function AudioControls ({
       <View
         accessible
         accessibilityRole='button'
-        accessibilityLabel={isPlaying ? '暂停语音' : '播放语音'}
+        accessibilityLabel={isPlaying ? tr('audio.pause') : tr('audio.play')}
         accessibilityState={{ disabled: isDisabled }}
         onAccessibilityTap={isDisabled ? undefined : onToggle}
         style={{

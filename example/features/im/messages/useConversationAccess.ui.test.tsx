@@ -1,6 +1,10 @@
 import { expect, it, jest } from '@jest/globals'
 import { act, renderHook, waitFor } from '@testing-library/react-native'
+import { translatorFor } from '../i18n/translate'
+import { errorMessage } from '../shared/error-message'
 import { useConversationAccess } from './useConversationAccess'
+
+const zhT = translatorFor('zh')
 const mockGroup = jest.fn<(...args: unknown[]) => Promise<unknown>>()
 const mockMember = jest.fn<(...args: unknown[]) => Promise<unknown>>()
 const mockBlacklist = jest.fn<() => Promise<unknown[]>>()
@@ -11,7 +15,7 @@ it('uses real group mute permissions and accepts expired millisecond timestamps'
   mockGroup.mockResolvedValue({ status: 3, memberCount: 19 })
   mockMember.mockResolvedValue({ roleLevel: 20 })
   const view = await renderHook(() => useConversationAccess(conversation, 'self'))
-  await waitFor(() => expect(view.result.current.notice).toBe('全员禁言中'))
+  await waitFor(() => expect(zhT(view.result.current.notice || 'error.generic')).toBe('全员禁言中'))
   expect(view.result.current.count).toBe(19)
   mockMember.mockResolvedValue({ roleLevel: 60, muteEndTime: Date.now() - 10000 })
   await act(async () => view.result.current.refresh())
@@ -30,36 +34,36 @@ it('does not let a superseded blacklist request overwrite current permissions', 
 it('shows only the current accounts own blacklist and exposes retryable failures', async () => {
   mockBlacklist.mockResolvedValueOnce([{ userID: 'peer' }]).mockRejectedValueOnce(new Error('权限同步失败'))
   const view = await renderHook(() => useConversationAccess({ ...conversation, groupID: undefined, userID: 'peer' }, 'self'))
-  await waitFor(() => expect(view.result.current.notice).toBe('已加入黑名单，无法发送消息'))
+  await waitFor(() => expect(zhT(view.result.current.notice || 'error.generic')).toBe('已加入黑名单，无法发送消息'))
   await act(async () => view.result.current.refresh())
-  expect(view.result.current.error).toBe('权限同步失败')
-  expect(view.result.current.notice).toBe('已加入黑名单，无法发送消息')
+  expect(errorMessage(view.result.current.error, zhT)).toBe('操作失败，请稍后重试')
+  expect(zhT(view.result.current.notice || 'error.generic')).toBe('已加入黑名单，无法发送消息')
 })
 
 it('blocks sending when the group has been dissolved even if self membership remains', async () => {
   mockGroup.mockResolvedValue({ status: 2, memberCount: 0 })
   mockMember.mockResolvedValue({ roleLevel: 60 })
   const view = await renderHook(() => useConversationAccess(conversation, 'self'))
-  await waitFor(() => expect(view.result.current.notice).toBe('群聊已解散，无法发送消息'))
+  await waitFor(() => expect(zhT(view.result.current.notice || 'error.generic')).toBe('群聊已解散，无法发送消息'))
 })
 it('blocks sending when the current user is no longer a group member', async () => {
   mockGroup.mockResolvedValue({ status: 0, memberCount: 5 })
   mockMember.mockResolvedValue(undefined)
   const view = await renderHook(() => useConversationAccess(conversation, 'self'))
-  await waitFor(() => expect(view.result.current.notice).toBe('你已不在群聊中，无法发送消息'))
+  await waitFor(() => expect(zhT(view.result.current.notice || 'error.generic')).toBe('你已不在群聊中，无法发送消息'))
 })
 it('keeps sending blocked while permissions are still synchronizing', async () => {
   mockGroup.mockImplementation(() => new Promise(() => {}))
   mockMember.mockImplementation(() => new Promise(() => {}))
   const view = await renderHook(() => useConversationAccess(conversation, 'self'))
-  expect(view.result.current.notice).toBe('正在同步会话权限…')
+  expect(zhT(view.result.current.notice || 'error.generic')).toBe('正在同步会话权限…')
 })
 it('hides SDK diagnostics and keeps sending blocked after a permission failure until retry succeeds', async () => {
   mockGroup.mockRejectedValueOnce(new Error('rpc error: code = Internal desc = /workspace/private.go:20'))
     .mockResolvedValueOnce({ status: 0, memberCount: 5 })
   mockMember.mockResolvedValue({ roleLevel: 60 })
   const view = await renderHook(() => useConversationAccess(conversation, 'self'))
-  await waitFor(() => expect(view.result.current.error).toBe('操作失败，请稍后重试'))
+  await waitFor(() => expect(errorMessage(view.result.current.error, zhT)).toBe('操作失败，请稍后重试'))
   expect(view.result.current.notice).not.toBe('')
   await act(async () => view.result.current.refresh())
   expect(view.result.current.notice).toBe('')
@@ -73,7 +77,7 @@ it('blocks sending when a previously successful permission refresh later fails',
   const view = await renderHook(() => useConversationAccess(conversation, 'self'))
   await waitFor(() => expect(view.result.current.notice).toBe(''))
   await act(async () => view.result.current.refresh())
-  expect(view.result.current.error).toBe('操作失败，请稍后重试')
+  expect(errorMessage(view.result.current.error, zhT)).toBe('操作失败，请稍后重试')
   expect(view.result.current.notice).not.toBe('')
 })
 
@@ -81,5 +85,5 @@ it('blocks sending for a group unavailable state', async () => {
   mockGroup.mockResolvedValue({ status: 1, memberCount: 5 })
   mockMember.mockResolvedValue({ roleLevel: 60 })
   const view = await renderHook(() => useConversationAccess(conversation, 'self'))
-  await waitFor(() => expect(view.result.current.notice).toBe('群聊当前不可用，无法发送消息'))
+  await waitFor(() => expect(zhT(view.result.current.notice || 'error.generic')).toBe('群聊当前不可用，无法发送消息'))
 })

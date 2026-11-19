@@ -2,6 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { Platform } from 'react-native'
 import { type Href, useFocusEffect, useRouter } from 'expo-router'
 import { prefetchConversationHistory, reportError } from '../application/store'
+import { ProductError } from '../shared/product-error.ts'
 import { isChatEntryReady, registerChatEntryReady, waitForChatEntry } from './chat-entry'
 import { useDesktopNavigation } from './DesktopNavigation'
 import { traceChatEntry } from './entry-performance'
@@ -132,7 +133,7 @@ export function useChatEntry (account: string, open: (href: Href) => void, hasHi
       if (intent.current !== current)
         return
       if (!ready)
-        throw new Error('会话页面尚未准备完成，请再点一次重试')
+        throw new ProductError('chatEntry.notReady')
       committed.current = true
       traceChatEntry(account, id, 'navigate')
       open(href)

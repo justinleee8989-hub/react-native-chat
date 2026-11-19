@@ -3,6 +3,7 @@ import { Pressable, Text, View } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import type { Conversation } from '../domain/types'
+import { useT } from '../i18n'
 import { useDesktopNavigation } from '../navigation/DesktopNavigation'
 import { useProductLayout } from '../ui/preferences'
 import { ProductAvatar } from '../ui/primitives'
@@ -22,6 +23,7 @@ export function ProductChatHeader ({
   onCall: () => void
   onMore: () => void
 }) {
+  const tr = useT()
   const router = useRouter()
   const t = useProductTheme()
   const navigation = useDesktopNavigation()
@@ -50,14 +52,14 @@ export function ProductChatHeader ({
         {(!desktop || navigation?.canGoBackInSection) && (
           <ProductIconButton
             name='back'
-            label='返回'
+            label={tr('common.back')}
             onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)/chats'))}
           />
         )}
         {desktop && (
           <Pressable
             accessibilityRole='button'
-            accessibilityLabel='聊天信息'
+            accessibilityLabel={tr('chatInfo.title')}
             onPress={info}
             style={{ marginLeft: 4 }}
           >
@@ -73,7 +75,7 @@ export function ProductChatHeader ({
         <Pressable
           onPress={info}
           accessibilityRole='button'
-          accessibilityLabel='聊天信息'
+          accessibilityLabel={tr('chatInfo.title')}
           style={{
             flex: 1,
             minWidth: 0,
@@ -102,13 +104,13 @@ export function ProductChatHeader ({
             {typing ||
               (conversation.groupID
                 ? memberCount === undefined
-                  ? '群聊'
-                  : `${memberCount} 位成员`
-                : '私人会话')}
+                  ? tr('header.group')
+                  : tr('header.memberCount', { count: memberCount })
+                : tr('header.private'))}
           </Text>
         </Pressable>
-        <ProductIconButton name='phone' label='音视频通话' onPress={onCall} />
-        <ProductIconButton name='more' label='聊天信息' onPress={onMore} />
+        <ProductIconButton name='phone' label={tr('contacts.call')} onPress={onCall} />
+        <ProductIconButton name='more' label={tr('chatInfo.title')} onPress={onMore} />
       </View>
     </View>
   )

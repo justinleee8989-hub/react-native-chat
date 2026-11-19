@@ -1,4 +1,5 @@
 import md5 from 'md5'
+import { ProductError, ServerError } from '../shared/product-error.ts'
 
 export type AccountMode = 'register' | 'reset'
 interface AccountForm {
@@ -12,9 +13,9 @@ interface AccountForm {
 export function createAccountService (baseURL: string, platform: number, verificationEnabled: boolean, request: typeof fetch = fetch) {
   function check (email: string) {
     if (!verificationEnabled)
-      throw new Error('尚未配置邮件验证服务，请联系管理员启用后再试')
+      throw new ProductError('auth.emailServiceOff')
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
-      throw new Error('请填写有效邮箱')
+      throw new ProductError('auth.enterValidEmail')
   }
   async function post (path: string, body: object) {
     const controller = new AbortController()
@@ -27,9 +28,9 @@ export function createAccountService (baseURL: string, platform: number, verific
       })
       const result = await response.json()
       if (!result || typeof result.errCode !== 'number')
-        throw new Error('ChatServer 响应格式不正确，请检查服务地址和版本')
+        throw new ProductError('error.badResponse')
       if (!response.ok || result.errCode)
-        throw new Error(result.errMsg || `账户操作失败 (${response.status})`)
+        throw new ServerError(result, response.status)
     } finally {
       clearTimeout(timeout)
     }
@@ -42,7 +43,7 @@ export function createAccountService (baseURL: string, platform: number, verific
     submit: async (form: AccountForm) => {
       check(form.email)
       if (!form.password || !form.code.trim() || (form.mode === 'register' && !form.nickname?.trim()))
-        throw new Error('请填写密码、验证码及昵称（注册时）')
+        throw new ProductError('auth.fillRequired')
       if (form.mode === 'register')
         await post('register', { platform, autoLogin: false, verifyCode: form.code.trim(), invitationCode: form.invitationCode?.trim() || '', user: { email: form.email, nickname: form.nickname?.trim(), password: md5(form.password) } })
       else

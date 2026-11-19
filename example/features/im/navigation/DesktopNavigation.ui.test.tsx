@@ -16,7 +16,7 @@ jest.mock('expo-router', () => ({
   usePathname: () => mockPath,
 }))
 jest.mock('../application/store', () => ({ useOpenIM: () => ({ session: mockSession, conversations: [{ conversationID: 'chat-7' }, { conversationID: 'chat-8' }] }) }))
-jest.mock('../ui/preferences', () => ({ useProductLayout: () => ({ desktop: true }) }))
+jest.mock('../ui/preferences', () => ({ useLanguageChoice: () => 'auto', useProductLayout: () => ({ desktop: true }) }))
 
 function rootState (tabIndex = 0, detail = true) {
   const tabs = { key: 'tabs-key', index: tabIndex, routes: [

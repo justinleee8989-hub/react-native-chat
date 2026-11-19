@@ -1,7 +1,8 @@
 import type { Session } from '../domain/types'
+import { ProductError, ServerError } from '../shared/product-error.ts'
 export async function requestCallToken (session: Session, room: string, baseURL: string, request: typeof fetch = fetch) {
   if (!session.chatToken)
-    throw new Error('请重新登录后使用通话')
+    throw new ProductError('call.signInFirst')
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), 15000)
   try {
@@ -12,7 +13,7 @@ export async function requestCallToken (session: Session, room: string, baseURL:
     })
     const result = await response.json()
     if (!response.ok || result.errCode !== 0 || !result.data?.token || !result.data?.serverUrl)
-      throw new Error(result.errMsg || '无法获取通话凭据，请检查本地音视频服务')
+      throw result?.errCode ? new ServerError(result, response.status) : new ProductError('call.noToken')
     return result.data as { token: string, serverUrl: string }
   } finally {
     clearTimeout(timeout)

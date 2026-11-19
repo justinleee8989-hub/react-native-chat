@@ -3,6 +3,7 @@ import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, View }
 import { type Href, useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { offlineStatus, useConnectionStatus } from '../application/connection-status'
+import { useT } from '../i18n'
 import { useDesktopNavigation } from '../navigation/DesktopNavigation'
 import { ProductToast } from '../shared/ProductToast'
 import { useProductLayout } from './preferences'
@@ -69,6 +70,7 @@ export function ProductPage ({
   /** No header row: the page's own content opens it (我的 starts with the profile card). */
   headerHidden?: boolean
 }>) {
+  const tr = useT()
   const router = useRouter()
   const navigation = useDesktopNavigation()
   const { desktop } = useProductLayout()
@@ -79,7 +81,7 @@ export function ProductPage ({
   // Offline, every page's requests fail with whatever the SDK says (often 操作失败); the page says
   // only that the network is down, the same as the chat list.
   const connection = useConnectionStatus()
-  const shownError = error && connection === offlineStatus ? offlineStatus : error
+  const shownError = error && connection === offlineStatus ? tr('status.offline') : error
   return (
     <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: white ? t.page : t.bg }}>
       <View
@@ -126,8 +128,8 @@ export function ProductPage ({
               </Text>
             )}
             {(initialLoading || loading) && !!error && onRetry && (
-              <Pressable accessibilityRole='button' accessibilityLabel='重新加载' disabled={busy} onPress={onRetry} style={{ padding: 20, alignItems: 'center' }}>
-                <Text style={{ color: t.accent }}>重新加载</Text>
+              <Pressable accessibilityRole='button' accessibilityLabel={tr('common.reload')} disabled={busy} onPress={onRetry} style={{ padding: 20, alignItems: 'center' }}>
+                <Text style={{ color: t.accent }}>{tr('common.reload')}</Text>
               </Pressable>
             )}
             {initialLoading
@@ -138,7 +140,7 @@ export function ProductPage ({
           {/* Floats over the content: in the flow it pushed the page down on every refresh (pages
               refresh on focus), and back up when the refresh ended. */}
           {busy && !initialLoading && !loading && !refreshing && (
-            <ActivityIndicator accessibilityLabel='正在处理' color={t.accent} style={styles.busy} pointerEvents='none' />
+            <ActivityIndicator accessibilityLabel={tr('common.processing')} color={t.accent} style={styles.busy} pointerEvents='none' />
           )}
         </View>
         <ProductToast />

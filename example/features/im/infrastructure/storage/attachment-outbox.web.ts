@@ -1,4 +1,5 @@
 import type { AttachmentBatch, AttachmentPersistence } from '../../messages/attachment-batch'
+import { ProductError } from '../../shared/product-error.ts'
 
 const databaseName = 'im-attachment-outbox-v1'
 const assetPrefix = 'im-outbox:'
@@ -7,7 +8,7 @@ const MAX_BYTES = 100 * 1024 * 1024
 
 async function database () {
   if (typeof indexedDB === 'undefined')
-    throw new Error('浏览器无法保存附件，请启用本地存储后重试')
+    throw new ProductError('outbox.noStorage')
   return new Promise<IDBDatabase>((resolve, reject) => {
     const request = indexedDB.open(databaseName, 1)
     request.onupgradeneeded = () => {
@@ -16,7 +17,7 @@ async function database () {
     }
     request.onsuccess = () => resolve(request.result)
     request.onerror = () => reject(request.error)
-    request.onblocked = () => reject(new Error('附件存储被其他页面占用，请关闭旧页面后重试'))
+    request.onblocked = () => reject(new ProductError('outbox.busy'))
   })
 }
 
@@ -28,7 +29,7 @@ async function transaction<T> (storeName: string, mode: IDBTransactionMode, acti
       const request = action(tx.objectStore(storeName))
       tx.oncomplete = () => resolve(request.result)
       tx.onerror = () => reject(tx.error || request.error)
-      tx.onabort = () => reject(tx.error || new Error('附件保存失败，请检查本地存储空间后重试'))
+      tx.onabort = () => reject(tx.error || new ProductError('outbox.saveFailed'))
     })
   } finally {
     db.close()
@@ -44,23 +45,23 @@ export const attachmentOutbox: AttachmentPersistence = {
   async retain (scope, id, media) {
     const response = await fetch(media.uri)
     if (!response.ok)
-      throw new Error('无法读取附件，请重新选择')
+      throw new ProductError('outbox.unreadable')
     const blob = await response.blob()
     if (blob.size > MAX_BYTES)
-      throw new Error('单个附件不能超过 100 MB')
+      throw new ProductError('outbox.tooLarge')
     const key = batchKey(scope, id)
     await transaction('assets', 'readwrite', store => store.put(blob, key))
     return { ...media, uri: `${assetPrefix}${key}` }
   },
   async resolve (media) {
     if (!media.uri.startsWith(assetPrefix))
-      throw new Error('附件存储格式不正确，请重新选择')
+      throw new ProductError('outbox.badFormat')
     const key = media.uri.slice(assetPrefix.length)
     let uri = urls.get(key)
     if (!uri) {
       const blob = await transaction('assets', 'readonly', store => store.get(key)) as Blob | undefined
       if (!blob)
-        throw new Error('附件已从本地存储移除，请取消任务并重新选择')
+        throw new ProductError('outbox.removed')
       uri = URL.createObjectURL(blob)
       urls.set(key, uri)
     }

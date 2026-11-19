@@ -6,6 +6,7 @@ import { toMessage } from '@/features/im/domain/model'
 import type { GroupMessageReadInfo, IMMessage } from '@/features/im/domain/types'
 import { parseCallInvitation } from '../calls/invitation'
 import { messageCallSignal, projectCallMessages } from '../calls/message-projection'
+import { useT } from '../i18n'
 import { resolveExtraSequence } from './extras'
 import { MessageCustomContent } from './MessageCustomContent'
 import { groupReadCount } from './presentation'
@@ -55,6 +56,7 @@ export function useChatRows ({
   requestCall: () => void
   onRevoke: (clientMsgID: string) => void
 }) {
+  const tr = useT()
   const router = useRouter()
 
   // Typed as IMessage[] so `Chat` keeps IMessage as its message type.
@@ -62,7 +64,7 @@ export function useChatRows ({
   const messages = useMemo<IMessage[]>(
     () => projectCallMessages(rawMessages, messageID ? [messageID] : []).map((message): RowMessage => {
       const mapped: RowMessage = {
-        ...extrasMap(toMessage(message)),
+        ...extrasMap(toMessage(message, tr)),
         imRaw: message,
         imReadCount: groupReadCount(message, readInfo?.[message.clientMsgID]?.readCount),
       }
@@ -80,7 +82,7 @@ export function useChatRows ({
         ? { ...mapped, text: '' }
         : mapped
     }),
-    [rawMessages, messageID, extrasMap, readInfo]
+    [rawMessages, messageID, extrasMap, readInfo, tr]
   )
 
   const latestRequestCall = useRef(requestCall)
@@ -148,7 +150,7 @@ export function useChatRows ({
     if (raw.sendID === selfID && raw.status === 2)
       actions.push({
         key: 'revoke',
-        label: '撤回',
+        label: tr('message.revoke'),
         destructive: true,
         onPress: () => onRevoke(raw.clientMsgID),
       })
@@ -160,7 +162,7 @@ export function useChatRows ({
     )
       actions.push({
         key: 'readers',
-        label: '已读成员',
+        label: tr('message.readers'),
         onPress: () =>
           router.push({
             pathname: '/chats/readers/[id]',
@@ -169,7 +171,7 @@ export function useChatRows ({
       })
     const order = ['retry', 'reply', 'copy', 'forward', 'edit', 'readers', 'revoke']
     return actions.sort((a, b) => order.indexOf(a.key || '') - order.indexOf(b.key || ''))
-  }, [selfID, onRevoke, router, id])
+  }, [selfID, onRevoke, router, id, tr])
 
   const reactRow = extras.react
   const reactions = useMemo(() => ({

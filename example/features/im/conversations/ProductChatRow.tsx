@@ -6,6 +6,7 @@ import {
   type User,
   type ChatListItem,
 } from '@kesha-antonov/react-native-chat'
+import { useT } from '../i18n'
 import { shortTime } from '../messages/presentation'
 import { useProductLayout } from '../ui/preferences'
 import { ProductAvatar } from '../ui/primitives'
@@ -38,6 +39,7 @@ export function ProductChatRow ({
   onMenu: () => void
   onSwipe?: () => void
 }) {
+  const tr = useT()
   const t = useProductTheme()
   const { desktop } = useProductLayout()
   const swipe = PanResponder.create({
@@ -54,7 +56,7 @@ export function ProductChatRow ({
   const labels = useLabels()
   const content = getChatPreview(chat, labels, user)
   const date = chat.lastMessage?.createdAt ? new Date(chat.lastMessage.createdAt) : undefined
-  const time = date ? shortTime(date.getTime()) : ''
+  const time = date ? shortTime(date.getTime(), tr) : ''
   const web =
     Platform.OS === 'web'
       ? {
@@ -65,9 +67,9 @@ export function ProductChatRow ({
       }
       : {}
   const preview = chat.typingUsers?.length
-    ? '正在输入…'
+    ? tr('chats.typing')
     : chat.draft
-      ? `[草稿] ${chat.draft}`
+      ? tr('chats.draft', { text: chat.draft })
       : `${content.prefix || ''}${content.attachment || content.text}`
   return (
     <View {...swipe.panHandlers}>
