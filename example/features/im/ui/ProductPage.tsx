@@ -33,6 +33,7 @@ export function ProductPage ({
   scrollRef,
   overlay,
   backHref = '/(tabs)/contacts',
+  headerHidden = false,
 }: React.PropsWithChildren<{
   title: string
   subtitle?: string
@@ -65,6 +66,8 @@ export function ProductPage ({
   /** Drawn over the scrolling area and not scrolled with it (the contacts letter index). */
   overlay?: React.ReactNode
   backHref?: Href
+  /** No header row: the page's own content opens it (我的 starts with the profile card). */
+  headerHidden?: boolean
 }>) {
   const router = useRouter()
   const navigation = useDesktopNavigation()
@@ -87,7 +90,7 @@ export function ProductPage ({
           alignSelf: 'center',
         }}
       >
-        <ProductHeader
+        {!headerHidden && <ProductHeader
           detail={!root}
           backgroundColor={white ? t.page : t.bg}
           title={title}
@@ -104,7 +107,7 @@ export function ProductPage ({
                   router.replace(backHref)
               }
           }
-        />
+        />}
         {headerContent}
         <View style={{ flex: 1 }}>
           <ScrollView

@@ -58,7 +58,7 @@ export function ProductRow ({
           style={{
             fontSize: big ? 20 : 16,
             lineHeight: big ? 26 : 22,
-            fontWeight: big ? '600' : undefined,
+            fontWeight: big ? '700' : undefined,
             color: danger ? t.danger : t.text,
           }}
         >
@@ -120,7 +120,7 @@ export function ProductRow ({
               style={{
                 fontSize: big ? 20 : 16,
                 lineHeight: big ? 26 : 22,
-                fontWeight: big ? '600' : undefined,
+                fontWeight: big ? '700' : undefined,
                 color: danger ? t.danger : t.text,
               }}
             >

@@ -8,15 +8,17 @@ import {
 } from '@kesha-antonov/react-native-chat'
 import * as Sharing from 'expo-sharing'
 import { GestureDetector, useTapGesture } from 'react-native-gesture-handler'
+import { useSentPartColor } from '../ui/ProductChatTheme'
 import { ProductIcon } from '../ui/ProductIcon'
 import { useProductTheme } from '../ui/theme'
 
 export function ProductFile (props: Partial<MessageFileProps<IMessage>>) {
   const t = useProductTheme()
+  const sent = useSentPartColor()
   const [error, setError] = useState(false)
   const file = props.currentMessage?.file
   const own = props.position === 'right'
-  const color = own ? t.onAccent : t.text
+  const color = own ? sent : t.text
   const open = () => {
     if (!file)
       return
@@ -59,7 +61,7 @@ export function ProductFile (props: Partial<MessageFileProps<IMessage>>) {
               backgroundColor: own ? '#ffffff33' : t.accentWeak,
             }}
           >
-            <ProductIcon name='file' size={22} color={own ? t.onAccent : t.accent} />
+            <ProductIcon name='file' size={22} color={own ? sent : t.accent} />
           </View>
           <View style={{ flexShrink: 1 }}>
             <Text

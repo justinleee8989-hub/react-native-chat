@@ -7,9 +7,8 @@ import type { SelfProfile } from '../domain/profile'
 import { rememberedValue } from '../shared/remembered'
 import { Confirm } from '../shared/shared'
 import { useTask } from '../shared/useTask'
-import { useProductAppearance, useProductLayout, setProductAppearance } from '../ui/preferences'
-import type { ProductAppearance } from '../ui/preferences-model'
-import { ProductAvatar, ProductCard, ProductRow, ProductSheet } from '../ui/primitives'
+import { useProductLayout } from '../ui/preferences'
+import { ProductAvatar, ProductCard, ProductRow } from '../ui/primitives'
 import { ProductPage } from '../ui/ProductPage'
 import { useProductTheme } from '../ui/theme'
 import { useMasterNavigation } from './DesktopNavigation'
@@ -26,9 +25,6 @@ export default function MyScreen () {
 function MyAccount ({ userID, account }: { userID: string, account: string }) {
   const t = useProductTheme()
   const { desktop } = useProductLayout()
-  const appearance = useProductAppearance()
-  const [appearanceMenu, setAppearanceMenu] = useState(false)
-  const themes = { auto: '跟随系统', light: '浅色', dark: '深色' } as const
   const router = useRouter()
   const openMaster = useMasterNavigation()
   const { busy } = useOpenIM()
@@ -50,11 +46,12 @@ function MyAccount ({ userID, account }: { userID: string, account: string }) {
     void refresh()
   }, [refresh]))
   return (
-    <ProductPage title='我的' root {...task} loading={!task.hasSucceeded && !kept} onRetry={() => {
+    // A phone opens on the profile card; PC keeps the title, as every master list there has one.
+    <ProductPage title='我的' root headerHidden={!desktop} {...task} loading={!task.hasSucceeded && !kept} onRetry={() => {
       void refresh()
     }}
     >
-      <View style={{ marginHorizontal: desktop ? 12 : 16, marginTop: 12, gap: 24 }}>
+      <View style={{ marginHorizontal: desktop ? 12 : 16, marginTop: desktop ? 12 : 20, gap: 24 }}>
         <ProductCard>
           <ProductRow
             big
@@ -98,12 +95,7 @@ function MyAccount ({ userID, account }: { userID: string, account: string }) {
         <ProductCard>
           <ProductRow
             title='外观'
-            trailing={
-              <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
-                <Text style={{ color: t.text2, fontSize: 15 }}>{themes[appearance]}</Text>
-              </View>
-            }
-            onPress={() => setAppearanceMenu(true)}
+            onPress={() => openMaster('/chats/appearance' as Href)}
           />
         </ProductCard>
         <ProductCard>
@@ -118,20 +110,6 @@ function MyAccount ({ userID, account }: { userID: string, account: string }) {
           />
         </ProductCard>
       </View>
-      {appearanceMenu && (
-        <ProductSheet
-          title='外观'
-          onClose={() => setAppearanceMenu(false)}
-          items={Object.entries(themes).map(([value, label]) => ({
-            title: label,
-            trailing: <Text style={{ color: t.accent }}>{appearance === value ? '✓' : ''}</Text>,
-            onPress: () => {
-              setProductAppearance(value as ProductAppearance)
-              setAppearanceMenu(false)
-            },
-          }))}
-        />
-      )}
       {confirmLogout && (
         <Confirm
           title='退出当前账户？'

@@ -2,6 +2,7 @@ import React, { useContext } from 'react'
 import { Text, View } from 'react-native'
 import { Bubble, type BubbleProps, type IMessage } from '@kesha-antonov/react-native-chat'
 import { useProductLayout } from '../../ui/preferences'
+import { useChatThemeLook } from '../../ui/ProductChatTheme'
 import { useProductTheme } from '../../ui/theme'
 import { ProductAudio } from '../ProductAudio'
 import { ProductContextMenu } from '../ProductContextMenu'
@@ -29,12 +30,14 @@ export function ProductBubble (props: BubbleProps<IMessage>) {
     next.user._id !== props.currentMessage.user._id ||
     new Date(next.createdAt).getTime() - new Date(props.currentMessage.createdAt).getTime() >
       5 * 60 * 1000
+  // 我的 → 外观 → 聊天主题 sets the radius and the sharper corner a group ends on.
+  const { radius, corner } = useChatThemeLook().preset
   const corners = {
-    borderRadius: 20,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    borderBottomLeftRadius: last && props.position === 'left' ? 6 : 20,
-    borderBottomRightRadius: last && props.position === 'right' ? 6 : 20,
+    borderRadius: radius,
+    borderTopLeftRadius: radius,
+    borderTopRightRadius: radius,
+    borderBottomLeftRadius: last && props.position === 'left' ? corner : radius,
+    borderBottomRightRadius: last && props.position === 'right' ? corner : radius,
     maxWidth: width ? width * (desktop ? 0.62 : 0.76) : undefined,
   }
   return (

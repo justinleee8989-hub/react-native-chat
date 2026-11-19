@@ -2,13 +2,12 @@ import { useEffect, useSyncExternalStore } from 'react'
 import { useWindowDimensions } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useColorScheme } from '@/hooks/use-color-scheme'
+import { parseChatTheme, type ChatThemeId } from './chat-theme'
+import { parseChatWallpaper, type ChatWallpaperId } from './chat-wallpaper'
 import { parseAppearance, resolveAppearance, type ProductAppearance } from './preferences-model'
 
-const key = 'openim.product.appearance'
-let appearance: ProductAppearance = 'auto'
 let phonePreview = false
 let initialized = false
-let changed = false
 const listeners = new Set<() => void>()
 const subscribe = (listener: () => void) => {
   listeners.add(listener); return () => {
@@ -16,28 +15,61 @@ const subscribe = (listener: () => void) => {
   }
 }
 const emit = () => listeners.forEach(listener => listener())
+
+/**
+ * One choice saved on this device. A choice made before the saved one has loaded wins over it.
+ */
+function stored<T extends string> (storageKey: string, initial: T, parse: (value: string | null) => T) {
+  let value = initial
+  let changed = false
+  return {
+    initial,
+    get: () => value,
+    restore: () => {
+      void AsyncStorage.getItem(storageKey).then(saved => {
+        if (!changed) {
+          value = parse(saved); emit()
+        }
+      }).catch(() => {})
+    },
+    set: (next: T) => {
+      changed = true
+      value = next
+      emit()
+      void AsyncStorage.setItem(storageKey, next).catch(() => {})
+    },
+  }
+}
+const appearance = stored<ProductAppearance>('openim.product.appearance', 'auto', parseAppearance)
+const chatWallpaper = stored<ChatWallpaperId>('openim.product.chat-wallpaper', 'plain', parseChatWallpaper)
+const chatTheme = stored<ChatThemeId>('openim.product.chat-theme', 'default', parseChatTheme)
+// The picked photo for the 相册图片 wallpaper: a file in the app's documents, or a data URL on web.
+const chatWallpaperPhoto = stored<string>('openim.product.chat-wallpaper-photo', '', value => value ?? '')
 function restore () {
   if (initialized)
     return
   initialized = true
-  void AsyncStorage.getItem(key).then(value => {
-    if (!changed) {
-      appearance = parseAppearance(value); emit()
-    }
-  }).catch(() => {})
+  appearance.restore()
+  chatWallpaper.restore()
+  chatTheme.restore()
+  chatWallpaperPhoto.restore()
 }
-export function setProductAppearance (value: ProductAppearance) {
-  changed = true
-  appearance = value
-  emit()
-  void AsyncStorage.setItem(key, value).catch(() => {})
+function useStored<T extends string> (choice: ReturnType<typeof stored<T>>) {
+  useEffect(restore, [])
+  return useSyncExternalStore(subscribe, choice.get, () => choice.initial)
 }
+
+// 我的 → 外观: these apply to every chat on this device.
+export const setChatWallpaper = chatWallpaper.set
+export const useChatWallpaper = () => useStored(chatWallpaper)
+export const setChatWallpaperPhoto = chatWallpaperPhoto.set
+export const useChatWallpaperPhoto = () => useStored(chatWallpaperPhoto)
+export const setChatTheme = chatTheme.set
+export const useChatTheme = () => useStored(chatTheme)
+export const setProductAppearance = appearance.set
+export const useProductAppearance = () => useStored(appearance)
 export function setPhonePreview (value: boolean) {
   phonePreview = value; emit()
-}
-export function useProductAppearance () {
-  useEffect(restore, [])
-  return useSyncExternalStore(subscribe, () => appearance, () => 'auto' as const)
 }
 export function useProductScheme () {
   return resolveAppearance(useProductAppearance(), useColorScheme())

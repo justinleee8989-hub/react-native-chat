@@ -8,6 +8,7 @@ import {
 } from '@kesha-antonov/react-native-chat'
 import { GestureDetector, useTapGesture } from 'react-native-gesture-handler'
 import { formatCallDuration } from '../calls/terminal-metadata'
+import { useSentPartColor } from '../ui/ProductChatTheme'
 import { ProductIcon } from '../ui/ProductIcon'
 import { useProductTheme } from '../ui/theme'
 import { ProductPulse } from './ProductMotion'
@@ -61,12 +62,13 @@ function AudioControls ({
 
 export function ProductAudio (props: RenderMessageAudioProps<IMessage>) {
   const t = useProductTheme()
+  const sent = useSentPartColor()
   return (
     <MessageAudio
       {...props}
       containerStyle={{ marginHorizontal: 0, marginVertical: 0 }}
       renderPlayer={player => (
-        <AudioControls {...player} color={props.position === 'right' ? t.onAccent : t.text} />
+        <AudioControls {...player} color={props.position === 'right' ? sent : t.text} />
       )}
     />
   )

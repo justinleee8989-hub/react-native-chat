@@ -4,6 +4,7 @@ import { render } from '@testing-library/react-native'
 import { ProductBubble, ProductMessage } from './ProductMessage'
 
 jest.mock('../ui/preferences', () => ({ useProductLayout: () => ({ desktop: false }) }))
+jest.mock('../ui/ProductChatTheme', () => ({ useChatPill: () => undefined, useChatThemeLook: () => ({ preset: { radius: 20, corner: 6 }, look: { text: '#fff' } }) }))
 jest.mock('../ui/theme', () => ({ useProductTheme: () => ({ text: '#111', text2: '#555', text3: '#777', accent: '#06f', danger: '#f00' }) }))
 jest.mock('../ui/primitives', () => ({ ProductAvatar: () => null }))
 jest.mock('../ui/ProductIcon', () => ({ ProductIcon: () => null }))

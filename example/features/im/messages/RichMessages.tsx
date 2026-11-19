@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router'
 import { GestureDetector, useTapGesture } from 'react-native-gesture-handler'
 import type { IMMessage } from '../domain/types'
 import { ProductAvatar } from '../ui/primitives'
+import { useSentPartColor } from '../ui/ProductChatTheme'
 import { ProductIcon } from '../ui/ProductIcon'
 import { useProductTheme } from '../ui/theme'
 import { locationURL } from './composer'
@@ -20,6 +21,7 @@ export function RichMessage ({
 }) {
   const router = useRouter()
   const t = useProductTheme()
+  const sent = useSentPartColor()
   const card =
     message?.contentType === 108 && message.cardElem?.userID ? message.cardElem : undefined
   const candidate = message?.contentType === 109 ? message.locationElem : undefined
@@ -53,7 +55,7 @@ export function RichMessage ({
   })
   if (!card && !location)
     return null
-  const color = own ? t.onAccent : t.text
+  const color = own ? sent : t.text
   return (
     <GestureDetector gesture={gesture}>
       <View
@@ -82,7 +84,7 @@ export function RichMessage ({
                 backgroundColor: own ? '#ffffff33' : t.accentWeak,
               }}
             >
-              <ProductIcon name='loc' size={22} color={own ? t.onAccent : t.accent} />
+              <ProductIcon name='loc' size={22} color={own ? sent : t.accent} />
             </View>
           )}
           <View style={{ minWidth: 0 }}>

@@ -18,6 +18,7 @@ import { useChatEntryReady } from '../../navigation/useChatEntry'
 import { ConnectionStatus } from '../../shared/ConnectionStatus'
 import { Confirm } from '../../shared/shared'
 import { useTask } from '../../shared/useTask'
+import { usePhotoWallpaperRender } from '../../ui/ChatWallpaperView'
 import { useProductLayout, useProductScheme } from '../../ui/preferences'
 import { productChatLabels } from '../../ui/ProductChatLabels'
 import { productChatIcons, useProductChatTheme } from '../../ui/ProductChatTheme'
@@ -72,6 +73,7 @@ function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
   const scheme = useProductScheme()
   const { desktop } = useProductLayout()
   const background = theme.colors.background
+  const renderWallpaper = usePhotoWallpaperRender()
   const conversation = state.conversations.find(item => item.conversationID === id)
   const sessionID = state.session?.userID
   const access = useConversationAccess(conversation, state.session?.userID || '')
@@ -228,6 +230,7 @@ function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
         colorScheme={scheme}
         theme={theme}
         darkTheme={theme}
+        renderWallpaper={renderWallpaper}
         icons={productChatIcons}
         labels={productChatLabels}
         renderChatEmpty={rows.renderChatEmpty}

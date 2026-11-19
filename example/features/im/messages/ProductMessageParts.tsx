@@ -10,13 +10,15 @@ import {
   type ReplyPreviewProps,
 } from '@kesha-antonov/react-native-chat'
 import { useProductLayout } from '../ui/preferences'
+import { useSentPartColor } from '../ui/ProductChatTheme'
 import { ProductIcon } from '../ui/ProductIcon'
 import { useProductTheme } from '../ui/theme'
 import { ProductImagePreview } from './ProductImagePreview'
 
 export function ProductMessageText (props: RenderMessageTextProps<IMessage>) {
   const t = useProductTheme()
-  const color = props.position === 'right' ? t.onAccent : t.text
+  const sent = useSentPartColor()
+  const color = props.position === 'right' ? sent : t.text
   return (
     <MessageText
       {...props}

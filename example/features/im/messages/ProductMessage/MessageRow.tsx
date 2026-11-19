@@ -4,6 +4,7 @@ import { Message, type MessageProps, type IMessage } from '@kesha-antonov/react-
 import { useRowRenderCount } from '../../navigation/entry-performance'
 import { useProductLayout } from '../../ui/preferences'
 import { ProductAvatar } from '../../ui/primitives'
+import { useChatPill } from '../../ui/ProductChatTheme'
 import { ProductIcon } from '../../ui/ProductIcon'
 import { useProductTheme } from '../../ui/theme'
 import { messageTimestamp } from '../presentation'
@@ -21,6 +22,8 @@ export function ProductMessage ({
 }: ProductMessageProps) {
   useRowRenderCount()
   const t = useProductTheme()
+  // Over a wallpaper the date and system notices sit on a pill (外观 → 聊天壁纸).
+  const pill = useChatPill()
   const { desktop } = useProductLayout()
   const edge = desktop ? 28 : 12
   const [measuredWidth, setWidth] = useState<number>()
@@ -64,14 +67,17 @@ export function ProductMessage ({
       <MessageWidth.Provider value={width}>
         {separated && (
           <Text
-            style={{
-              color: t.text3,
-              fontSize: 12,
-              textAlign: 'center',
-              lineHeight: 16,
-              marginTop: 14,
-              marginBottom: 8,
-            }}
+            style={[
+              {
+                color: t.text3,
+                fontSize: 12,
+                textAlign: 'center',
+                lineHeight: 16,
+                marginTop: 14,
+                marginBottom: 8,
+              },
+              pill && { ...pill, alignSelf: 'center', overflow: 'hidden', borderRadius: 10, paddingHorizontal: 10, paddingVertical: 2 },
+            ]}
           >
             {messageTimestamp(date)}
           </Text>
@@ -134,7 +140,7 @@ export function ProductMessage ({
                     paddingVertical: 4,
                     paddingHorizontal: 10,
                     borderRadius: 10,
-                    backgroundColor: '#7878801f',
+                    backgroundColor: pill?.backgroundColor ?? '#7878801f',
                   }}
                 >
                   <Text

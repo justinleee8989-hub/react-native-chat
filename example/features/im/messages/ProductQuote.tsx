@@ -2,6 +2,7 @@ import React from 'react'
 import { Text, View } from 'react-native'
 import { type BubbleProps, type IMessage } from '@kesha-antonov/react-native-chat'
 import { GestureDetector, useTapGesture } from 'react-native-gesture-handler'
+import { useSentPartColor } from '../ui/ProductChatTheme'
 import { useProductTheme } from '../ui/theme'
 
 type QuoteRenderer = NonNullable<
@@ -15,8 +16,9 @@ export function ProductQuote ({
   selfID,
 }: Parameters<QuoteRenderer>[0] & { selfID?: string | number }) {
   const t = useProductTheme()
+  const sent = useSentPartColor()
   const media = replyMessage as Partial<IMessage>
-  const color = position === 'right' ? t.onAccent : t.text
+  const color = position === 'right' ? sent : t.text
   const open = () => onPress?.(replyMessage, currentMessage)
   const gesture = useTapGesture({
     runOnJS: true,

@@ -7,8 +7,8 @@ export const styles = StyleSheet.create({
   heading: { flex: 1, minWidth: 0 },
   // A section's own title (消息, 通讯录, 通话, 我的), the same on a phone and on PC: PC drew it at
   // 24/700, so the same page looked like a different product on the two.
-  pageTitle: { fontSize: 18, lineHeight: 24, fontWeight: '600' },
-  detailTitle: { fontSize: 17, lineHeight: 22, fontWeight: '600' },
+  pageTitle: { fontSize: 18, lineHeight: 24, fontWeight: '500' },
+  detailTitle: { fontSize: 17, lineHeight: 22, fontWeight: '500' },
   icon: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   card: { borderRadius: 16, overflow: 'hidden' },
   row: {

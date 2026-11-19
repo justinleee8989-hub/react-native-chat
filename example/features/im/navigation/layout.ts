@@ -7,7 +7,7 @@ export function productSection (path: string): ProductSection {
     return 'contacts'
   if (/\/(calls|call-history)(\/|$)/.test(path))
     return 'calls'
-  if (/\/(me|settings|account)(\/|$)/.test(path))
+  if (/\/(me|settings|account|appearance|chat-wallpaper|chat-wallpaper-colors)(\/|$)/.test(path))
     return 'me'
   return 'chats'
 }

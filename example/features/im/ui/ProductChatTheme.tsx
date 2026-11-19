@@ -1,14 +1,52 @@
 import React, { useMemo } from 'react'
 import { defaultLightTheme, mergeTheme, type ChatIcons } from '@kesha-antonov/react-native-chat'
-import { useProductLayout } from './preferences'
+import { chatThemeOf } from './chat-theme'
+import { resolveChatWallpaper } from './chat-wallpaper'
+import { useChatTheme, useChatWallpaper, useChatWallpaperPhoto, useProductLayout, useProductScheme } from './preferences'
 import { ProductIcon } from './ProductIcon'
 import { useProductTheme } from './theme'
+
+/** The doodle tile drawn over every chat wallpaper preset (black, tinted by the wallpaper). */
+export const chatPattern = require('../../../assets/images/chat-pattern.png')
+
+/** The current chat theme's preset and its look in the current scheme, for sent-message parts. */
+export function useChatThemeLook () {
+  const preset = chatThemeOf(useChatTheme())
+  return { preset, look: preset[useProductScheme()] }
+}
+
+/**
+ * The text and icon color for parts inside a sent bubble (text, links, quotes, files, voice,
+ * location): the chat theme's, since not every theme's sent bubbles are dark (经典's are light).
+ */
+export function useSentPartColor () {
+  return useChatThemeLook().look.text
+}
+
+/**
+ * The pill behind the chat's date and system notices over a wallpaper, so they stay readable on a
+ * photo or a strong color; undefined over the plain page, where they need none.
+ */
+export function useChatPill () {
+  const t = useProductTheme()
+  const wallpaper = resolveChatWallpaper(useChatWallpaper(), useProductScheme(), useChatWallpaperPhoto())
+  return wallpaper.kind === 'plain' ? undefined : { backgroundColor: t.bar, color: t.text2 }
+}
 
 // Memoized: the chat resolves its theme by identity, and a new theme object re-renders every
 // bubble on screen, so each render of the chat page must hand it the same one.
 export function useProductChatTheme () {
   const t = useProductTheme()
   const { desktop } = useProductLayout()
+  const scheme = useProductScheme()
+  const wallpaper = resolveChatWallpaper(useChatWallpaper(), scheme, useChatWallpaperPhoto())
+  const gradient = wallpaper.kind === 'gradient' ? wallpaper.colors : undefined
+  const solid = wallpaper.kind === 'color' ? wallpaper.color : undefined
+  // Anything but the plain page shows through the composer band and puts the date on a pill.
+  const hasWallpaper = wallpaper.kind !== 'plain'
+  // 我的 → 外观 → 聊天主题: the sent bubbles' fill, colors and shape, and the chat's accent.
+  const theme = chatThemeOf(useChatTheme())
+  const look = theme[scheme]
   return useMemo(() => mergeTheme(defaultLightTheme, {
     avatar: { size: 30 },
     composer: { minHeight: 40, maxHeight: 118, fieldPaddingH: 14, insetButtonWidth: 36 },
@@ -17,14 +55,19 @@ export function useProductChatTheme () {
       idleBackground: 'transparent',
       idleIcon: t.text2,
     },
-    wallpaper: { isEnabled: false },
+    // 我的 → 外观 → 聊天壁纸: a swirl gradient is the library's own wallpaper; a solid color is the
+    // chat background; a photo is drawn by the chat page (`renderWallpaper`).
+    wallpaper: gradient
+      ? { isEnabled: true, colors: gradient, isAnimated: true, pattern: chatPattern }
+      : { isEnabled: false },
     bubble: {
+      // The product bubble draws its own corners (`ProductBubble`), from the theme's shape.
       hasTail: false,
       isTimeInline: false,
-      outgoingGradient: ['#6E6BF2', '#0087F2'],
+      outgoingGradient: look.gradient,
       outgoingGradientMode: 'window',
     },
-    radii: { bubble: 20, bubbleGrouped: 6, inputField: 20, sendButton: 20 },
+    radii: { bubble: theme.radius, bubbleGrouped: 6, inputField: 20, sendButton: 20 },
     spacing: {
       bubblePaddingH: 14,
       bubblePaddingV: 9,
@@ -39,28 +82,30 @@ export function useProductChatTheme () {
       day: { fontSize: 12 },
     },
     colors: {
-      background: t.bg,
-      accent: t.accent,
+      background: solid ?? t.bg,
+      accent: look.accent,
       incomingBubble: t.bubble,
-      outgoingBubble: t.accent,
+      outgoingBubble: look.bubble,
       incomingText: t.text,
-      outgoingText: t.onAccent,
+      outgoingText: look.text,
+      outgoingLink: look.link ?? look.text,
       incomingMeta: t.text3,
-      outgoingMeta: '#FFFFFFAA',
+      outgoingMeta: look.meta,
       incomingBubbleShadow: 'transparent',
       outgoingBubbleShadow: 'transparent',
       inputBackground: t.surface,
-      inputBarBackground: t.bg,
+      // Over a wallpaper the band behind the composer lets it show through.
+      inputBarBackground: hasWallpaper ? 'transparent' : t.bg,
       inputText: t.text,
       placeholder: t.text3,
       inputFieldBorder: t.line,
       composerIcon: t.text2,
-      dayPillBackground: 'transparent',
-      dayPillText: t.text3,
+      dayPillBackground: hasWallpaper ? t.bar : 'transparent',
+      dayPillText: hasWallpaper ? t.text2 : t.text3,
       surface: t.surface,
       error: t.danger,
-      ticksRead: t.onAccent,
-      ticksSent: '#FFFFFFAA',
+      ticksRead: look.ticks ?? look.meta,
+      ticksSent: look.meta,
     },
     chatList: {
       background: t.page,
@@ -103,7 +148,7 @@ export function useProductChatTheme () {
       icon: t.text2,
       iconSelected: t.accent,
     },
-  }), [t, desktop])
+  }), [t, desktop, gradient, solid, hasWallpaper, theme, look])
 }
 export const productChatIcons: ChatIcons = {
   paperclip: props => <ProductIcon {...props} name='plus' />,

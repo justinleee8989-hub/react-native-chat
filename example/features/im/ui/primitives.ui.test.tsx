@@ -157,7 +157,7 @@ it.each([false, true])('draws a section title the same on a phone and on PC (des
   try {
     const screen = await render(<ProductHeader title='通讯录' large />)
     const style = StyleSheet.flatten(screen.getByRole('header', { name: '通讯录' }).props.style)
-    expect(style).toEqual(expect.objectContaining({ fontSize: 18, lineHeight: 24, fontWeight: '600' }))
+    expect(style).toEqual(expect.objectContaining({ fontSize: 18, lineHeight: 24, fontWeight: '500' }))
     expect(style.textAlign).toBe(desktop ? 'left' : 'center')
   } finally {
     mockDesktop = previous
