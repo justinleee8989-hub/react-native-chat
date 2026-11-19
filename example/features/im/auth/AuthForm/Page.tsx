@@ -49,7 +49,7 @@ export function AuthPage ({
             <Text style={[styles.subtitle, { color: colors.message }]}>{subtitle}</Text>
             <View style={styles.fields}>{children}</View>
             {brand && (
-              <Text style={[styles.footer, { color: t.text3 }]}>OpenIM · 让沟通更简单</Text>
+              <Text style={[styles.footer, { color: t.text3 }]}>XIM · 让沟通更简单</Text>
             )}
           </View>
         </ScrollView>

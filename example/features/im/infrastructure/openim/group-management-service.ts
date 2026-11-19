@@ -20,7 +20,7 @@ export function createGroupManagementService (getSDKClient: () => Promise<GroupM
       const params = { offset, count: 30, groupIDs: [], handleResults: [] }
       const data = unwrap(await (received ? sdk.getGroupApplicationListAsRecipient(params) : sdk.getGroupApplicationListAsApplicant(params)))
       if (!Array.isArray(data) || !data.every(item => item && typeof item.groupID === 'string' && typeof item.userID === 'string' && typeof item.handleResult === 'number'))
-        throw new Error('OpenIM 群申请响应格式不正确，请检查 SDK 版本')
+        throw new Error('XIM 群申请响应格式不正确，请检查 SDK 版本')
       return data
     },
     respond: async (groupID: string, fromUserID: string, accept: boolean, handleMsg = '') => {

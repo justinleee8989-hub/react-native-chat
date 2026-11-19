@@ -20,13 +20,13 @@ export function createProfileService (
 ) {
   function person (value: unknown): Person {
     if (!value || typeof value !== 'object' || !('userID' in value) || typeof value.userID !== 'string')
-      throw new Error('OpenIM 用户资料响应格式不正确')
+      throw new Error('XIM 用户资料响应格式不正确')
     return value as Person
   }
   function list (value: unknown): Person[] {
     const data = unwrap(value)
     if (!Array.isArray(data))
-      throw new Error('OpenIM 用户列表响应格式不正确')
+      throw new Error('XIM 用户列表响应格式不正确')
     return data.map(person)
   }
   return {

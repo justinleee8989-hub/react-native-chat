@@ -66,7 +66,7 @@ function ready () {
           OpenIMWebSDK?: typeof import('@openim/wasm-client-sdk')
         }
         if (!browser.OpenIMWebSDK)
-          throw new Error('OpenIM Web SDK 加载失败，请检查 /openim-sdk-loader.js')
+          throw new Error('XIM Web SDK 加载失败，请检查 /openim-sdk-loader.js')
         state.sdk = browser.OpenIMWebSDK.getSDK({
           coreWasmPath: '/openim.wasm',
           sqlWasmPath: '/sql-wasm.wasm',
@@ -114,14 +114,14 @@ export const client: IMClient = {
     await withTimeout(
       promise,
       30000,
-      'OpenIM 连接超时，请检查服务地址与 SDK worker 静态资源'
+      'XIM 连接超时，请检查服务地址与 SDK worker 静态资源'
     )
   },
   async logout() {
     state.authenticatedKey = undefined
     if (state.sdk)
       await endWebSession(
-        () => withTimeout(state.sdk!.logout(), 5000, 'OpenIM 退出超时'),
+        () => withTimeout(state.sdk!.logout(), 5000, 'XIM 退出超时'),
         () => window.location.reload()
       )
   },

@@ -42,7 +42,7 @@ export function createDirectoryService (
   function list<T>(value: unknown, valid: (item: any) => boolean): T[] {
     const data = unwrap(value)
     if (!Array.isArray(data) || !data.every(item => item && valid(item)))
-      throw new Error('OpenIM 目录响应格式不正确，请检查 SDK 版本')
+      throw new Error('XIM 目录响应格式不正确，请检查 SDK 版本')
     return data
   }
   const people = (value: unknown) => list<Person>(value, item => typeof item.userID === 'string')
@@ -59,7 +59,7 @@ export function createDirectoryService (
   const group = (value: unknown): Group => {
     const data = unwrap(value) as Group | undefined
     if (!data || typeof data.groupID !== 'string' || typeof data.groupName !== 'string')
-      throw new Error('OpenIM 群组响应格式不正确，请检查 SDK 版本')
+      throw new Error('XIM 群组响应格式不正确，请检查 SDK 版本')
     return data
   }
   return {
