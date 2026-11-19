@@ -102,6 +102,7 @@ export default function AccountScreen ({ mode: requestedMode }: { mode?: Account
           autoComplete='email'
           value={email}
           onChangeText={setEmail}
+          invalid={!!email && !validEmail}
           editable={!task.busy && !loginBusy && !created}
         />
         {!!email && !validEmail && <AuthNotice error>{tr('auth.invalidEmail')}</AuthNotice>}

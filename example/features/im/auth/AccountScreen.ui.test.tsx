@@ -1,6 +1,8 @@
 import React from 'react'
+import { StyleSheet } from 'react-native'
 import { beforeEach, expect, it, jest } from '@jest/globals'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native'
+import { productPalette } from '../ui/tokens'
 import { createAccountService } from './account-api'
 import AccountScreen from './AccountScreen'
 
@@ -87,4 +89,15 @@ it('successful reset returns to login and does not authenticate', async () => {
   await fireEvent(screen.getByLabelText('确认密码'), 'submitEditing')
   await waitFor(() => expect(mockReplace).toHaveBeenCalledWith(expect.objectContaining({ pathname: '/auth/login' })))
   expect(mockLogin).not.toHaveBeenCalled()
+})
+
+it('edges an email that is not one in red, along with saying so', async () => {
+  await render(<AccountScreen mode='register' />)
+  const edge = () => StyleSheet.flatten(screen.getByLabelText('邮箱').parent?.props.style).borderColor
+  await fireEvent.changeText(screen.getByLabelText('邮箱'), 'person@')
+  expect(screen.getByText('请填写有效的邮箱地址')).toBeTruthy()
+  expect([productPalette.light.danger, productPalette.dark.danger]).toContain(edge())
+  await fireEvent.changeText(screen.getByLabelText('邮箱'), 'person@example.com')
+  expect(screen.queryByText('请填写有效的邮箱地址')).toBeNull()
+  expect(edge()).toBe('transparent')
 })
