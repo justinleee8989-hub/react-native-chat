@@ -1,5 +1,10 @@
 # Changelog
 
+## [Unreleased]
+
+### 🐛 Fixes
+- On web, a wallpaper `pattern` given as a required image tiles over the whole chat instead of drawing once in the corner
+
 ## [6.1.5] - 2026-11-07
 
 ### 📝 Docs

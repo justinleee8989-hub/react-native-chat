@@ -4,7 +4,7 @@ import { render } from '@testing-library/react-native'
 
 import { Bubble, defaultDarkTheme, defaultLightTheme, mergeTheme, utils } from '..'
 import { HIDDEN_TEXT_COLOR } from '../Bubble/styles'
-import { useOutgoingStep } from '../components/ChatWallpaper'
+import { ChatWallpaper, useOutgoingStep } from '../components/ChatWallpaper'
 import { encodePng, gatherPositions, generateWallpaperPixels, getWallpaperUri } from '../components/wallpaperGradient'
 import { IMessage } from '../Models'
 import { getNameColor, getUserColorIndex } from '../Theme'
@@ -248,4 +248,12 @@ describe('wallpaper', () => {
     await rerender(<Probe messages={[message({ user: ME }), ...first]} />)
     expect(step).toBe(1)
   })
+})
+
+it('sizes the wallpaper pattern to fill the chat, not to the tile', async () => {
+  // react-native-web sizes an image without a width and height to its source's own.
+  const { toJSON } = await render(<ChatWallpaper colors={['#111111', '#222222', '#333333']} pattern={{ uri: 'tile.png', width: 240, height: 240 }} />)
+  const images = (toJSON() as { children: { props: { resizeMode?: string, style: unknown } }[] }).children
+  const pattern = images.find(image => image.props.resizeMode === 'repeat')
+  expect(StyleSheet.flatten(pattern?.props.style as never)).toMatchObject({ width: '100%', height: '100%' })
 })

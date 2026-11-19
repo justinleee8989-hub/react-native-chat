@@ -115,8 +115,11 @@ export function ChatWallpaper ({
         <Image
           source={pattern}
           resizeMode='repeat'
+          // The explicit size: react-native-web sizes an image to its source's own dimensions
+          // (a required asset carries them), which would draw the tile once in the corner.
           style={[
             StyleSheet.absoluteFill,
+            styles.fill,
             { opacity: patternOpacity, tintColor: patternColor, mixBlendMode: 'soft-light' } as ImageStyle,
           ]}
         />
@@ -145,3 +148,7 @@ export function useOutgoingStep (messages: IMessage[], userId: string | number |
 
   return step
 }
+
+const styles = StyleSheet.create({
+  fill: { width: '100%', height: '100%' },
+})
