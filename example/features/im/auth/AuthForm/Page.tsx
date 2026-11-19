@@ -5,8 +5,8 @@ import { useT } from '../../i18n'
 import { ProductToast } from '../../shared/ProductToast'
 import { useProductLayout } from '../../ui/preferences'
 import { ProductHeader } from '../../ui/primitives'
-import { ProductIcon } from '../../ui/ProductIcon'
 import { useProductColors as useChatListColors, useProductTheme } from '../../ui/theme'
+import { type AuthMood, AuthMascot } from './Mascot'
 import { styles } from './styles'
 
 export function AuthPage ({
@@ -14,11 +14,20 @@ export function AuthPage ({
   subtitle,
   children,
   brand = true,
+  mood,
+  typed,
+  end,
   onBack,
 }: React.PropsWithChildren<{
   title: string
   subtitle: string
   brand?: boolean
+  /** What the form is doing, for the sprite in the brand mark to act out. */
+  mood?: AuthMood
+  /** The email's length, for the sprite to follow as it is typed. */
+  typed?: number
+  /** Below the form, at the bottom of a phone's screen: the way to another page. */
+  end?: React.ReactNode
   onBack?: () => void
 }>) {
   const tr = useT()
@@ -42,14 +51,16 @@ export function AuthPage ({
           contentContainerStyle={[styles.page, { paddingTop: brand ? (desktop ? 72 : 28) : 8 }]}
         >
           <View style={styles.form}>
-            {brand && (
-              <View style={[styles.brand, { backgroundColor: t.text }]}>
-                <ProductIcon name='chat' size={30} color={t.bg} />
-              </View>
-            )}
+            {brand && <AuthMascot mood={mood} typed={typed} />}
             <Text style={[styles.title, { color: colors.name }]}>{title}</Text>
             <Text style={[styles.subtitle, { color: colors.message }]}>{subtitle}</Text>
             <View style={styles.fields}>{children}</View>
+            {!!end && (
+              <>
+                <View style={desktop ? { height: 24 } : styles.endSpacer} />
+                {end}
+              </>
+            )}
             {brand && (
               <Text style={[styles.footer, { color: t.text3 }]}>{tr('auth.footer')}</Text>
             )}

@@ -9,9 +9,9 @@ import {
   AuthButton,
   AuthField,
   AuthLink,
-  AuthLinks,
   AuthNotice,
   AuthPage,
+  AuthPrompt,
 } from './AuthForm'
 
 export default function LoginScreen () {
@@ -34,10 +34,43 @@ export default function LoginScreen () {
     touched.current = true
     setAccount(lastAccount.account)
   }, [lastAccount, params.email])
+  // A refused sign-in edges both fields in red, and the sprite slumps, until the user types again.
+  const [refused, setRefused] = useState(false)
+  const failed = refused && !!state.error && !state.busy
+  // Typing again also puts away the refusal's notice. A notice the page opened with (why the user
+  // was signed out) stays: it was never a refusal. The next refusal is a new error, and shows.
+  const [dismissed, setDismissed] = useState<unknown>()
+  const notice = state.error && state.error !== dismissed ? state.error : undefined
+  const edit = () => {
+    if (refused)
+      setDismissed(state.error)
+    setRefused(false)
+  }
   const type = (value: string) => {
     touched.current = true
+    edit()
     setAccount(value)
   }
+  const typePassword = (value: string) => {
+    edit()
+    setPassword(value)
+  }
+  // What the sprite in the brand mark acts out: the field in use, and the password while it is shown
+  // (on the web, pressing 显示 takes the focus off the field).
+  const [focused, setFocused] = useState<'email' | 'password'>()
+  const [shown, setShown] = useState(false)
+  const mood = state.busy
+    ? 'busy'
+    : failed
+      ? 'error'
+      : focused === 'email'
+        ? 'email'
+        : shown && !!password
+          ? 'peek'
+          : focused === 'password'
+            ? 'password'
+            : 'idle'
+  const blur = () => setFocused(undefined)
   // Opened at start-up, `autoFocus` brings up the keyboard. After a sign-out the page arrives with
   // a stack transition, and Android gives a field focused during it the cursor but no keyboard;
   // focusing again when the opening transition ends shows it. Its closing transition (signed in)
@@ -53,45 +86,63 @@ export default function LoginScreen () {
   const navigate = (mode: 'register' | 'reset') =>
     router.push({ pathname: `/auth/${mode}`, params: { email: account.trim() } } as Href)
   const submit = () => {
-    if (account.trim() && password && !state.busy)
-      void login(account.trim(), password)
+    if (!account.trim() || !password || state.busy)
+      return
+    setRefused(true)
+    void login(account.trim(), password)
   }
   return (
-    <AuthPage title={tr('auth.welcomeBack')} subtitle={tr('auth.loginSubtitle')}>
+    <AuthPage
+      title={tr('auth.welcomeBack')}
+      subtitle={tr('auth.loginSubtitle')}
+      mood={mood}
+      typed={account.length}
+      end={(
+        <AuthPrompt text={tr('auth.noAccount')}>
+          <AuthLink title={tr('auth.register')} disabled={state.busy} onPress={() => navigate('register')} />
+        </AuthPrompt>
+      )}
+    >
       <AuthField
         label={tr('auth.emailAccount')}
-        placeholder={tr('auth.emailAccount')}
+        showLabel
+        placeholder={tr('auth.emailPlaceholder')}
         keyboardType='email-address'
         autoComplete='email'
         value={account}
         onChangeText={type}
+        onFocus={() => setFocused('email')}
+        onBlur={blur}
+        invalid={failed}
         editable={!state.busy}
       />
       <AuthField
         label={tr('auth.password')}
-        placeholder={tr('auth.password')}
+        showLabel
+        placeholder={tr('auth.passwordPlaceholder')}
         password
         reveal
+        onRevealChange={setShown}
         autoComplete='current-password'
         ref={passwordField}
         autoFocus={filled}
         value={password}
-        onChangeText={setPassword}
+        onChangeText={typePassword}
+        onFocus={() => setFocused('password')}
+        onBlur={blur}
+        invalid={failed}
         editable={!state.busy}
         returnKeyType='go'
         onSubmitEditing={submit}
       />
-      {!!state.error && <AuthNotice error>{errorMessage(state.error, tr)}</AuthNotice>}
+      <AuthLink title={tr('auth.forgotPassword')} trailing disabled={state.busy} onPress={() => navigate('reset')} />
+      {!!notice && <AuthNotice error>{errorMessage(notice, tr)}</AuthNotice>}
       <AuthButton
         title={state.busy ? tr('auth.connecting') : tr('auth.signIn')}
         busy={state.busy}
         disabled={!account.trim() || !password}
         onPress={submit}
       />
-      <AuthLinks>
-        <AuthLink title={tr('auth.forgotPassword')} disabled={state.busy} onPress={() => navigate('reset')} />
-        <AuthLink title={tr('auth.register')} disabled={state.busy} onPress={() => navigate('register')} />
-      </AuthLinks>
     </AuthPage>
   )
 }

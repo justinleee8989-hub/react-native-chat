@@ -4,7 +4,7 @@ import { ActivityIndicator, Pressable, Text, View } from 'react-native'
 
 
 
-import { useProductColors as useChatListColors } from '../../ui/theme'
+import { useProductColors as useChatListColors, useProductTheme } from '../../ui/theme'
 import { styles } from './styles'
 
 export function AuthButton ({
@@ -48,11 +48,14 @@ export function AuthLink ({
   onPress,
   disabled,
   accessibilityLabel,
+  trailing = false,
 }: {
   title: string
   onPress: () => void
   disabled?: boolean
   accessibilityLabel?: string
+  /** Set off at the end of the field above it (忘记密码？ under the password). */
+  trailing?: boolean
 }) {
   const colors = useChatListColors()
   return (
@@ -61,7 +64,7 @@ export function AuthLink ({
       accessibilityLabel={accessibilityLabel}
       disabled={disabled}
       onPress={onPress}
-      style={styles.link}
+      style={[styles.link, trailing && styles.linkTrailing]}
     >
       <Text
         style={{
@@ -77,33 +80,46 @@ export function AuthLink ({
   )
 }
 
+/** A question with the link that answers it, on one centred line: 还没有账户？注册新账户. */
+export function AuthPrompt ({ text, children }: React.PropsWithChildren<{ text: string }>) {
+  const t = useProductTheme()
+  return (
+    <View style={styles.prompt}>
+      <Text style={[styles.promptText, { color: t.text2 }]}>{text}</Text>
+      {children}
+    </View>
+  )
+}
+
+/** A line under the fields; an error sits on a pale red card with a mark, so it is not missed. */
 export function AuthNotice ({
   children,
   error = false,
 }: React.PropsWithChildren<{ error?: boolean }>) {
   const colors = useChatListColors()
-  return (
+  const t = useProductTheme()
+  const text = (
     <Text
       accessibilityRole={error ? 'alert' : undefined}
       accessibilityLiveRegion='polite'
-      style={[styles.notice, { color: error ? colors.draft : colors.attachment }]}
+      style={[styles.notice, error && styles.noticeText, { color: error ? colors.draft : colors.attachment }]}
     >
       {children}
     </Text>
   )
-}
-
-export function AuthLinks ({ children }: React.PropsWithChildren) {
+  if (!error)
+    return text
   return (
-    <View
-      style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginTop: 4,
-      }}
-    >
-      {children}
+    <View style={[styles.errorCard, { backgroundColor: t.dangerWeak }]}>
+      {/* Only a mark: a screen reader says the text alone. */}
+      <View
+        accessibilityElementsHidden
+        importantForAccessibility='no-hide-descendants'
+        style={[styles.errorMark, { backgroundColor: t.danger }]}
+      >
+        <Text style={[styles.errorMarkText, { color: t.onAccent }]}>!</Text>
+      </View>
+      {text}
     </View>
   )
 }

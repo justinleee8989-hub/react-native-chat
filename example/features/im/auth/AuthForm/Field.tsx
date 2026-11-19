@@ -16,6 +16,8 @@ export function AuthField ({
   showLabel = false,
   reveal = false,
   compact = false,
+  invalid = false,
+  onRevealChange,
   ...props
 }: TextInputProps & {
   label: string
@@ -23,6 +25,9 @@ export function AuthField ({
   showLabel?: boolean
   reveal?: boolean
   compact?: boolean
+  /** What was entered was refused: edged in red, except while it has the focus. */
+  invalid?: boolean
+  onRevealChange?: (visible: boolean) => void
   trailing?: React.ReactNode
   /** Reaches the input, so a page can focus it (React 19 passes `ref` as a prop). */
   ref?: React.Ref<React.ComponentRef<typeof TextInput>>
@@ -41,8 +46,10 @@ export function AuthField ({
           styles.inputRow,
           {
             minHeight: compact ? 46 : 54,
-            borderColor: focused ? t.accent : 'transparent',
-            backgroundColor: colors.pressed,
+            borderColor: focused ? t.accent : invalid ? t.danger : 'transparent',
+            // Focused, it lifts off the grey onto the page with a soft ring around it.
+            backgroundColor: focused ? t.page : colors.pressed,
+            boxShadow: focused ? `0 0 0 4px ${t.accentWeak}` : undefined,
           },
         ]}
       >
@@ -71,7 +78,10 @@ export function AuthField ({
           <Pressable
             accessibilityRole='button'
             accessibilityLabel={visible ? tr('auth.hideField', { label }) : tr('auth.showField', { label })}
-            onPress={() => setVisible(!visible)}
+            onPress={() => {
+              setVisible(!visible)
+              onRevealChange?.(!visible)
+            }}
             style={styles.reveal}
           >
             <ProductIcon name={visible ? 'eyeOff' : 'eye'} size={20} color={t.text3} />

@@ -1,6 +1,6 @@
 import React from 'react'
 import { beforeEach, expect, it, jest } from '@jest/globals'
-import { render } from '@testing-library/react-native'
+import { fireEvent, render } from '@testing-library/react-native'
 import { ProductError } from '../shared/product-error'
 import LoginScreen from './LoginScreen'
 
@@ -8,7 +8,8 @@ let mockState: Record<string, unknown>
 let mockParams: Record<string, string>
 let mockTransitionEnd: ((event: { data?: { closing?: boolean } }) => void) | undefined
 const mockFocus = jest.fn()
-jest.mock('../application/store', () => ({ login: jest.fn(), useOpenIM: () => mockState }))
+const mockLogin = jest.fn()
+jest.mock('../application/store', () => ({ login: (...args: unknown[]) => mockLogin(...args), useOpenIM: () => mockState }))
 jest.mock('expo-router', () => ({
   useLocalSearchParams: () => mockParams,
   useRouter: () => ({ push: jest.fn() }),
@@ -21,18 +22,42 @@ jest.mock('expo-router', () => ({
   }),
 }))
 jest.mock('./AuthForm', () => {
-  const { Text, TextInput, View } = jest.requireActual<typeof import('react-native')>('react-native')
+  const { Pressable, Text, TextInput, View } = jest.requireActual<typeof import('react-native')>('react-native')
   return {
-    AuthPage: ({ children }: React.PropsWithChildren) => <View>{children}</View>,
-    AuthField: (props: { label: string, value: string, autoFocus?: boolean, ref?: { current: unknown } }) => {
+    // The sprite's state, where a test can read it.
+    AuthPage: ({ children, mood }: React.PropsWithChildren<{ mood?: string }>) => <View testID='page' accessibilityHint={mood}>{children}</View>,
+    AuthField: (props: {
+      label: string
+      value: string
+      autoFocus?: boolean
+      invalid?: boolean
+      ref?: { current: unknown }
+      onChangeText?: (value: string) => void
+      onFocus?: () => void
+      onBlur?: () => void
+      onRevealChange?: (visible: boolean) => void
+    }) => {
       if (props.ref)
         props.ref.current = { focus: mockFocus }
-      return <TextInput accessibilityLabel={props.label} value={props.value} autoFocus={props.autoFocus} />
+      return (
+        <View>
+          <TextInput
+            accessibilityLabel={props.label}
+            accessibilityHint={props.invalid ? 'invalid' : undefined}
+            value={props.value}
+            autoFocus={props.autoFocus}
+            onChangeText={props.onChangeText}
+            onFocus={props.onFocus}
+            onBlur={props.onBlur}
+          />
+          {props.onRevealChange && <Pressable accessibilityRole='button' accessibilityLabel='reveal' onPress={() => props.onRevealChange?.(true)} />}
+        </View>
+      )
     },
-    AuthButton: ({ title }: { title: string }) => <Text>{title}</Text>,
+    AuthButton: ({ title, onPress }: { title: string, onPress: () => void }) => <Pressable accessibilityRole='button' onPress={onPress}><Text>{title}</Text></Pressable>,
     AuthLink: ({ title }: { title: string }) => <Text>{title}</Text>,
-    AuthLinks: ({ children }: React.PropsWithChildren) => <View>{children}</View>,
     AuthNotice: ({ children }: React.PropsWithChildren) => <Text>{children}</Text>,
+    AuthPrompt: ({ text, children }: React.PropsWithChildren<{ text: string }>) => <View><Text>{text}</Text>{children}</View>,
   }
 })
 
@@ -43,6 +68,7 @@ beforeEach(() => {
   mockParams = {}
   mockTransitionEnd = undefined
   mockFocus.mockClear()
+  mockLogin.mockClear()
   mockState = { busy: false, error: '', config: servers }
 })
 
@@ -85,4 +111,57 @@ it('focuses the password again when the sign-out transition ends, so Android sho
   // Signed in: the page's own closing transition must not bring the keyboard up over the home page.
   mockTransitionEnd?.({ data: { closing: true } })
   expect(mockFocus).toHaveBeenCalledTimes(1)
+})
+
+const moodOf = (view: Awaited<ReturnType<typeof render>>) => view.getByTestId('page').props.accessibilityHint
+
+it('has the sprite lean over the email, turn from the password and peek once it is shown', async () => {
+  const view = await render(<LoginScreen />)
+  expect(moodOf(view)).toBe('idle')
+  await fireEvent(view.getByLabelText('邮箱账号'), 'focus')
+  expect(moodOf(view)).toBe('email')
+  await fireEvent(view.getByLabelText('密码'), 'focus')
+  expect(moodOf(view)).toBe('password')
+  await fireEvent.changeText(view.getByLabelText('密码'), 'secret')
+  // On the web, pressing 显示 takes the focus off the field: the shown password is still peeked at.
+  await fireEvent(view.getByLabelText('密码'), 'blur')
+  await fireEvent.press(view.getByRole('button', { name: 'reveal' }))
+  expect(moodOf(view)).toBe('peek')
+})
+
+it('slumps the sprite and edges the fields in red after a refused sign-in, until the user types again', async () => {
+  mockState = { ...mockState, error: new ProductError('session.expired') }
+  const view = await render(<LoginScreen />)
+  // An error the page opened with (an expired login) is not a refusal.
+  expect(moodOf(view)).toBe('idle')
+  await fireEvent.changeText(view.getByLabelText('邮箱账号'), 'alice@example.com')
+  await fireEvent.changeText(view.getByLabelText('密码'), 'wrong')
+  await fireEvent.press(view.getByRole('button', { name: '登录' }))
+  expect(mockLogin).toHaveBeenCalledWith('alice@example.com', 'wrong')
+  mockState = { ...mockState, busy: true, error: '' }
+  await view.rerender(<LoginScreen />)
+  expect(moodOf(view)).toBe('busy')
+  mockState = { ...mockState, busy: false, error: new ProductError('serverError.20001') }
+  await view.rerender(<LoginScreen />)
+  expect(moodOf(view)).toBe('error')
+  expect(view.getByLabelText('密码').props.accessibilityHint).toBe('invalid')
+  expect(view.getByText('账号或密码错误')).toBeTruthy()
+  await fireEvent.changeText(view.getByLabelText('密码'), 'right')
+  expect(moodOf(view)).toBe('idle')
+  expect(view.getByLabelText('密码').props.accessibilityHint).toBeUndefined()
+  // The refusal's notice goes with the red edges.
+  expect(view.queryByText('账号或密码错误')).toBeNull()
+  // Refused again: a new error, said again.
+  await fireEvent.press(view.getByRole('button', { name: '登录' }))
+  mockState = { ...mockState, error: new ProductError('serverError.20001') }
+  await view.rerender(<LoginScreen />)
+  expect(view.getByText('账号或密码错误')).toBeTruthy()
+})
+
+it('keeps why the user was signed out while they type', async () => {
+  mockState = { ...mockState, lastAccount: last, error: new ProductError('session.expired') }
+  const view = await render(<LoginScreen />)
+  await fireEvent.changeText(view.getByLabelText('密码'), 'secret')
+  await fireEvent.changeText(view.getByLabelText('邮箱账号'), 'bob@example.com')
+  expect(view.getByText('登录已失效，请重新登录')).toBeTruthy()
 })
