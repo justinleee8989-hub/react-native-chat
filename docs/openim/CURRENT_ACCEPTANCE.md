@@ -1,5 +1,22 @@
 # 当前验收状态 — 2026-11-18
 
+## 2026-11-19 添加好友：按邮箱、手机号查找
+
+添加好友的搜索框除了完整用户 ID，也接受完整的邮箱或手机号（`contacts/contact-query.ts` 判断类型）：含 `@` 的是邮箱；11 位 1 开头的号码（可带 `+86`/`86`、空格、横线）是中国大陆手机号；`+区号 号码`（区号后要有空格或横线）是其他国家手机号；其余都按用户 ID 查。只做精确匹配，不支持部分邮箱或号码，避免被用来枚举用户。找不到时提示对应的「请检查邮箱/手机号是否完整」。像手机号的输入若没有人用这个号码，还会再按用户 ID 查一次（管理员可以自定义 ID，以前能按 ID 找到的人不会因此找不到）。
+
+- 服务端（chat 仓库 perf）新增 C 端接口 `POST /user/find/contact`，按现有接口的写法：`chat.proto` 的 `FindUserByContactReq{email | areaCode+phoneNumber}` / `FindUserByContactResp{user}`、`Check()` 要求邮箱和手机号二选一、RPC `FindUserByContact`（账号凭证表精确查找，手机号凭证为 `区号 号码`）、`a2r.Call` 处理器、`/user` 路由组（需 chat token）。返回的是公开资料，非管理员看到的对方邮箱为空；没找到时 `user` 为空而不是报错。凭证表里也存着账号名，所以要求凭证类型与查找方式一致：把某人的账号名当邮箱传过来不算匹配。
+- 客户端：`infrastructure/openim/contact-lookup-api.ts` 按 `self-profile-api.ts` 的方式调用（chat token、15 秒超时、`errCode` 检查），只取回用户 ID；之后与输入用户 ID 一样经 OpenIM SDK 读资料和好友状态。
+- 暂不提供"不允许别人通过邮箱/手机号找到我"的隐私开关。
+- 验证：本机测试环境的 openim-chat 换为含新接口的镜像 `local/openim-chat:perf-contact` 后，用接口直接测了：找到 bob（返回的邮箱为空）、不存在的邮箱和手机号返回空、同时传邮箱和手机号报参数错误、无 token 被拒。网页手机宽度用 alice 实测：按邮箱找到 Bob、Charlie（均显示已是好友），手机号 `138 0013 8000` 显示「未找到该用户 / 请检查手机号是否完整」。QA 账号都没有手机号，找到手机号用户的情况只有单元测试覆盖；Android、iOS 未实测。
+
+## 2026-11-19 扫码加好友与我的二维码
+
+- 我的二维码（`contacts/MyQRCard.tsx`）：头像、昵称、ID 和一个二维码，二维码内容是 App 的资料页链接 `example:///chats/people/<用户ID>`（`contacts/friend-qr.ts`，scheme 与 `app.json` 一致），用手机系统相机扫也能直接打开 App 里的资料页。App 自己的蓝色渐变，与默认聊天主题发出气泡相同（`#6E6BF2 → #0087F2`，取自 `ui/chat-theme.ts`），中间是 App 图标；纠错等级 H，图标挡住中间也能识别。已用 ML Kit 识别页面实际渲染出的二维码图片验证。入口：「我的」资料卡右侧二维码图标（`/chats/my-qr`）。二维码不用 react-native-qrcode-svg：它把每个码的渐变都命名为 `grad`，Web 上同时有两个码（另一个 tab 的页面仍挂载）时后一个会画成空白。
+- 添加好友页：顶部一个搜索框（用户 ID、邮箱或手机号，回车查找，见下一节），搜到人后显示结果；不再在这页展示我的二维码（在「我的」里）。不能添加的人（自己、已是好友、已发送申请）在结果行右侧用浅色文字说明，不显示申请说明和按钮。手机上标题栏右侧是「扫一扫」图标。
+- 扫一扫（`/chats/scan`，`contacts/ScanScreen.tsx`）：相机取景框，只识别二维码；扫到好友二维码打开对方资料页（在那里发好友申请），其他二维码提示「不是好友二维码」（同一码持续在画面中时 2 秒提示一次）并继续扫描。页面在前台且 App 活跃时才开相机，离开后释放。没有相机权限时提示并可打开系统设置；设备没有相机时提示可从相册选择。底部「相册」从照片中识别二维码（`application/scan-photo.ts`）。Web/PC 不提供扫一扫（浏览器无可靠扫码），只显示二维码。
+- 新依赖：`react-native-vision-camera-barcode-scanner` 5.2.4（VisionCamera 官方扫码插件，ML Kit，iOS/安卓；VisionCamera 自带的识别接口只支持 iOS），`qrcode` 1.5.4（只做编码；码由 `contacts/FriendQRCode.tsx` 用已有的 `react-native-svg` 自己画，每个码用独立的渐变 ID）。扫码插件是原生库，需重新编译 App（iOS 需 `pod install`）。iOS 相机权限说明改为"录制视频消息和扫描二维码"（`app.json`；已生成的 `ios/` 需重新 prebuild 或同步 Info.plist）。
+- 验证：网页手机宽度与 PC 实测添加好友页、我的二维码页、搜索结果状态文字。Android 模拟器（重新编译安装）实测：添加好友入口、相机权限请求、扫一扫页、相册识别好友码后打开资料页、非好友码提示、离开后相机释放；无相机时崩溃已修复。实时相机扫码因模拟器相机只有测试画面未能实拍验证；iOS 已编译通过（`generic/platform=iOS Simulator`），扫码未在 iOS 上实测。
+
 ## 2026-11-19 外观：聊天主题、聊天壁纸、深色模式
 
 我的 → 外观 由底部选项表改为二级页 `/chats/appearance`（`profile/AppearanceScreen.tsx`），按系统设置的分组卡片排版。所有选择点按立即生效，对所有聊天有效，保存在本机。

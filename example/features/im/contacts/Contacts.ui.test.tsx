@@ -1,19 +1,21 @@
 import React from 'react'
 import { beforeEach, expect, it, jest } from '@jest/globals'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native'
-import { directory } from '../application/directory'
+import { directory, findUserIDByContact } from '../application/directory'
 import { groupManagement } from '../application/group-management'
 import { profile } from '../application/profile'
 import AddFriendScreen from './AddFriendScreen'
 import ContactsScreen from './ContactsScreen'
 import FriendRequestsScreen from './FriendRequestsScreen'
 
+const SEARCH = '用户 ID、邮箱或手机号'
+
 const mockPush = jest.fn()
 let mockInitialID = ''
 jest.mock('react-native-safe-area-context', () => ({ ...jest.requireActual<object>('react-native-safe-area-context'), useSafeAreaInsets: () => ({ top: 0, right: 0, bottom: 0, left: 0 }) }))
 jest.mock('expo-router', () => ({ useRouter: () => ({ push: mockPush, canGoBack: () => false, replace: jest.fn() }), useLocalSearchParams: () => ({ id: mockInitialID }) }))
-jest.mock('../application/store', () => ({ useOpenIM: () => ({ session: { userID: 'self', imToken: 'token' } }) }))
-jest.mock('../application/directory', () => ({ directory: { friends: jest.fn(), groups: jest.fn(), requests: jest.fn(), respond: jest.fn(), users: jest.fn(), add: jest.fn() }, contactDirectoryEvents: [], groupDirectoryEvents: [], subscribeDirectory: () => () => {} }))
+jest.mock('../application/store', () => ({ useOpenIM: () => ({ session: { userID: 'self', imToken: 'token', chatToken: 'chat' }, config: { chat: 'https://chat.example.test' } }) }))
+jest.mock('../application/directory', () => ({ directory: { friends: jest.fn(), groups: jest.fn(), requests: jest.fn(), respond: jest.fn(), users: jest.fn(), add: jest.fn() }, contactDirectoryEvents: [], groupDirectoryEvents: [], subscribeDirectory: () => () => {}, findUserIDByContact: jest.fn() }))
 jest.mock('../application/group-management', () => ({ groupApplicationEvents: [], groupManagement: { requests: jest.fn() } }))
 jest.mock('./ContactActions', () => ({ ContactActions: () => null }))
 jest.mock('../application/profile', () => ({ profile: { person: jest.fn() } }))
@@ -93,26 +95,70 @@ it('keeps request actions available after a real service error', async () => {
   expect(screen.queryByText('已接受好友申请')).toBeNull()
 })
 
-it('checks all outgoing request pages and disables duplicate pending applications', async () => {
+it('checks all outgoing request pages and says a pending application on the row, with no button', async () => {
   jest.mocked(directory.requests).mockImplementation(async (_received, offset) => offset ? [{ fromUserID: 'self', toUserID: 'alice', handleResult: 0 }] : Array.from({ length: 30 }, (_, i) => ({ fromUserID: 'self', toUserID: `other-${i}`, handleResult: 1 })))
   await render(<AddFriendScreen />)
   await waitFor(() => expect(directory.requests).toHaveBeenCalledWith(false, 30))
-  await fireEvent.changeText(screen.getByLabelText('完整用户 ID'), 'alice')
-  await fireEvent.press(screen.getByText('查找'))
-  await waitFor(() => expect(screen.getByText('已发送申请，等待对方处理')).toBeTruthy())
-  await fireEvent.press(screen.getByText('已发送申请，等待对方处理'))
+  await fireEvent.changeText(screen.getByLabelText(SEARCH), 'alice')
+  await fireEvent(screen.getByLabelText(SEARCH), 'submitEditing')
+  await waitFor(() => expect(screen.getByText('已发送申请')).toBeTruthy())
+  expect(screen.queryByRole('button', { name: '发送好友申请' })).toBeNull()
   expect(directory.add).not.toHaveBeenCalled()
 })
 
-it('shows a real-ID instruction while the add-friend form is empty', async () => {
+it('says a friend is already one on the row, with no note or button', async () => {
+  jest.mocked(profile.person).mockResolvedValue({ userID: 'alice', nickname: 'Alice', isFriend: true })
   await render(<AddFriendScreen />)
-  const hint = screen.getByText('输入完整用户 ID，查找后发送好友申请。')
-  expect(hint.props.style).toMatchObject({ paddingHorizontal: 32, paddingTop: 8 })
-  let node = hint.parent
-  while (node) {
-    expect(node.props.style?.marginHorizontal).not.toBe(16)
-    node = node.parent
-  }
+  await fireEvent.changeText(screen.getByLabelText(SEARCH), 'alice')
+  await fireEvent(screen.getByLabelText(SEARCH), 'submitEditing')
+  await waitFor(() => expect(screen.getByText('已是好友')).toBeTruthy())
+  expect(screen.queryByLabelText('好友申请说明')).toBeNull()
+  expect(screen.queryByRole('button', { name: '发送好友申请' })).toBeNull()
+})
+
+it('searches on submit, not when empty, and sends an application', async () => {
+  await render(<AddFriendScreen />)
+  // An empty search does nothing.
+  await fireEvent(screen.getByLabelText(SEARCH), 'submitEditing')
+  expect(directory.users).not.toHaveBeenCalled()
+  await fireEvent.changeText(screen.getByLabelText(SEARCH), 'alice')
+  await fireEvent(screen.getByLabelText(SEARCH), 'submitEditing')
+  await waitFor(() => expect(screen.getByRole('button', { name: '发送好友申请' })).toBeTruthy())
+  await fireEvent.press(screen.getByRole('button', { name: '发送好友申请' }))
+  await waitFor(() => expect(directory.add).toHaveBeenCalledWith('alice', '你好，希望添加你为好友'))
+  await waitFor(() => expect(screen.getByText('已发送申请')).toBeTruthy())
+})
+
+it('looks up an email or phone number on the chat server, then shows that user', async () => {
+  jest.mocked(findUserIDByContact).mockResolvedValue('alice')
+  await render(<AddFriendScreen />)
+  await fireEvent.changeText(screen.getByLabelText(SEARCH), 'alice@example.com')
+  await fireEvent(screen.getByLabelText(SEARCH), 'submitEditing')
+  await waitFor(() => expect(screen.getByText('Alice')).toBeTruthy())
+  expect(findUserIDByContact).toHaveBeenCalledWith(expect.objectContaining({ chatToken: 'chat' }), 'https://chat.example.test', { email: 'alice@example.com' })
+  expect(directory.users).toHaveBeenCalledWith('alice')
+  await fireEvent.changeText(screen.getByLabelText(SEARCH), '+86 138 0013 8000')
+  await fireEvent(screen.getByLabelText(SEARCH), 'submitEditing')
+  await waitFor(() => expect(findUserIDByContact).toHaveBeenLastCalledWith(expect.anything(), 'https://chat.example.test', { areaCode: '+86', phoneNumber: '13800138000' }))
+})
+
+it('tries a number nobody has as their phone as a user ID, then says nobody has it', async () => {
+  jest.mocked(findUserIDByContact).mockResolvedValue(undefined)
+  jest.mocked(directory.users).mockResolvedValue([])
+  await render(<AddFriendScreen />)
+  await fireEvent.changeText(screen.getByLabelText(SEARCH), '13800138000')
+  await fireEvent(screen.getByLabelText(SEARCH), 'submitEditing')
+  await waitFor(() => expect(screen.getByText('请检查手机号是否完整')).toBeTruthy())
+  expect(directory.users).toHaveBeenCalledWith('13800138000')
+})
+
+it('does not try an email nobody has as a user ID', async () => {
+  jest.mocked(findUserIDByContact).mockResolvedValue(undefined)
+  await render(<AddFriendScreen />)
+  await fireEvent.changeText(screen.getByLabelText(SEARCH), 'nobody@example.com')
+  await fireEvent(screen.getByLabelText(SEARCH), 'submitEditing')
+  await waitFor(() => expect(screen.getByText('请检查邮箱是否完整')).toBeTruthy())
+  expect(directory.users).not.toHaveBeenCalled()
 })
 
 it('loads a supplied person ID without an extra search tap', async () => {

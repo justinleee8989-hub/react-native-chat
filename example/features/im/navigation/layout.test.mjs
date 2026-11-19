@@ -11,6 +11,8 @@ test('deep links keep their matching master section', () => {
   assert.equal(productSection('/chats/appearance'), 'me')
   assert.equal(productSection('/chats/chat-wallpaper'), 'me')
   assert.equal(productSection('/chats/chat-wallpaper-colors'), 'me')
+  assert.equal(productSection('/chats/my-qr'), 'me')
+  assert.equal(productSection('/chats/scan'), 'contacts')
   assert.equal(productSection('/chats/call-history'), 'calls')
   assert.equal(productSection('/calls'), 'calls')
   assert.equal(productSection('/chats/call'), 'chats')

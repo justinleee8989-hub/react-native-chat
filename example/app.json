@@ -12,7 +12,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.anonymous.example",
       "infoPlist": {
-        "NSCameraUsageDescription": "$(PRODUCT_NAME) needs camera access to record video messages.",
+        "NSCameraUsageDescription": "$(PRODUCT_NAME) needs camera access to record video messages and scan QR codes.",
         "NSMicrophoneUsageDescription": "$(PRODUCT_NAME) needs microphone access to record video messages."
       }
     },

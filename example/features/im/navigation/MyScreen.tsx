@@ -9,7 +9,7 @@ import { Confirm } from '../shared/shared'
 import { useTask } from '../shared/useTask'
 import { useProductLayout } from '../ui/preferences'
 import { ProductAvatar, ProductCard, ProductRow } from '../ui/primitives'
-import { ProductPage } from '../ui/ProductPage'
+import { ProductIconButton, ProductPage } from '../ui/ProductPage'
 import { useProductTheme } from '../ui/theme'
 import { useMasterNavigation } from './DesktopNavigation'
 
@@ -66,6 +66,10 @@ function MyAccount ({ userID, account }: { userID: string, account: string }) {
               />
             }
             onPress={() => openMaster('/chats/settings?section=profile' as Href)}
+            trailingInteractive
+            trailing={
+              <ProductIconButton name='qr' label='我的二维码' onPress={() => openMaster('/chats/my-qr' as Href)} />
+            }
           />
         </ProductCard>
         <ProductCard>
