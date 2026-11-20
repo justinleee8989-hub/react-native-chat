@@ -567,6 +567,8 @@ export const en: Record<MessageKey, Entry> = {
   'call.gotIt': 'OK',
   'call.me': ' (me)',
   'call.hangUp': 'Hang up',
+  'call.ongoing': 'Call in progress. Tap to return to it.',
+  'call.channel': 'Calls',
   'call.noSpeaker': 'This device has no speaker available.',
   'call.noEarpiece': 'This device has no earpiece or headset available.',
   'call.invitationExpired': 'This call invitation has expired or isn\'t valid. Start a new call.',

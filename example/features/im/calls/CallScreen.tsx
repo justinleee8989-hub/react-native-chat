@@ -16,6 +16,7 @@ import { assertActiveInvitation } from './invitation'
 import { applyInitialMedia, stopLocalCapture } from './media-setup'
 import { MediaTrack, prepareAudio, releaseAudio, setCallSpeaker } from './platform'
 import { requestCallToken } from './token-api'
+import { useCallKeepAlive } from './useCallKeepAlive'
 
 export default function CallScreen () {
   const {
@@ -79,6 +80,8 @@ function Call ({
   // have lost their connection, and the server ends the call only once they have had time to come back.
   const [peerSeen, setPeerSeen] = useState(false)
   const mediaActive = useRef(false)
+  // Whether the media set out with has been applied here, its permissions asked for and answered.
+  const [mediaSet, setMediaSet] = useState(false)
   const translate = useRef(tr)
   // A call page opened on its own (a link, or a reloaded web page) has nothing to go back to.
   const leave = useCallback(() => {
@@ -114,6 +117,7 @@ function Call ({
         endedHere.current = true
         calls.mediaReady(roomID, false)
         mediaActive.current = false
+        setMediaSet(false)
         stopLocalCapture(room)
         void room
           .disconnect()
@@ -219,6 +223,8 @@ function Call ({
           } catch (error) {
             mediaError = mediaError || error
           }
+        if (active)
+          setMediaSet(true)
         changed()
         if (mediaError)
           throw callError(mediaError)
@@ -238,6 +244,16 @@ function Call ({
         active.groupID ? item.groupID === active.groupID : item.userID === active.peer
       )
       : undefined
+  const name = conversation?.showName || active?.name || active?.peer || tr(active?.groupID ? 'call.group' : 'call.title')
+  useCallKeepAlive(
+    mediaSet && room.state !== 'disconnected' && (!managed || active)
+      ? {
+        title: name,
+        microphone: room.localParticipant.isMicrophoneEnabled,
+        camera: room.localParticipant.isCameraEnabled,
+      }
+      : undefined
+  )
   const disabled = task.busy || room.state !== 'connected'
   const peerAway = !!active && !active.groupID && peerSeen && room.state === 'connected' && room.remoteParticipants.size === 0
   const hangUp = () => {
@@ -255,7 +271,7 @@ function Call ({
     <ProductModal onRequestClose={hangUp}>
       <CallPresentation
         group={!!active?.groupID}
-        name={conversation?.showName || active?.name || active?.peer || tr(active?.groupID ? 'call.group' : 'call.title')}
+        name={name}
         id={active?.groupID || active?.peer || roomID}
         uri={conversation?.faceURL}
         status={

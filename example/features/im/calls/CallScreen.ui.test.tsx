@@ -13,6 +13,7 @@ const mockToken = jest.fn(() => Promise.resolve({ serverUrl: 'ws://rtc', token: 
 const mockCallState: { active?: object } = { active: undefined }
 const mockTask = { run: (action: (current: () => boolean) => unknown) => Promise.resolve(action(() => true)), error: '', busy: false }
 let mockFocus = false
+const mockKeepAlive = jest.fn()
 const mockParams: { room: string, expires: string, managed?: string } = { room: 'imcall-00000000-0000-4000-8000-000000000001', expires: String(Date.now() + 600_000) }
 type MockRoom = { state: string, remoteParticipants: Map<string, object>, handlers: Map<string, (() => void)[]> }
 const mockRooms: MockRoom[] = []
@@ -66,6 +67,7 @@ jest.mock('./CallPresentation', () => ({
   },
 }))
 jest.mock('./platform', () => ({ MediaTrack: () => null, prepareAudio: () => Promise.resolve(), releaseAudio: () => Promise.resolve(), setCallSpeaker: () => Promise.resolve() }))
+jest.mock('./useCallKeepAlive', () => ({ useCallKeepAlive: (call: unknown) => mockKeepAlive(call) }))
 jest.mock('./token-api', () => ({ requestCallToken: () => mockToken() }))
 jest.mock('./media-setup', () => ({ applyInitialMedia: () => Promise.resolve(), stopLocalCapture: () => {} }))
 
@@ -149,4 +151,24 @@ it('says the other side lost connection while the server gives them time to come
   room.remoteParticipants.set('peer', { identity: 'peer', trackPublications: new Map() })
   await emit('participantConnected')
   expect(view.queryByText('对方网络中断，等待重连')).toBeNull()
+})
+it('keeps the call going in the background once its media connects, through reconnecting, until the room is gone', async () => {
+  mockFocus = true
+  mockParams.managed = '1'
+  mockCallState.active = { room: mockParams.room, peer: 'peer', phase: 'connected', media: { microphone: true, camera: false, speaker: true } }
+  await render(<CallScreen />)
+  await act(async () => {})
+  expect(mockKeepAlive).toHaveBeenLastCalledWith(undefined)
+  const room = mockRooms[mockRooms.length - 1]
+  // The status label is mocked to one text here, so a participant event renders the page again.
+  const stateChanged = (state: string) => {
+    room.state = state
+    return act(async () => ['connectionStateChanged', 'participantConnected'].forEach(event => room.handlers.get(event)?.forEach(handler => handler())))
+  }
+  await stateChanged('connected')
+  expect(mockKeepAlive).toHaveBeenLastCalledWith({ title: 'peer', microphone: false, camera: false })
+  await stateChanged('reconnecting')
+  expect(mockKeepAlive).toHaveBeenLastCalledWith({ title: 'peer', microphone: false, camera: false })
+  await stateChanged('disconnected')
+  expect(mockKeepAlive).toHaveBeenLastCalledWith(undefined)
 })

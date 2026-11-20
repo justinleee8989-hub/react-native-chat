@@ -570,6 +570,8 @@ export const zh = {
   'call.gotIt': '知道了',
   'call.me': '（我）',
   'call.hangUp': '挂断',
+  'call.ongoing': '通话进行中，点按返回通话',
+  'call.channel': '通话',
   'call.noSpeaker': '当前设备没有可用扬声器',
   'call.noEarpiece': '当前设备没有可用听筒或耳机',
   'call.invitationExpired': '通话邀请已过期或无效，请重新发起',
