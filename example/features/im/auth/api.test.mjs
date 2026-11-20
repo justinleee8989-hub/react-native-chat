@@ -33,3 +33,42 @@ test('login maps the backend PasswordError code to safe account credentials copy
     error => errorMessage(error, zhT) === '账号或密码错误'
   )
 })
+
+for (const [kind, failure] of [
+  ['React Native and the browser', () => new TypeError('Network request failed')],
+  // expo/fetch, the global fetch on iOS and Android, rejects with a plain Error subclass.
+  ['expo/fetch', () => new Error('fetch failed: 似乎已断开与互联网的连接。')],
+]) {
+  test(`a login that got no answer from ${kind}'s fetch says it could not reach the server, once`, async () => {
+    let calls = 0
+    await assert.rejects(
+      authenticate('alice@example.com', 'pw', 'http://local', 1, async () => {
+        calls++
+        throw failure()
+      }),
+      error => errorMessage(error, zhT).startsWith('无法连接服务器')
+    )
+    // Never sent again: a first request that did reach the server would revoke the second one's token.
+    assert.equal(calls, 1)
+  })
+}
+test('a login with no answer within the timeout says it could not reach the server', async () => {
+  const realTimeout = globalThis.setTimeout
+  // The timeout fires at once; the request then rejects with an AbortError, as RN's fetch does.
+  globalThis.setTimeout = (callback => realTimeout(callback, 0))
+  try {
+    await assert.rejects(
+      authenticate('alice@example.com', 'pw', 'http://local', 1, (_url, options) => new Promise((_resolve, reject) => {
+        options.signal.addEventListener('abort', () => reject(Object.assign(new Error('Aborted'), { name: 'AbortError' })))
+      })),
+      error => errorMessage(error, zhT).startsWith('无法连接服务器')
+    )
+  } finally {
+    globalThis.setTimeout = realTimeout
+  }
+})
+test('other errors are not taken for a missing answer', async () => {
+  await assert.rejects(authenticate('alice', 'pw', 'http://local', 5, async () => {
+    throw new Error('something else')
+  }), /something else/)
+})

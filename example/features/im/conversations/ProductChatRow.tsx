@@ -71,12 +71,19 @@ export function ProductChatRow ({
     : chat.draft
       ? tr('chats.draft', { text: chat.draft })
       : `${content.prefix || ''}${content.attachment || content.text}`
+  // A screen reader hears the whole row, as it is seen: who, what was said, when, and how much is unread.
+  const rowLabel = [
+    chat.title,
+    preview,
+    time,
+    chat.unreadCount ? tr('chats.unreadCount', { count: chat.unreadCount }) : '',
+  ].filter(Boolean).join(', ')
   return (
     <View {...swipe.panHandlers}>
       <Pressable
         {...web}
         accessibilityRole='button'
-        accessibilityLabel={chat.title}
+        accessibilityLabel={rowLabel}
         accessibilityState={{ selected }}
         onPress={onPress}
         onPressIn={onPressIn}

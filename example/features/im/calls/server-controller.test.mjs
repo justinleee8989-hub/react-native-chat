@@ -34,7 +34,7 @@ test('joining a group call again clears its previous local ignore state', async 
  })
  c.reset('me')
  await c.group('group', 'request')
- await c.finish('end')
+ await c.finish()
  await c.join(accepted.room)
  assert.equal(c.snapshot().active?.room, accepted.room)
  assert.equal(c.snapshot().active?.phase, 'connected')
@@ -74,10 +74,10 @@ test('call controller can surface group invitation failure after navigation', ()
  assert.equal(c.snapshot().error, failure)
 })
 
-test('records the server terminal outcome instead of the requested finish label', async () => {
+test('records the server terminal outcome, not one guessed here', async () => {
  const recorded = []
  const c = createServerCallController({ request: async req => [req.action === 'cancel' ? { ...call, status: 'canceled' } : call], record: async (_peer, signal) => recorded.push(signal.kind), now: () => 1000 })
- c.reset('me'); await c.start('peer', 'Peer', 'id'); await c.finish('end')
+ c.reset('me'); await c.start('peer', 'Peer', 'id'); await c.finish()
  assert.deepEqual(recorded, ['invite', 'cancel'])
 })
 
@@ -104,10 +104,152 @@ test('an answer to the 通话 page resumes polling stopped for a missing call se
   throw new CallServiceUnavailableError()
  }, record: async () => {}, now: () => clock })
  c.reset('me')
- clock += 3000; c.tick(); await new Promise(r => setImmediate(r))
- clock += 3000; c.tick(); await new Promise(r => setImmediate(r))
+ clock += 11000; c.tick(); await new Promise(r => setImmediate(r))
+ clock += 11000; c.tick(); await new Promise(r => setImmediate(r))
  assert.equal(polls, 1)
  c.serviceAnswered()
- clock += 3000; c.tick(); await new Promise(r => setImmediate(r))
+ clock += 11000; c.tick(); await new Promise(r => setImmediate(r))
  assert.equal(polls, 2)
+})
+test('a call answered and ended between two polls says it never connected, not that it took place', async () => {
+ let data = call
+ const c = createServerCallController({ request: async () => [data], record: async () => {}, now: () => 1000 })
+ c.reset('me'); await c.start('peer', 'Peer', 'id')
+ assert.equal(c.snapshot().active.phase, 'outgoing')
+ data = { ...call, status: 'ended', connectedAt: 1500, ended: 2000 }
+ await c.poll()
+ assert.equal(c.snapshot().active, undefined)
+ assert.equal(zhT(c.snapshot().notice), '通话未能接通，已结束')
+})
+test('a new call found by polling clears the last call\'s notice, so the same ending is said again', async () => {
+ let data = call
+ const c = createServerCallController({ request: async () => [data], record: async () => {}, now: () => 1000 })
+ c.reset('me'); await c.start('peer', 'Peer', 'id')
+ data = { ...call, status: 'ended', connectedAt: 1500, ended: 2000 }
+ await c.poll()
+ assert.equal(c.snapshot().notice, 'call.endedBeforeConnect')
+ data = { ...call, room: 'imcall-next', caller: 'peer', callee: 'me' }
+ await c.poll()
+ assert.equal(c.snapshot().active.phase, 'incoming')
+ assert.equal(c.snapshot().notice, '')
+})
+test('a call that ends in the same answer as a new one rings keeps its notice', async () => {
+ let data = [call]
+ const c = createServerCallController({ request: async () => data, record: async () => {}, now: () => 1000 })
+ c.reset('me'); await c.start('peer', 'Peer', 'id')
+ data = [{ ...call, status: 'rejected', ended: 2000 }, { ...call, room: 'imcall-next', caller: 'peer', callee: 'me' }]
+ await c.poll()
+ assert.equal(c.snapshot().active.room, 'imcall-next')
+ assert.equal(c.snapshot().notice, 'call.rejected')
+})
+test('a call seen answered that then ends keeps the plain ended notice', async () => {
+ let data = call
+ const c = createServerCallController({ request: async () => [data], record: async () => {}, now: () => 1000 })
+ c.reset('me'); await c.start('peer', 'Peer', 'id')
+ data = { ...call, status: 'accepted', connectedAt: 1500 }
+ await c.poll()
+ data = { ...call, status: 'ended', connectedAt: 1500, ended: 9000 }
+ await c.poll()
+ assert.equal(c.snapshot().notice, 'call.ended')
+})
+
+test('waiting for a group call to connect here ends with the media, or with the call', async () => {
+ const accepted = { ...call, room: 'imcall-group', groupID: 'group', status: 'accepted', members: { me: { lease: 90000 } } }
+ const c = createServerCallController({ request: async req => req.action === 'leave' ? [{ ...accepted, members: {} }] : [accepted], record: async () => {}, now: () => 1000 })
+ c.reset('me')
+ await c.group('group', 'request')
+ const connected = c.whenMediaReady(accepted.room)
+ c.mediaReady(accepted.room, true)
+ assert.equal(await connected, true)
+
+ c.mediaReady(accepted.room, false)
+ const failed = c.whenMediaReady(accepted.room)
+ await c.finish()
+ assert.equal(await failed, false)
+ assert.equal(await c.whenMediaReady(accepted.room), false)
+})
+
+test('a hang-up the server does not answer is not said: the call has already ended here', async () => {
+ const c = createServerCallController({ request: async req => {
+  if (req.action === 'cancel') throw new Error('aborted')
+  return [call]
+ }, record: async () => {}, now: () => 1000 })
+ c.reset('me'); await c.start('peer', 'Peer', 'id')
+ await assert.rejects(c.finish())
+ assert.equal(c.snapshot().active, undefined)
+ assert.equal(c.snapshot().error, '')
+})
+
+const room = 'imcall-11111111-1111-4111-8111-111111111111'
+test('a hang-up the server records keeps its outcome for the chat at once, until the next sign-in', async () => {
+ const ringing = { ...call, room }
+ const c = createServerCallController({ request: async req => req.action === 'cancel' ? [{ ...ringing, status: 'canceled', ended: 3000, serverRecordDelivery: true }] : [ringing], record: async () => assert.fail('the server records it'), now: () => 1000 })
+ c.reset('me'); await c.start('peer', 'Peer', 'id'); await c.finish()
+ assert.deepEqual(c.snapshot().outcomes[room], { version: 2, eventID: `rtc-terminal:${room}`, room, caller: 'me', callee: 'peer', status: 'canceled', kind: 'cancel', expires: 46000, ended: 3000, connectedAt: undefined, durationSeconds: undefined })
+ c.reset('me')
+ assert.deepEqual(c.snapshot().outcomes, {})
+})
+test('the other side ending the call is kept as its outcome when polling sees it', async () => {
+ let data = { ...call, room }
+ const c = createServerCallController({ request: async () => [data], record: async () => {}, now: () => 1000 })
+ c.reset('me'); await c.start('peer', 'Peer', 'id')
+ data = { ...data, status: 'rejected', ended: 2000, serverRecordDelivery: true }
+ await c.poll()
+ assert.equal(c.snapshot().outcomes[room]?.kind, 'reject')
+})
+test('no outcome for a call the server does not record, or a group call', async () => {
+ const ringing = { ...call, room }
+ const c = createServerCallController({ request: async req => req.action === 'cancel' ? [{ ...ringing, status: 'canceled', ended: 3000 }] : [ringing], record: async () => {}, now: () => 1000 })
+ c.reset('me'); await c.start('peer', 'Peer', 'id'); await c.finish()
+ assert.deepEqual(c.snapshot().outcomes, {})
+})
+
+const connectedCall = { ...call, status: 'accepted', members: { me: { lease: 90000 }, peer: { lease: 90000 } } }
+const flush = () => new Promise(r => setImmediate(r))
+test('the other side joining asks for the connect time at once, then backs off three times at most', async () => {
+ let clock = 1000; const actions = []
+ const c = createServerCallController({ request: async req => {
+  actions.push(req.action); return [connectedCall]
+ }, record: async () => {}, now: () => clock })
+ c.reset('me'); await c.start('peer', 'Peer', 'id'); c.mediaReady(call.room, true)
+ actions.length = 0
+ c.peerJoined(call.room); await flush()
+ assert.deepEqual(actions, ['heartbeat'])
+ // Asked again after 1, 2 and 4 seconds, then only the heartbeat's own pace.
+ for (const wait of [500, 500, 2000, 4000, 1000, 1000, 1000]) {
+  clock += wait; c.tick(); await flush()
+ }
+ assert.equal(actions.length, 4)
+ clock += 8000; c.tick(); await flush()
+ assert.equal(actions.length, 5)
+ // Once per call: the other side coming back does not start it over.
+ c.peerJoined(call.room); c.tick(); await flush()
+ assert.equal(actions.length, 5)
+})
+test('the connect time arriving stops the asking', async () => {
+ let clock = 1000; let data = connectedCall; let asked = 0
+ const c = createServerCallController({ request: async req => {
+  if (req.action === 'heartbeat') asked++
+  return [data]
+ }, record: async () => {}, now: () => clock })
+ c.reset('me'); await c.start('peer', 'Peer', 'id'); c.mediaReady(call.room, true)
+ data = { ...connectedCall, connectedAt: 1500 }
+ c.peerJoined(call.room); await flush()
+ assert.equal(c.snapshot().active.connectedAt, 1500)
+ clock += 1500; c.tick(); await flush()
+ clock += 2500; c.tick(); await flush()
+ assert.equal(asked, 1)
+})
+test('a call that ends stops the asking for its connect time', async () => {
+ let clock = 1000; let asked = 0
+ const c = createServerCallController({ request: async req => {
+  if (req.action === 'heartbeat') asked++
+  return req.action === 'end' ? [{ ...connectedCall, status: 'ended', ended: 1200 }] : [connectedCall]
+ }, record: async () => {}, now: () => clock })
+ c.reset('me'); await c.start('peer', 'Peer', 'id'); c.mediaReady(call.room, true)
+ c.peerJoined(call.room); await flush()
+ await c.finish()
+ clock += 1500; c.tick(); await flush()
+ assert.equal(asked, 1)
+ assert.equal(c.snapshot().active, undefined)
 })

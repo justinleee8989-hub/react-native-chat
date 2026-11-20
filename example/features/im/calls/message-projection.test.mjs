@@ -42,3 +42,15 @@ test('server v2 result wins over a later old-client result for the same call', (
  const old = { ...server, clientMsgID: 'old', sendID: 'b', recvID: 'a', sendTime: 101000, textElem: {content: '[OpenIM 呼叫] '+JSON.stringify({room, expires:45000,kind:'end'})} }
  assert.deepEqual(projectCallMessages([old, server]).map(m => m.clientMsgID), ['server'])
 })
+
+test('an ending the server answered shows on the invitation until its record arrives', () => {
+ const outcome = { version: 2, eventID: `rtc-terminal:${room}`, room, caller: 'caller', callee: 'callee', status: 'canceled', kind: 'cancel', expires: 45000, ended: 2000 }
+ const invite = msg('invite', 'invite')
+ const shown = projectCallMessages([invite], [], { [room]: outcome })
+ assert.deepEqual(shown.map(m => m.clientMsgID), ['invite'])
+ assert.equal(callMessageLabel(shown[0], 'caller', zhT), callMessageLabel({ ...invite, textElem: { content: encodeSignal({ room, expires: 45000, kind: 'cancel' }) } }, 'caller', zhT))
+ assert.equal(invite.textElem.content, encodeSignal({ room, expires: 45000, kind: 'invite' }))
+ const record = { ...invite, clientMsgID: 'server', sendTime: 3000, textElem: { content: encodeSignal({ ...outcome, kind: 'end', status: 'ended' }) } }
+ assert.deepEqual(projectCallMessages([record, invite], [], { [room]: outcome }), [record])
+ assert.deepEqual(projectCallMessages([invite], [], { [room]: { ...outcome, caller: 'stranger' } }), [invite])
+})

@@ -1,15 +1,17 @@
-import React, { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
-import { AppState, Platform, Text, View } from 'react-native'
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { Platform, Text, View } from 'react-native'
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router'
 import { Room, RoomEvent } from 'livekit-client'
 import { calls, useOpenIM } from '../application/store'
 import LoginScreen from '../auth/LoginScreen'
 import type { MessageKey } from '../i18n'
 import { useT } from '../i18n'
+import { errorMessage } from '../shared/error-message'
+import { ProductToast, showProductToast } from '../shared/ProductToast'
 import { useTask } from '../shared/useTask'
 import { ProductModal } from '../ui/ProductModal'
 import { CallControl, CallPresentation, callConnectionLabel } from './CallPresentation'
-import { callError } from './errors'
+import { callConnectError, callError, callJoinError } from './errors'
 import { assertActiveInvitation } from './invitation'
 import { applyInitialMedia, stopLocalCapture } from './media-setup'
 import { MediaTrack, prepareAudio, releaseAudio, setCallSpeaker } from './platform'
@@ -73,12 +75,33 @@ function Call ({
     return () => clearInterval(timer)
   }, [connectedAt])
   const [status, setStatus] = useState<MessageKey>('call.preparing')
+  // Whether the other side of a one-to-one call has been in the room: gone from it since, they
+  // have lost their connection, and the server ends the call only once they have had time to come back.
+  const [peerSeen, setPeerSeen] = useState(false)
   const mediaActive = useRef(false)
-  useEffect(() => {
-    if (managed && callState.active?.room !== roomID) {
-      void room.disconnect().catch(() => {})
+  const translate = useRef(tr)
+  // A call page opened on its own (a link, or a reloaded web page) has nothing to go back to.
+  const leave = useCallback(() => {
+    if (router.canGoBack())
       router.back()
-    }
+    else
+      router.replace('/(tabs)/chats')
+  }, [router])
+  useLayoutEffect(() => {
+    translate.current = tr
+  }, [tr])
+  // Whether the media ever connected here, and whether this side ended the call. This page opens
+  // once the call is answered, so a call the other side ends before the media connected here (its
+  // own connection failed) is said as such, rather than the page just closing.
+  const joined = useRef(false)
+  const endedHere = useRef(false)
+  useEffect(() => {
+    if (!managed || callState.active?.room === roomID)
+      return
+    void room.disconnect().catch(() => {})
+    if (!joined.current && !endedHere.current)
+      showProductToast(translate.current('call.endedBeforeConnect'))
+    router.back()
   }, [managed, callState.active?.room, roomID, room, router])
   useFocusEffect(
     useCallback(() => {
@@ -88,6 +111,7 @@ function Call ({
       mediaActive.current = true
       const stop = () => {
         active = false
+        endedHere.current = true
         calls.mediaReady(roomID, false)
         mediaActive.current = false
         stopLocalCapture(room)
@@ -96,19 +120,20 @@ function Call ({
           .finally(releaseAudio)
           .catch(() => {})
         if (managed && calls.snapshot().active?.room === roomID)
-          void calls.finish('end').catch(() => {})
+          void calls.finish().catch(() => {})
       }
-      const appState = AppState.addEventListener('change', state => {
-        if (state === 'background') {
-          stop()
-          setStatus('call.leftRejoin')
-        }
-      })
+      // The call goes on with the app in the background: its audio keeps the app running there.
       const changed = () => {
         if (active)
           setRevision(value => value + 1)
+        if (active && room.remoteParticipants.size) {
+          setPeerSeen(true)
+          calls.peerJoined(roomID)
+        }
       }
       const stateChanged = () => {
+        if (room.state === 'connected')
+          joined.current = true
         calls.mediaReady(roomID, active && room.state === 'connected')
         if (active)
           setStatus(callConnectionLabel(room.state))
@@ -126,8 +151,28 @@ function Call ({
       events.forEach(event => room.on(event, changed))
       room.on(RoomEvent.ConnectionStateChanged, stateChanged)
       void run(async current => {
-        assertActiveInvitation({ room: roomID, expires })
-        const credentials = await requestCallToken(session, roomID, chatURL)
+        // Never joined, and cannot: end the call at once, so the other side is not left counting a
+        // call nobody joined until the server's lease runs out, and go back to the chat. Said once,
+        // in the toast: the page is closing, so it is not also left on it.
+        const giveUp = (said: string) => {
+          if (!current() || !active)
+            return false
+          stop()
+          showProductToast(said)
+          if (!managed)
+            leave()
+          return true
+        }
+        let credentials: Awaited<ReturnType<typeof requestCallToken>>
+        try {
+          assertActiveInvitation({ room: roomID, expires })
+          credentials = await requestCallToken(session, roomID, chatURL)
+        } catch (error) {
+          // An expired invitation, or one the server will not let this user join.
+          if (giveUp(errorMessage(callJoinError(error), translate.current)))
+            return
+          throw error
+        }
         if (!current() || !active)
           return
         await prepareAudio()
@@ -135,7 +180,14 @@ function Call ({
           await releaseAudio()
           return
         }
-        await room.connect(credentials.serverUrl, credentials.token)
+        try {
+          await room.connect(credentials.serverUrl, credentials.token)
+        } catch (error) {
+          const failure = callConnectError(error)
+          if (giveUp(translate.current(failure.key)))
+            return
+          throw failure
+        }
         if (!current() || !active) {
           await room.disconnect()
           return
@@ -172,12 +224,11 @@ function Call ({
           throw callError(mediaError)
       })
       return () => {
-        appState.remove()
         stop()
         events.forEach(event => room.off(event, changed))
         room.off(RoomEvent.ConnectionStateChanged, stateChanged)
       }
-    }, [room, roomID, expires, session, chatURL, run, managed])
+    }, [room, roomID, expires, session, chatURL, run, managed, leave])
   )
   const participants = [room.localParticipant, ...room.remoteParticipants.values()]
   const active = callState.active?.room === roomID ? callState.active : undefined
@@ -188,14 +239,16 @@ function Call ({
       )
       : undefined
   const disabled = task.busy || room.state !== 'connected'
+  const peerAway = !!active && !active.groupID && peerSeen && room.state === 'connected' && room.remoteParticipants.size === 0
   const hangUp = () => {
+    endedHere.current = true
     mediaActive.current = false
     calls.mediaReady(roomID, false)
     stopLocalCapture(room)
     if (managed)
-      void calls.finish('end').catch(() => {})
+      void calls.finish().catch(() => {})
     else
-      router.back()
+      leave()
     void room.disconnect().catch(() => {})
   }
   return (
@@ -206,14 +259,16 @@ function Call ({
         id={active?.groupID || active?.peer || roomID}
         uri={conversation?.faceURL}
         status={
-          room.state === 'connected' && connectedAt
-            ? `${Math.floor(elapsed / 60)
-              .toString()
-              .padStart(
-                2,
-                '0'
-              )}:${(elapsed % 60).toString().padStart(2, '0')}${active?.groupID ? ` · ${tr('chatInfo.memberCount', { count: participants.length })}` : ''}`
-            : tr(status)
+          peerAway
+            ? tr('call.peerAway')
+            : room.state === 'connected' && connectedAt
+              ? `${Math.floor(elapsed / 60)
+                .toString()
+                .padStart(
+                  2,
+                  '0'
+                )}:${(elapsed % 60).toString().padStart(2, '0')}${active?.groupID ? ` · ${tr('chatInfo.memberCount', { count: participants.length })}` : ''}`
+              : tr(status)
         }
         error={task.error}
         media={
@@ -317,6 +372,10 @@ function Call ({
         </View>
         <CallControl label={tr('call.hangUp')} icon='phone' tone='red' onPress={hangUp} />
       </CallPresentation>
+      {/* A failed call says why at once, here: this modal covers every other page's toast, and it
+          can stay up for seconds after the failure, until the server ends the call. The pages
+          under it hide theirs meanwhile, and show what is left of it once the modal closes. */}
+      <ProductToast modal />
     </ProductModal>
   )
 }

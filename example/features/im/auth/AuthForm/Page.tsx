@@ -16,6 +16,7 @@ export function AuthPage ({
   brand = true,
   mood,
   typed,
+  covered,
   end,
   onBack,
 }: React.PropsWithChildren<{
@@ -26,6 +27,8 @@ export function AuthPage ({
   mood?: AuthMood
   /** The email's length, for the sprite to follow as it is typed. */
   typed?: number
+  /** Another page is over this one: the sprite holds still. */
+  covered?: boolean
   /** Below the form, at the bottom of a phone's screen: the way to another page. */
   end?: React.ReactNode
   onBack?: () => void
@@ -51,7 +54,7 @@ export function AuthPage ({
           contentContainerStyle={[styles.page, { paddingTop: brand ? (desktop ? 72 : 28) : 8 }]}
         >
           <View style={styles.form}>
-            {brand && <AuthMascot mood={mood} typed={typed} />}
+            {brand && <AuthMascot mood={mood} typed={typed} paused={covered} />}
             <Text style={[styles.title, { color: colors.name }]}>{title}</Text>
             <Text style={[styles.subtitle, { color: colors.message }]}>{subtitle}</Text>
             <View style={styles.fields}>{children}</View>

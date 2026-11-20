@@ -94,18 +94,18 @@ test('heartbeat failures retain a call during the grace period and stop it after
     return [activeCall]
   }, { now: () => now })
 
-  await controller.poll()
+  await controller.start('peer', 'Peer', 'id')
   controller.mediaReady(room, true)
   now = 9_001
-  await controller.poll()
+  controller.tick(); await new Promise(resolve => setImmediate(resolve))
   assert.equal(controller.snapshot().active.phase, 'connected')
   assert.equal(errorMessage(controller.snapshot().error, zhT), '')
 
-  now = 16_001
-  await controller.poll()
+  now = 17_002
+  controller.tick(); await new Promise(resolve => setImmediate(resolve))
   assert.equal(controller.snapshot().active, undefined)
   assert.match(errorMessage(controller.snapshot().error, zhT), /无法确认服务端通话状态/)
-  assert.deepEqual(actions, ['list', 'list', 'heartbeat', 'list', 'heartbeat'])
+  assert.deepEqual(actions, ['create', 'heartbeat', 'get', 'heartbeat', 'get'])
 })
 
 test('a connected call without ready media never sends a heartbeat', async () => {
@@ -117,12 +117,12 @@ test('a connected call without ready media never sends a heartbeat', async () =>
     return [activeCall]
   }, { now: () => now })
 
-  await controller.poll()
+  await controller.start('peer', 'Peer', 'id')
   now = 9_001
   await controller.poll()
 
   assert.equal(controller.snapshot().active.phase, 'connected')
-  assert.deepEqual(actions, ['list', 'list'])
+  assert.deepEqual(actions, ['create', 'list'])
 })
 
 test('logout during a pending accept prevents late server and record results from restoring the prior account', async () => {
@@ -142,7 +142,7 @@ test('logout during a pending accept prevents late server and record results fro
   acceptResponse.resolve([call('accepted')])
   await accepting
 
-  assert.deepEqual(controller.snapshot(), { error: '', notice: '', active: undefined })
+  assert.deepEqual(controller.snapshot(), { error: '', notice: '', active: undefined, outcomes: {} })
   assert.equal(recordCount, 0)
 })
 
@@ -169,21 +169,20 @@ test('an older poll cannot replace a newer accepted call or resurrect a finished
   assert.equal(acceptedController.snapshot().active.phase, 'connected')
 
   const staleFinishPoll = deferred()
-  let finishListCalls = 0
   const finishedCall = call('ended', { caller: 'me', callee: 'peer', ended: 2_000 })
   const finishedController = controllerFor(async ({ action }) => {
-    if (action === 'list') {
-      finishListCalls++
-      return finishListCalls === 1 ? [call('accepted', { caller: 'me', callee: 'peer' })] : staleFinishPoll.promise
-    }
+    if (action === 'create')
+      return [call('accepted', { caller: 'me', callee: 'peer' })]
+    if (action === 'list')
+      return staleFinishPoll.promise
     if (action === 'end')
       return [finishedCall]
     return []
   })
 
-  await finishedController.poll()
+  await finishedController.start('peer', 'Peer', 'id')
   const oldFinishPoll = finishedController.poll()
-  await finishedController.finish('end')
+  await finishedController.finish()
   staleFinishPoll.resolve([call('accepted', { caller: 'me', callee: 'peer' })])
   await oldFinishPoll
   assert.equal(finishedController.snapshot().active, undefined)
@@ -204,7 +203,7 @@ test('an accept response arriving after finish cannot revive a rejected call', a
 
   await controller.poll()
   const accepting = controller.accept()
-  await controller.finish('reject')
+  await controller.finish()
   acceptResponse.resolve([call('accepted')])
   await accepting
 

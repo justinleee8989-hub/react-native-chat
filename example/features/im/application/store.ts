@@ -168,7 +168,7 @@ async function connect (session: Session, config: ServerConfig, quiet = false) {
   setDraftStorageScope(JSON.stringify([config.api, config.ws]))
   disposeEvents()
   runtime.update(quiet ? { config } : { busy: true, error: '', status: 'connecting', config })
-  disposeEvents = subscribeEvents(client, runtime, { ...messaging, refresh }, logout, epoch, message => calls.receive(message))
+  disposeEvents = subscribeEvents(client, runtime, { ...messaging, refresh }, logout, epoch, message => calls.receive(message), () => calls.recheck())
   let sdkLoggedIn = false
   try {
     await client.login(session, config)
@@ -377,7 +377,7 @@ export async function logout (reason?: MessageKey) {
   const previousConfig = runtime.state.config
   stopReconnecting()
   stopHomeSnapshot()
-  void calls.finish('end').catch(() => {})
+  void calls.finish().catch(() => {})
   calls.reset('')
   const epoch = ++runtime.generation
   disposeEvents()

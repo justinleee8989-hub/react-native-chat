@@ -106,6 +106,14 @@ it('checks all outgoing request pages and says a pending application on the row,
   expect(directory.add).not.toHaveBeenCalled()
 })
 
+it('opens a Latin keyboard for the ID, email or phone number, so no pinyin IME gets in the way', async () => {
+  await render(<AddFriendScreen />)
+  const field = screen.getByLabelText(SEARCH)
+  expect(field.props.keyboardType).toBe('email-address')
+  expect(field.props.autoCapitalize).toBe('none')
+  expect(field.props.autoCorrect).toBe(false)
+})
+
 it('says a friend is already one on the row, with no note or button', async () => {
   jest.mocked(profile.person).mockResolvedValue({ userID: 'alice', nickname: 'Alice', isFriend: true })
   await render(<AddFriendScreen />)

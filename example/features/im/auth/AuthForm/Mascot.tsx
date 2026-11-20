@@ -1,5 +1,5 @@
 import React, { useEffect, useEffectEvent, useId, useRef, useState } from 'react'
-import { AccessibilityInfo, Animated, Easing, Platform, Pressable, StyleSheet } from 'react-native'
+import { AccessibilityInfo, Animated, Easing, Platform, Pressable, Settings, StyleSheet } from 'react-native'
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg'
 import { chatThemeOf } from '../../ui/chat-theme'
 import { useProductScheme } from '../../ui/preferences'
@@ -61,13 +61,25 @@ function poseOf (mood: AuthMood, typed: number): Pose {
 const moodMove: Partial<Record<AuthMood, MoveName>> = { busy: 'bounce', password: 'shiver', peek: 'sneak', error: 'shake' }
 
 const between = (min: number, max: number) => min + Math.random() * (max - min)
+// UI tests launch the app with `-XIMReduceMotion 1` (iOS puts launch arguments in the user
+// defaults) so the endless loops stop and the app can go idle, as it does when the system asks for
+// reduced motion. On Android, setting the transition animation scale to 0 does the same: it is
+// the setting AccessibilityInfo reads there (the animator duration scale does not stop it).
+const testsAskStill = (() => {
+  try {
+    return Platform.OS === 'ios' && !!Settings.get('XIMReduceMotion')
+  } catch {
+    // No settings module (the unit tests): nothing asked for.
+    return false
+  }
+})()
 
 function useReducedMotion () {
-  const [reduced, setReduced] = useState(false)
+  const [reduced, setReduced] = useState(testsAskStill)
   useEffect(() => {
     let live = true
-    void AccessibilityInfo.isReduceMotionEnabled().then(value => live && setReduced(value))
-    const subscription = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduced)
+    void AccessibilityInfo.isReduceMotionEnabled().then(value => live && setReduced(value || testsAskStill))
+    const subscription = AccessibilityInfo.addEventListener('reduceMotionChanged', value => setReduced(value || testsAskStill))
     return () => {
       live = false
       subscription.remove()
@@ -82,9 +94,10 @@ function useReducedMotion () {
  * random move every second or two (peeks, hops, flips, tiptoes, stretches); as the form is used it
  * leans over the email, turns away from the password, peeks when it is shown, hops while
  * connecting, and shakes its head and slumps when the sign-in fails. Still, in each pose, when the
- * system asks for reduced motion. `typed` is the email's length: each letter is a nod.
+ * system asks for reduced motion, and while `paused` (the page is covered by another). `typed` is
+ * the email's length: each letter is a nod.
  */
-export function AuthMascot ({ mood = 'idle', typed = 0 }: { mood?: AuthMood, typed?: number }) {
+export function AuthMascot ({ mood = 'idle', typed = 0, paused = false }: { mood?: AuthMood, typed?: number, paused?: boolean }) {
   const light = useProductScheme() === 'light'
   const gradient = `mark-${useId().replace(/[^a-zA-Z0-9-]/g, '')}`
   const reduced = useReducedMotion()
@@ -94,30 +107,36 @@ export function AuthMascot ({ mood = 'idle', typed = 0 }: { mood?: AuthMood, typ
   const [pose] = useState(() => still.map(value => new Animated.Value(value)))
   const [move, setMove] = useState<MoveName>()
   const playing = useRef<Animated.CompositeAnimation>(undefined)
+  // A tap on it, left alone: a flip.
+  const [taps, setTaps] = useState(0)
+  const resting = reduced || paused
 
   const play = useEffectEvent((name: MoveName | undefined) => {
     playing.current?.stop()
     playing.current = undefined
     setMove(name)
     progress.setValue(0)
-    if (!name || reduced)
+    if (!name || resting)
       return
     const run = Animated.timing(progress, { toValue: 1, duration: moves[name].ms, easing: Easing.linear, useNativeDriver: nativeDriver })
     playing.current = moves[name].loop ? Animated.loop(run) : run
     playing.current.start(({ finished }) => finished && !moves[name].loop && setMove(undefined))
   })
 
-  // Breathing, always.
+  // Breathing, while it moves.
   useEffect(() => {
-    if (reduced)
+    if (resting)
       return
     const animation = Animated.loop(Animated.sequence([
       Animated.timing(breath, { toValue: 1, duration: 1200, easing: Easing.inOut(Easing.sin), useNativeDriver: nativeDriver }),
       Animated.timing(breath, { toValue: 0, duration: 1200, easing: Easing.inOut(Easing.sin), useNativeDriver: nativeDriver }),
     ]))
     animation.start()
-    return () => animation.stop()
-  }, [breath, reduced])
+    return () => {
+      animation.stop()
+      breath.setValue(0)
+    }
+  }, [breath, resting])
 
   // Springs into the state's pose and plays its move; a new letter in the email is a nod.
   const key = poseOf(mood, typed).join()
@@ -127,7 +146,9 @@ export function AuthMascot ({ mood = 'idle', typed = 0 }: { mood?: AuthMood, typ
       ? value.setValue(values[index])
       : Animated.spring(value, { toValue: values[index], friction: 5, tension: 140, useNativeDriver: nativeDriver }).start())
   }, [key, pose, reduced])
-  useEffect(() => play(moodMove[mood]), [mood, reduced])
+  // Pausing ends a looping move (the shiver, the hop while connecting) in its rest pose; the page
+  // showing again starts the state's move over.
+  useEffect(() => play(paused ? undefined : moodMove[mood]), [mood, reduced, paused])
   const nod = useEffectEvent(() => mood === 'email' && play('nod'))
   useEffect(() => {
     if (typed)
@@ -136,7 +157,7 @@ export function AuthMascot ({ mood = 'idle', typed = 0 }: { mood?: AuthMood, typ
 
   // Left alone: a random move, never the same twice in a row, every second or two.
   useEffect(() => {
-    if (mood !== 'idle' || reduced)
+    if (mood !== 'idle' || resting)
       return
     let last: MoveName | undefined
     let timer: ReturnType<typeof setTimeout>
@@ -150,11 +171,11 @@ export function AuthMascot ({ mood = 'idle', typed = 0 }: { mood?: AuthMood, typ
     }
     next()
     return () => clearTimeout(timer)
-  }, [mood, reduced])
+  }, [mood, resting])
 
   // A blink every few seconds, sometimes two; not while it turns away with its eyes shut tight.
   useEffect(() => {
-    if (reduced || mood === 'password')
+    if (resting || mood === 'password')
       return
     const shut = () => Animated.sequence([
       Animated.timing(blink, { toValue: 0.08, duration: 70, useNativeDriver: nativeDriver }),
@@ -169,11 +190,9 @@ export function AuthMascot ({ mood = 'idle', typed = 0 }: { mood?: AuthMood, typ
     }
     next()
     return () => clearTimeout(timer)
-  }, [blink, mood, reduced])
+  }, [blink, mood, resting])
 
   useEffect(() => () => playing.current?.stop(), [])
-  // A tap on it, left alone: a flip.
-  const [taps, setTaps] = useState(0)
   useEffect(() => {
     if (taps)
       play('flip')

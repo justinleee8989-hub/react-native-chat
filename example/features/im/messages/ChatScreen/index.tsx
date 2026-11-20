@@ -19,7 +19,9 @@ import { useChatEntryReady } from '../../navigation/useChatEntry'
 import { ConnectionStatus } from '../../shared/ConnectionStatus'
 import { errorMessage } from '../../shared/error-message'
 import { ProductError } from '../../shared/product-error'
+import { ProductToast, showProductToast } from '../../shared/ProductToast'
 import { Confirm } from '../../shared/shared'
+import { useInFront } from '../../shared/useInFront'
 import { useTask } from '../../shared/useTask'
 import { usePhotoWallpaperRender } from '../../ui/ChatWallpaperView'
 import { useProductLayout, useProductScheme } from '../../ui/preferences'
@@ -132,14 +134,22 @@ function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
   }, [state.session])
   const askReadersAgain = useCallback(() => setReaderRefreshToken(value => value + 1), [])
   useFocusedConversation({ id, session: state.session, available: !!conversation, onForeground: askReadersAgain })
+  // A page opened over this chat shows its own toasts.
+  const front = useInFront()
   const onSend = useChatSend({ id, composer, accessNotice: access.notice, accessError: access.error, setReply })
+  // One call at a time (a second tap while it starts is ignored). One that cannot start is said in a
+  // passing toast: a notice pinned above the chat would stay there long after the user moved on.
   const requestCall = () => {
     void task.run(async () => {
-      if (access.notice || access.error)
-        throw access.error || new ProductError(access.notice || 'error.generic')
-      if (!conversation)
-        throw new ProductError('chat.unavailable')
-      await startConversationCall(conversation, id)
+      try {
+        if (access.notice || access.error)
+          throw access.error || new ProductError(access.notice || 'error.generic')
+        if (!conversation)
+          throw new ProductError('chat.unavailable')
+        await startConversationCall(conversation, id)
+      } catch (error) {
+        showProductToast(errorMessage(error, tr))
+      }
     })
   }
 
@@ -326,6 +336,8 @@ function SessionChat ({ id, messageID }: { id: string, messageID?: string }) {
         }}
         messageActions={rows.messageActions}
       />
+      {/* Last, so it draws over the chat. Only while in front, as the chat list does. */}
+      {front && <ProductToast />}
     </View>
   )
 }

@@ -12,6 +12,6 @@ test('does not send duplicate client records when authority owns delivery', asyn
  let response = { room: payload.room, caller: 'a', callee: 'b', status: 'ringing', created: 1, expires: 45000, members: {}, serverRecordDelivery: true }
  const c = createServerCallController({ request: async () => [response], record: async (...args) => sent.push(args) })
  c.reset('a'); await c.poll(); response = {...response,status:'canceled'}
- await c.finish('cancel')
+ await c.finish()
  assert.equal(sent.length, 0)
 })

@@ -4,7 +4,8 @@ import { useLocalSearchParams, useNavigation, useRouter, type Href } from 'expo-
 import { login, useOpenIM } from '../application/store'
 import { useT } from '../i18n'
 import { type NavigationWithTransitions, onOpeningTransition } from '../navigation/opening-transition'
-import { errorMessage } from '../shared/error-message'
+import { errorKey, errorMessage } from '../shared/error-message'
+import { useInFront } from '../shared/useInFront'
 import {
   AuthButton,
   AuthField,
@@ -34,9 +35,14 @@ export default function LoginScreen () {
     touched.current = true
     setAccount(lastAccount.account)
   }, [lastAccount, params.email])
-  // A refused sign-in edges both fields in red, and the sprite slumps, until the user types again.
+  // A failed sign-in slumps the sprite until the user types again. Only the field the server said
+  // is wrong is edged in red: an unknown account the email, a wrong password both (the server does
+  // not say which). A connection problem or a timeout is not the user's typing, so neither is red.
   const [refused, setRefused] = useState(false)
   const failed = refused && !!state.error && !state.busy
+  const failure = failed ? errorKey(state.error) : undefined
+  const wrongAccount = failure === 'serverError.20001' || failure === 'serverError.20002'
+  const wrongPassword = failure === 'serverError.20001'
   // Typing again also puts away the refusal's notice. A notice the page opened with (why the user
   // was signed out) stays: it was never a refusal. The next refusal is a new error, and shows.
   const [dismissed, setDismissed] = useState<unknown>()
@@ -83,6 +89,8 @@ export default function LoginScreen () {
       return
     return onOpeningTransition(navigation, 'transitionEnd', () => passwordField.current?.focus())
   }, [filled, navigation])
+  // 注册 and 忘记密码 open over this page: the sprite holds still under them, not looping unseen.
+  const covered = !useInFront()
   const navigate = (mode: 'register' | 'reset') =>
     router.push({ pathname: `/auth/${mode}`, params: { email: account.trim() } } as Href)
   const submit = () => {
@@ -97,6 +105,7 @@ export default function LoginScreen () {
       subtitle={tr('auth.loginSubtitle')}
       mood={mood}
       typed={account.length}
+      covered={covered}
       end={(
         <AuthPrompt text={tr('auth.noAccount')}>
           <AuthLink title={tr('auth.register')} disabled={state.busy} onPress={() => navigate('register')} />
@@ -113,7 +122,7 @@ export default function LoginScreen () {
         onChangeText={type}
         onFocus={() => setFocused('email')}
         onBlur={blur}
-        invalid={failed}
+        invalid={wrongAccount}
         editable={!state.busy}
       />
       <AuthField
@@ -130,7 +139,7 @@ export default function LoginScreen () {
         onChangeText={typePassword}
         onFocus={() => setFocused('password')}
         onBlur={blur}
-        invalid={failed}
+        invalid={wrongPassword}
         editable={!state.busy}
         returnKeyType='go'
         onSubmitEditing={submit}

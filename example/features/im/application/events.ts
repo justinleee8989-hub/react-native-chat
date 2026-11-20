@@ -14,7 +14,9 @@ export function subscribeEvents (
   messaging: Messaging,
   logout: (reason?: MessageKey) => Promise<void>,
   epoch: number,
-  receiveCall: (message: IMMessage) => void = () => {}
+  receiveCall: (message: IMMessage) => void = () => {},
+  // The IM connection is back: anything said while it was down may not arrive as a message.
+  connected: () => void = () => {}
 ) {
   const disposers: (() => void)[] = []
   const on = (event: string, handler: (data: unknown) => void) => {
@@ -42,7 +44,10 @@ export function subscribeEvents (
     if (runtime.state.status !== offlineStatus)
       runtime.update({ status: 'connecting' })
   })
-  on('onConnectSuccess', () => runtime.update({ status: 'connected' }))
+  on('onConnectSuccess', () => {
+    runtime.update({ status: 'connected' })
+    connected()
+  })
   on('onConnectFailed', () => runtime.update({ status: offlineStatus }))
   on('onSyncServerStart', () => runtime.update({ status: 'syncing' }))
   on('onSyncServerFinish', () => {

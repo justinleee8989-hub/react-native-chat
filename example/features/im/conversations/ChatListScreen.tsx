@@ -22,7 +22,9 @@ import { useStartupReadiness } from '../navigation/StartupReadiness'
 import { useChatEntry } from '../navigation/useChatEntry'
 import { ConnectionStatus } from '../shared/ConnectionStatus'
 import { errorMessage } from '../shared/error-message'
+import { ProductToast } from '../shared/ProductToast'
 import { Confirm } from '../shared/shared'
+import { useInFront } from '../shared/useInFront'
 import { useTask } from '../shared/useTask'
 import { useProductLayout, useProductScheme } from '../ui/preferences'
 import { ProductHeader, ProductSearch, ProductSheet } from '../ui/primitives'
@@ -78,6 +80,8 @@ function SessionChatList ({ archived, autoRefresh }: { archived: boolean, autoRe
   const [selected, setSelected] = useState<string[] | null>(null)
   const [deleting, setDeleting] = useState<string[]>([])
   const refreshing = useRef(false)
+  // A chat opened over this list shows its own toasts.
+  const front = useInFront()
   useFocusEffect(
     useCallback(() => {
       if (!state.session || !autoRefresh)
@@ -411,6 +415,10 @@ function SessionChatList ({ archived, autoRefresh }: { archived: boolean, autoRe
           />
         )}
       </View>
+      {/* The list tabs have no ProductPage, so they host toasts here (a call that fails to connect
+          while this list is showing), only while in front, on a phone: on a desktop the chat
+          beside it, or the empty pane, shows them. */}
+      {front && !desktop && <ProductToast />}
     </SafeAreaView>
   )
 }

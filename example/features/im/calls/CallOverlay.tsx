@@ -1,9 +1,10 @@
-import React, { useEffect, useRef, useSyncExternalStore } from 'react'
+import React, { useEffect, useEffectEvent, useRef, useSyncExternalStore } from 'react'
 import { AppState, Platform, View } from 'react-native'
 import { useRouter } from 'expo-router'
 import { calls, useOpenIM } from '../application/store'
 import { useT } from '../i18n'
 import { errorMessage } from '../shared/error-message'
+import { showProductToast } from '../shared/ProductToast'
 import { useTask } from '../shared/useTask'
 import { ProductModal } from '../ui/ProductModal'
 import { CallControl, CallPresentation } from './CallPresentation'
@@ -20,15 +21,24 @@ export default function CallOverlay () {
   const ringing = call?.phase === 'incoming' || call?.phase === 'outgoing'
   useEffect(() => {
     const timer = setInterval(calls.tick, 1000)
+    // A call goes on while the app is in the background, ringing or connected.
     const subscription = AppState.addEventListener('change', status => {
-      if (status === 'background')
-        void calls.finish('end').catch(() => {})
+      // A call that rang while the app was away may never have reached it as a message.
+      if (status === 'active')
+        calls.recheck()
     })
     return () => {
       clearInterval(timer)
       subscription.remove()
     }
   }, [])
+  // A call answered and ended before it ever connected here passes in a toast, like the one the
+  // call page shows when the other side ends it before the media connected.
+  const sayEndedBeforeConnect = useEffectEvent(() => showProductToast(tr('call.endedBeforeConnect')))
+  useEffect(() => {
+    if (state.notice === 'call.endedBeforeConnect')
+      sayEndedBeforeConnect()
+  }, [state.notice])
   const playRingtone = useRingtone(ringing && call?.media.speaker !== false)
   useEffect(() => {
     if (!call) {
@@ -57,7 +67,7 @@ export default function CallOverlay () {
       : undefined
   const finish = () => {
     if (!task.busy)
-      void task.run(() => calls.finish(call?.phase === 'incoming' ? 'reject' : 'cancel'))
+      void task.run(calls.finish)
   }
   return (
     <ProductModal

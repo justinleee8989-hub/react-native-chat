@@ -88,6 +88,21 @@ it('keeps moving when left alone, and stops every timer when the page goes', asy
   expect(await rescheduled()).toBe(quiet)
 })
 
+it('keeps moving for as long as the page shows, and holds still while another page covers it', async () => {
+  const view = await mount(<AuthMascot />)
+  await act(async () => {
+    jest.advanceTimersByTime(60000)
+  })
+  // No time limit on the login page itself.
+  expect(await rescheduled()).toBeGreaterThan(quiet)
+  await view.rerender(<AuthMascot paused />)
+  // Covered: every loop, random move and blink has stopped, so the app can go idle.
+  expect(await rescheduled()).toBe(quiet)
+  await view.rerender(<AuthMascot />)
+  expect(await rescheduled()).toBeGreaterThan(quiet)
+  await view.unmount()
+})
+
 it('is a picture to a screen reader, on the app\'s gradient', async () => {
   const view = await mount(<AuthMascot />)
   const { root } = layers(view)

@@ -1,7 +1,7 @@
-import React, { useCallback, useLayoutEffect, useMemo, useRef } from 'react'
+import React, { useCallback, useLayoutEffect, useMemo, useRef, useSyncExternalStore } from 'react'
 import type { ChatProps, IMessage, MessageMenuItem } from '@kesha-antonov/react-native-chat'
 import { useRouter } from 'expo-router'
-import { loadServerHistory, reportError, retryMessage } from '@/features/im/application/store'
+import { calls, loadServerHistory, reportError, retryMessage } from '@/features/im/application/store'
 import { toMessage } from '@/features/im/domain/model'
 import type { GroupMessageReadInfo, IMMessage } from '@/features/im/domain/types'
 import { parseCallInvitation } from '../calls/invitation'
@@ -61,10 +61,22 @@ export function useChatRows ({
 
   // Typed as IMessage[] so `Chat` keeps IMessage as its message type.
   const extrasMap = extras.map
-  const messages = useMemo<IMessage[]>(
-    () => projectCallMessages(rawMessages, messageID ? [messageID] : []).map((message): RowMessage => {
+  // A call ended here shows as ended at once, not when the server's record of it arrives.
+  const callOutcomes = useSyncExternalStore(calls.subscribe, () => calls.snapshot().outcomes)
+  const messages = useMemo<IMessage[]>(() => {
+    // A call keeps one row, keyed by its room, whichever of its messages the row shows: when the
+    // call ends the server's record replaces the invitation under a new ID, and as a new row it
+    // was laid out at an estimated height, then measured, and the list jumped. Under the same key
+    // it keeps the row's height and the list stays put.
+    const callRows = new Set<string>()
+    return projectCallMessages(rawMessages, messageID ? [messageID] : [], callOutcomes).map((message): RowMessage => {
+      const room = messageCallSignal(message)?.room
+      const listKey = room && !callRows.has(room) ? `call:${room}` : undefined
+      if (room)
+        callRows.add(room)
       const mapped: RowMessage = {
         ...extrasMap(toMessage(message, tr)),
+        ...(listKey ? { listKey } : {}),
         imRaw: message,
         imReadCount: groupReadCount(message, readInfo?.[message.clientMsgID]?.readCount),
       }
@@ -81,9 +93,8 @@ export function useChatRows ({
       return messageCallSignal(message) || parseCallInvitation(message.textElem?.content || '')
         ? { ...mapped, text: '' }
         : mapped
-    }),
-    [rawMessages, messageID, extrasMap, readInfo, tr]
-  )
+    })
+  }, [rawMessages, messageID, callOutcomes, extrasMap, readInfo, tr])
 
   const latestRequestCall = useRef(requestCall)
   useLayoutEffect(() => {

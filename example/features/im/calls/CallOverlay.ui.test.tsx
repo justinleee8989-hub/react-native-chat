@@ -6,7 +6,7 @@ import { calls } from '../application/store'
 import { ProductError } from '../shared/product-error'
 import CallOverlay from './CallOverlay'
 const mockSnapshot: { active: undefined, notice: string, error: unknown } = { active: undefined, notice: 'call.canceled', error: '' }
-jest.mock('../application/store', () => ({ calls: { snapshot: () => mockSnapshot, subscribe: () => () => {}, tick: () => {}, finish: jest.fn(() => Promise.resolve()), accept: jest.fn(() => Promise.resolve()), setMediaPreference: jest.fn(), dismiss: () => {} }, useOpenIM: () => ({ session: { userID: 'me' }, conversations: [{ conversationID: 'c', userID: 'peer', showName: '真实联系人' }] }) }))
+jest.mock('../application/store', () => ({ calls: { snapshot: () => mockSnapshot, subscribe: () => () => {}, tick: () => {}, recheck: () => {}, finish: jest.fn(() => Promise.resolve()), accept: jest.fn(() => Promise.resolve()), setMediaPreference: jest.fn(), dismiss: () => {} }, useOpenIM: () => ({ session: { userID: 'me' }, conversations: [{ conversationID: 'c', userID: 'peer', showName: '真实联系人' }] }) }))
 jest.mock('expo-router', () => ({ useRouter: () => ({ push: () => {} }) }))
 jest.mock('./useRingtone', () => ({ useRingtone: () => () => {} }))
 jest.mock('../shared/useTask', () => ({ useTask: () => ({ run: (action: (...args: any[]) => unknown) => action(...(action.length ? [() => true] : [])), error: '', busy: false }) }))
@@ -52,20 +52,33 @@ const mockCall = (phase: 'incoming' | 'outgoing') => ({
   media: { microphone: true, camera: false, speaker: true },
 })
 
-it('routes incoming accept and reject buttons to their real call actions', async () => {
+it('routes incoming accept and decline buttons to answering and finishing the call', async () => {
   mockSnapshot.active = mockCall('incoming') as any
   const view = await render(<CallOverlay />)
   expect(view.getByText('邀请你进行音视频通话')).toBeTruthy()
   await fireEvent.press(view.getByRole('button', { name: '接听' }))
   expect(calls.accept).toHaveBeenCalledTimes(1)
   await fireEvent.press(view.getByRole('button', { name: '拒接' }))
-  expect(calls.finish).toHaveBeenCalledWith('reject')
+  expect(calls.finish).toHaveBeenCalledTimes(1)
 })
 
-it('routes an outgoing cancel button to the cancel call action', async () => {
+it('routes an outgoing cancel button to finishing the call', async () => {
   mockSnapshot.active = mockCall('outgoing') as any
   const view = await render(<CallOverlay />)
   expect(view.getByText('正在呼叫…')).toBeTruthy()
   await fireEvent.press(view.getByRole('button', { name: '取消' }))
-  expect(calls.finish).toHaveBeenCalledWith('cancel')
+  expect(calls.finish).toHaveBeenCalledTimes(1)
+})
+
+it('keeps a call going while the app is in the background', async () => {
+  let changed: (status: string) => void = () => {}
+  jest.spyOn(AppState, 'addEventListener').mockImplementation(((_: string, listener: (status: string) => void) => {
+    changed = listener; return { remove: () => {} }
+  }) as typeof AppState.addEventListener)
+  mockSnapshot.active = mockCall('outgoing') as any
+  const view = await render(<CallOverlay />)
+  changed('background')
+  changed('active')
+  expect(calls.finish).not.toHaveBeenCalled()
+  expect(view.getByText('正在呼叫…')).toBeTruthy()
 })

@@ -1,11 +1,16 @@
-import React, { useSyncExternalStore } from 'react'
+import React, { useLayoutEffect, useSyncExternalStore } from 'react'
 import { Text, View } from 'react-native'
 import { useProductLayout, useProductScheme } from '../ui/preferences'
 
 let message = ''
 let timer: ReturnType<typeof setTimeout> | undefined
+// Hosts inside a modal (the call page) that are mounted now. While one is, it alone shows the
+// toast: the pages under the modal still host theirs, and a screen reader would hear it twice.
+let modalHosts = 0
 const listeners = new Set<() => void>()
 const snapshot = () => message
+const covered = () => modalHosts > 0
+const notify = () => listeners.forEach(listener => listener())
 const subscribe = (listener: () => void) => {
   listeners.add(listener)
   return () => {
@@ -15,17 +20,29 @@ const subscribe = (listener: () => void) => {
 export function showProductToast (text: string) {
   clearTimeout(timer)
   message = text
-  listeners.forEach(listener => listener())
+  notify()
   timer = setTimeout(() => {
     message = ''
-    listeners.forEach(listener => listener())
+    notify()
   }, 1900)
 }
-export function ProductToast () {
+/** `modal`: this host is in a modal over every page, and shows the toast in their place. */
+export function ProductToast ({ modal = false }: { modal?: boolean }) {
   const text = useSyncExternalStore(subscribe, snapshot, snapshot)
+  const hidden = useSyncExternalStore(subscribe, covered, covered) && !modal
+  useLayoutEffect(() => {
+    if (!modal)
+      return
+    modalHosts++
+    notify()
+    return () => {
+      modalHosts--
+      notify()
+    }
+  }, [modal])
   const { desktop } = useProductLayout()
   const dark = useProductScheme() === 'dark'
-  return text ? (
+  return text && !hidden ? (
     <View
       pointerEvents='none'
       style={{

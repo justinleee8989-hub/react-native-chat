@@ -27,6 +27,12 @@ export async function authenticate (
         areaCode: '',
         phoneNumber: '',
       }),
+    }).catch(error => {
+      // No answer at all, as on the first sign-in after install while iOS still asks for local
+      // network access, or none within the timeout (the only thing that aborts this request): say
+      // it as a connection problem, not as a generic failure. It is not tried again, as a request
+      // that did reach the server would revoke the second one's token.
+      throw isNetworkFailure(error) || controller.signal.aborted ? new ProductError('auth.network') : error
     })
     const result = await response.json()
     // 20001 (wrong account or password) and the rest are explained by their code.
@@ -45,3 +51,11 @@ export async function authenticate (
     clearTimeout(timeout)
   }
 }
+
+/**
+ * No answer came at all (no network, refused, blocked). React Native's and the browser's fetch
+ * reject with a TypeError; expo/fetch, the global fetch on iOS and Android since Expo 58, rejects
+ * with a FetchError whose message it always starts with "fetch failed:".
+ */
+const isNetworkFailure = (error: unknown) =>
+  error instanceof TypeError || (error instanceof Error && error.message.startsWith('fetch failed:'))

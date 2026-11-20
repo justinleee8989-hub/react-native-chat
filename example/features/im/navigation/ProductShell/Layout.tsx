@@ -5,6 +5,7 @@ import CallHistoryScreen from '../../calls/CallHistoryScreen'
 import ContactsScreen from '../../contacts/ContactsScreen'
 import ChatListScreen from '../../conversations/ChatListScreen'
 import { useT } from '../../i18n'
+import { ProductToast } from '../../shared/ProductToast'
 import { useProductLayout } from '../../ui/preferences'
 import { ProductIcon } from '../../ui/ProductIcon'
 import { useProductTheme } from '../../ui/theme'
@@ -76,6 +77,9 @@ export default function ProductShell ({
             <Text style={{ fontSize: 14, color: t.text3, maxWidth: 280, textAlign: 'center' }}>
               {blank[1]}
             </Text>
+            {/* With no chat open, a call that ends comes back here, and the chat list beside it
+                shows no toasts on a desktop. The other lists are pages that show their own. */}
+            {desktop && section === 'chats' && <ProductToast />}
           </View>
         ) : (
           children

@@ -118,6 +118,8 @@ function AddFriend ({ session, chatURL, initialID }: { session: Session, chatURL
           placeholder={tr('addFriend.searchPlaceholder')}
           accessibilityLabel={tr('addFriend.searchLabel')}
           returnKeyType='search'
+          // IDs, emails and phone numbers are Latin text: start on a keyboard without a pinyin IME.
+          keyboardType='email-address'
           autoCapitalize='none'
           autoCorrect={false}
           value={query}

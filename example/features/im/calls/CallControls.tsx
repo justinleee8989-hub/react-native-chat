@@ -29,13 +29,19 @@ export async function startConversationCall (
   if (calls.snapshot().active)
     throw new ProductError('call.endCurrentFirst')
   const call = await calls.group(conversation.groupID, Crypto.randomUUID())
-  const invite = { room: call.room, expires: call.expires }
+  void inviteGroupWhenConnected(conversationID, { room: call.room, expires: call.expires })
+}
+// The group is invited only once the caller is in the call: one who cannot connect (the call page
+// says why and ends it) leaves no invitation to a call that is already over in the chat.
+async function inviteGroupWhenConnected (conversationID: string, invite: { room: string, expires: number }) {
+  if (!await calls.whenMediaReady(invite.room))
+    return
   try {
     await sendTextChecked(conversationID, formatCallInvitation(invite))
   } catch {
-    const sameCall = calls.snapshot().active?.room === call.room
+    const sameCall = calls.snapshot().active?.room === invite.room
     if (sameCall)
-      await calls.finish('end').catch(() => {})
+      await calls.finish().catch(() => {})
     calls.notifyError(new ProductError(sameCall ? 'call.groupInviteFailedEnded' : 'call.groupInviteFailed'))
   }
 }

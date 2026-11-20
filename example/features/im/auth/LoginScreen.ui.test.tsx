@@ -1,16 +1,23 @@
 import React from 'react'
 import { beforeEach, expect, it, jest } from '@jest/globals'
-import { fireEvent, render } from '@testing-library/react-native'
-import { ProductError } from '../shared/product-error'
+import { act, fireEvent, render } from '@testing-library/react-native'
+import { ProductError, ServerError } from '../shared/product-error'
 import LoginScreen from './LoginScreen'
 
 let mockState: Record<string, unknown>
 let mockParams: Record<string, string>
 let mockTransitionEnd: ((event: { data?: { closing?: boolean } }) => void) | undefined
 const mockFocus = jest.fn()
+let mockBlur: (() => void) | undefined
 const mockLogin = jest.fn()
 jest.mock('../application/store', () => ({ login: (...args: unknown[]) => mockLogin(...args), useOpenIM: () => mockState }))
 jest.mock('expo-router', () => ({
+  // Focused on mount, like a page that has just opened; `mockBlur` covers it with another.
+  useFocusEffect: (effect: () => void | (() => void)) => jest.requireActual<typeof import('react')>('react').useEffect(() => {
+    const blur = effect()
+    mockBlur = blur || undefined
+    return blur
+  }, [effect]),
   useLocalSearchParams: () => mockParams,
   useRouter: () => ({ push: jest.fn() }),
   useNavigation: () => ({
@@ -25,7 +32,9 @@ jest.mock('./AuthForm', () => {
   const { Pressable, Text, TextInput, View } = jest.requireActual<typeof import('react-native')>('react-native')
   return {
     // The sprite's state, where a test can read it.
-    AuthPage: ({ children, mood }: React.PropsWithChildren<{ mood?: string }>) => <View testID='page' accessibilityHint={mood}>{children}</View>,
+    AuthPage: ({ children, mood, covered }: React.PropsWithChildren<{ mood?: string, covered?: boolean }>) => (
+      <View testID='page' accessibilityHint={mood} accessibilityValue={{ text: covered ? 'covered' : 'shown' }}>{children}</View>
+    ),
     AuthField: (props: {
       label: string
       value: string
@@ -156,6 +165,34 @@ it('slumps the sprite and edges the fields in red after a refused sign-in, until
   mockState = { ...mockState, error: new ProductError('serverError.20001') }
   await view.rerender(<LoginScreen />)
   expect(view.getByText('账号或密码错误')).toBeTruthy()
+})
+
+it('edges in red only the fields the server said are wrong, never for a connection problem', async () => {
+  const view = await render(<LoginScreen />)
+  const hints = () => [view.getByLabelText('邮箱账号').props.accessibilityHint, view.getByLabelText('密码').props.accessibilityHint]
+  const refuse = async (error: unknown) => {
+    await fireEvent.changeText(view.getByLabelText('邮箱账号'), 'alice@example.com')
+    await fireEvent.changeText(view.getByLabelText('密码'), 'secret')
+    await fireEvent.press(view.getByRole('button', { name: '登录' }))
+    mockState = { ...mockState, busy: false, error }
+    await view.rerender(<LoginScreen />)
+  }
+  await refuse(new ProductError('auth.network'))
+  expect(view.getByText(/无法连接服务器/)).toBeTruthy()
+  expect(moodOf(view)).toBe('error')
+  expect(hints()).toEqual([undefined, undefined])
+  await refuse(new ServerError({ errCode: 20002 }))
+  expect(view.getByText('账号不存在')).toBeTruthy()
+  expect(hints()).toEqual(['invalid', undefined])
+  await refuse(new ServerError({ errCode: 20001 }))
+  expect(hints()).toEqual(['invalid', 'invalid'])
+})
+
+it('holds the sprite still while 注册 or 忘记密码 is open over the page', async () => {
+  const view = await render(<LoginScreen />)
+  expect(view.getByTestId('page').props.accessibilityValue).toEqual({ text: 'shown' })
+  await act(() => mockBlur?.())
+  expect(view.getByTestId('page').props.accessibilityValue).toEqual({ text: 'covered' })
 })
 
 it('keeps why the user was signed out while they type', async () => {

@@ -1,7 +1,7 @@
 import type { IMMessage } from '../domain/types'
 import type { Translate } from '../i18n/translate.ts'
 import { readReply } from '../messages/composer.ts'
-import { parseSignal } from './signaling.ts'
+import { encodeSignal, parseSignal, type CallSignal } from './signaling.ts'
 
 export function messageCallSignal (message?: IMMessage) {
   return message?.contentType === 101 && !message.groupID ? parseSignal(message.textElem?.content || '') : undefined
@@ -15,7 +15,11 @@ function keyFor (message: IMMessage) {
 }
 // This is a view only: the surviving row retains its real SDK ID and sender so
 // revoke, reply, forwarding and read receipts never target a synthetic message.
-export function projectCallMessages (messages: IMMessage[], preservedIDs: string[] = []) {
+//
+// `outcomes` (by room) are how calls ended by the server's answer, before its record of them
+// arrives: until then the call's invitation shows that ending.
+export function projectCallMessages (messages: IMMessage[], preservedIDs: string[] = [], outcomes: Record<string, CallSignal> = {}) {
+  messages = withOutcomes(messages, outcomes)
   const preserved = new Set(preservedIDs)
   for (const message of messages) {
     const quoted = message.quoteElem?.quoteMessage || readReply(message)
@@ -38,6 +42,23 @@ export function projectCallMessages (messages: IMMessage[], preservedIDs: string
     const key = keyFor(message)
     const final = key ? latest.get(key) : undefined
     return preserved.has(message.clientMsgID) || !final || final === message || messageCallSignal(final)?.version !== 2 && message.sendTime > final.sendTime
+  })
+}
+function withOutcomes (messages: IMMessage[], outcomes: Record<string, CallSignal>) {
+  if (!Object.keys(outcomes).length)
+    return messages
+  const recorded = new Set<string>()
+  for (const message of messages) {
+    const signal = messageCallSignal(message)
+    if (signal?.version === 2)
+      recorded.add(signal.room)
+  }
+  return messages.map(message => {
+    const signal = messageCallSignal(message)
+    const outcome = signal?.kind === 'invite' && !recorded.has(signal.room) ? outcomes[signal.room] : undefined
+    return outcome && outcome.expires === signal?.expires && message.sendID === outcome.caller && message.recvID === outcome.callee
+      ? { ...message, textElem: { ...message.textElem, content: encodeSignal(outcome) } }
+      : message
   })
 }
 export function callMessageLabel (message: IMMessage, self: string, tr: Translate) {
