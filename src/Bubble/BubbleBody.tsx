@@ -4,7 +4,7 @@ import { Text, View } from 'react-native'
 import { BubbleTail, GradientBubbleBackground } from '../components/BubbleBackground'
 import { BubbleHighlightTint, useMessageHighlightToken } from '../components/messageHighlight'
 import { useTheme, useThemedStyles } from '../hooks/useTheme'
-import { IMessage } from '../Models'
+import { IMessage, messageListKey } from '../Models'
 import { getNameColor } from '../Theme'
 import { renderComponentOrElement } from '../utils'
 import { BubbleContent, ReactionsDisplayProps } from './BubbleContent'
@@ -44,7 +44,7 @@ function BubbleSurface<TMessage extends IMessage> ({ bubble, layout }: { bubble:
           <GradientBubbleBackground
             stops={gradientStops!}
             mode={theme.bubble.outgoingGradientMode}
-            messageId={currentMessage._id}
+            rowKey={messageListKey(currentMessage)}
             bottomGap={isGroupedWithNext ? theme.spacing.withinGroup : theme.spacing.betweenGroups}
             cornerStyle={cornerStyle}
             tailSide={tailSide}

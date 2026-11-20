@@ -41,7 +41,7 @@ export interface BubbleGradientStore {
    * placed it. One shared value per message, so a row that moves re-runs its own bubble's
    * worklets and no other's.
    */
-  cellLayout: (messageId: string) => SharedValue<{ y: number, height: number } | undefined>
+  cellLayout: (rowKey: string) => SharedValue<{ y: number, height: number } | undefined>
   isInverted: boolean
 }
 
@@ -147,7 +147,8 @@ export const linearGradientStyle = (stops: string[]): ViewStyle => {
 interface GradientBackgroundProps {
   stops: string[]
   mode: 'screen' | 'bubble' | 'window'
-  messageId: string | number
+  /** The bubble's row key in the message list (`messageListKey`), whose position it paints from. */
+  rowKey: string
   /** Space under the bubble inside its list cell (the gap to the next row). */
   bottomGap: number
   /** The body's corner radii, so the fill is clipped like the bubble. */
@@ -170,9 +171,9 @@ const evenStops = (count: number) => {
  * list-tall gradient and slides it by its own position, from the cell layout and the scroll
  * offset - no measuring on the UI thread.
  */
-const ScreenGradientBackground = ({ stops, messageId, bottomGap, cornerStyle, tailSide, store }: GradientBackgroundProps & { store: BubbleGradientStore }) => {
+const ScreenGradientBackground = ({ stops, rowKey, bottomGap, cornerStyle, tailSide, store }: GradientBackgroundProps & { store: BubbleGradientStore }) => {
   const { scrolledY, listHeight, isInverted, windowFrame } = store
-  const cellLayout = useMemo(() => store.cellLayout(String(messageId)), [store, messageId])
+  const cellLayout = useMemo(() => store.cellLayout(rowKey), [store, rowKey])
 
   // The gradient slides with the scroll on every frame, so it is one worklet that computes the
   // bubble's bottom edge (in points from the top of the list) and the layer's offset together:
@@ -198,15 +199,15 @@ const ScreenGradientBackground = ({ stops, messageId, bottomGap, cornerStyle, ta
       <View pointerEvents='none' style={[StyleSheet.absoluteFill, styles.clip, { backgroundColor: stops[stops.length - 1] }, cornerStyle]}>
         <Animated.View style={[styles.layer, linearGradientStyle(stops), layerStyle]} />
       </View>
-      {tailSide && <ScreenGradientTail stops={stops} messageId={messageId} bottomGap={bottomGap} side={tailSide} store={store} />}
+      {tailSide && <ScreenGradientTail stops={stops} rowKey={rowKey} bottomGap={bottomGap} side={tailSide} store={store} />}
     </>
   )
 }
 
 // Mount the tail worklet only when a tail is visible; rounded bubbles need no color sampling.
-const ScreenGradientTail = ({ stops, messageId, bottomGap, side, store }: Pick<GradientBackgroundProps, 'stops' | 'messageId' | 'bottomGap'> & { side: 'left' | 'right', store: BubbleGradientStore }) => {
+const ScreenGradientTail = ({ stops, rowKey, bottomGap, side, store }: Pick<GradientBackgroundProps, 'stops' | 'rowKey' | 'bottomGap'> & { side: 'left' | 'right', store: BubbleGradientStore }) => {
   const { scrolledY, listHeight, isInverted, windowFrame } = store
-  const cellLayout = useMemo(() => store.cellLayout(String(messageId)), [store, messageId])
+  const cellLayout = useMemo(() => store.cellLayout(rowKey), [store, rowKey])
   const positions = evenStops(stops.length)
   // The tail samples the gradient at the bubble's bottom, live. Its colour snaps to one of
   // TAIL_COLOR_STEPS along the gradient: the tail is an SVG path, and redrawing it on every frame

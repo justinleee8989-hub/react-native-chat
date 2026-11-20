@@ -61,6 +61,7 @@ export function ChatScreen () {
 ```ts
 interface IMessage {
   _id: string | number
+  listKey?: string          // the row's key in the list when not _id (a message replacing another keeps its row)
   text: string
   createdAt: Date | number
   user: { _id: string | number, name?: string, avatar?: string | number | (() => React.ReactNode) }
@@ -94,7 +95,7 @@ interface IMessage {
 
 Messages are newest-first by default (`isInverted` defaults to `true`). `Chat.append(previous, newMessages)`
 prepends correctly for that ordering. The list itself (Legend List) renders oldest first, so list
-indexes count from the oldest message; scroll to a message with `scrollToKey({ key: String(_id) })`.
+indexes count from the oldest message; scroll to a message with `scrollToKey({ key: listKey ?? String(_id) })`.
 
 Status is app-owned: send a message with `pending: true`, then set `sent`, then `received` as your
 backend confirms. Voice notes, files and media show the same clock / ✓ / ✓✓.

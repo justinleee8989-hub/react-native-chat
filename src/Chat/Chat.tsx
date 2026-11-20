@@ -13,7 +13,7 @@ import { MediaViewerHost } from '../components/mediaViewer/MediaViewerHost'
 import { TextHighlightContext } from '../components/textHighlight'
 import { TEST_ID } from '../Constant'
 import { AnimatedList } from '../MessagesContainer'
-import { IMessage, User } from '../Models'
+import { IMessage, messageListKey, User } from '../Models'
 import stylesCommon from '../styles'
 import { renderComponentOrElement } from '../utils'
 import { ChatBackground } from './ChatBackground'
@@ -91,15 +91,16 @@ export function Chat<TMessage extends IMessage = IMessage> (
 
   useImperativeHandle(props.chatRef, () => ({
     scrollToMessage: (messageId, options) => {
+      const message = messagesRef.current.find(item => item._id === messageId)
       messagesContainerRef.current?.scrollToKey({
-        key: String(messageId),
+        key: message ? messageListKey(message) : String(messageId),
         animated: options?.animated ?? true,
         viewPosition: options?.viewPosition ?? 0.5,
       })
       if (options?.isHighlighted)
         highlightStore.highlight(messageId)
     },
-  }), [messagesContainerRef, highlightStore])
+  }), [messagesContainerRef, messagesRef, highlightStore])
 
   // Rebuilt on the way down to the list, so it has to keep its identity across renders that
   // change nothing: it is passed through `MessagesContainer` into every row, and `Item`'s memo

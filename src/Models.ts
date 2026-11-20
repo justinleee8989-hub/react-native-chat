@@ -98,6 +98,14 @@ export interface LinkPreview {
 
 export interface IMessage {
   _id: string | number
+  /**
+   * The message's row key in the list, when it is not `_id`. A message that takes the place of
+   * another on screen (a call's final record replacing its invitation, say) and takes over its
+   * key keeps the row, its measured height and the list's scroll position: under a new key the
+   * row is laid out at an estimated height first, and the list jumps when it is measured.
+   * Unique among the messages shown.
+   */
+  listKey?: string
   text: string
   /** A Date, or a timestamp in milliseconds (as `Date.now()` gives). */
   createdAt: Date | number
@@ -350,3 +358,7 @@ export interface MediaPlaybackProps {
   /** A view-once note finished playing; the app should remove it. */
   onViewOnceEnd?: (message: IMessage) => void
 }
+
+/** A message's row key in the message list: its `listKey`, or its `_id`. */
+export const messageListKey = (message: Pick<IMessage, '_id' | 'listKey'>) =>
+  message.listKey ?? String(message._id)

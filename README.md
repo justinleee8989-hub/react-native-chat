@@ -522,6 +522,8 @@ Messages, system messages, and quick replies follow the structure defined in [Mo
 ```typescript
 interface IMessage {
   _id: string | number
+  /** The row's key in the list when not `_id`: a message replacing another on screen takes over its key, keeping its row and the scroll position */
+  listKey?: string
   text: string
   createdAt: Date | number
   user: User

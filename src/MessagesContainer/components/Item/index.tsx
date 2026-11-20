@@ -4,7 +4,7 @@ import Animated, { useAnimatedStyle, useDerivedValue } from 'react-native-reanim
 import { UnreadSeparator } from '../../../components/UnreadSeparator'
 import { Day } from '../../../Day'
 import { Message, MessageProps } from '../../../Message'
-import { IMessage } from '../../../Models'
+import { IMessage, messageListKey } from '../../../Models'
 import { isSameDay } from '../../../utils'
 import { MessageRowConfigContext, useRowSettings } from '../../rowConfig'
 import { useRowEntry } from '../../rowStore'
@@ -148,7 +148,7 @@ const ItemComponent = <TMessage extends IMessage>(props: ItemProps<TMessage>) =>
 
   return (
     // do not remove key. it helps to get correct position of the day container
-    <View key={props.currentMessage._id.toString()}>
+    <View key={messageListKey(props.currentMessage)}>
       {isDayBoundary && (isDayAnimationEnabled
         ? <AnimatedDayWrapper<TMessage> {...props} />
         : <DayWrapper<TMessage> {...messageProps as MessageProps<TMessage>} />)}

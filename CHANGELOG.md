@@ -2,8 +2,14 @@
 
 ## [Unreleased]
 
+### ✨ Features
+- `IMessage.listKey` sets a message's row key in the list, so a message that replaces another on screen keeps its row, its height and the scroll position
+
 ### 🐛 Fixes
 - On web, a wallpaper `pattern` given as a required image tiles over the whole chat instead of drawing once in the corner
+
+### ⚡ Performance
+- On iOS and Android, an open chat no longer runs a callback on every frame while nothing moves, so the app can go idle and the screen can lower its refresh rate
 
 ## [6.1.5] - 2026-11-07
 

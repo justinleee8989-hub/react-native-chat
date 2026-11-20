@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { LayoutChangeEvent } from 'react-native'
 import { SharedValue, useDerivedValue, useSharedValue } from 'react-native-reanimated'
 
-import { IMessage } from '../Models'
+import { IMessage, messageListKey } from '../Models'
 import { CONTENT_PADDING_BOTTOM, ListState } from './listState'
 import { AnimatedListProps } from './types'
 
@@ -100,7 +100,7 @@ export function useRowsHeight (
     // content height off, all of them the gradient's last colour. Start from the last row's end.
     const lastMessage = orderedData[orderedData.length - 1]
     if (lastMessage) {
-      const lastId = String(lastMessage._id)
+      const lastId = messageListKey(lastMessage)
       const position = state.positionByKey(lastId)
       if (position != null)
         rowsHeight.set(position + (state.sizes.get(lastId) ?? 0))

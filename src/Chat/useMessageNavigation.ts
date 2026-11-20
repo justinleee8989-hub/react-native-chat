@@ -3,7 +3,7 @@ import { MediaPlaybackController } from '../components/mediaPlayback'
 import { createMessageHighlightStore } from '../components/messageHighlight'
 import { AnimatedList } from '../MessagesContainer'
 import { PageDownReturn } from '../MessagesContainer/pageDownReturn'
-import { IMessage, ReplyMessage } from '../Models'
+import { IMessage, messageListKey, ReplyMessage } from '../Models'
 
 /**
  * Moving around the list: scrolling to a message (from the now-playing bar or a quote),
@@ -29,11 +29,12 @@ export function useMessageNavigation<TMessage extends IMessage> ({
 
   // The now-playing bar scrolls to the playing message.
   const scrollToMessage = useCallback((messageId: string | number) => {
-    if (!messagesRef.current.some(message => message._id === messageId))
+    const message = messagesRef.current.find(item => item._id === messageId)
+    if (!message)
       return
 
     // By key: the list reaches a row it has not measured yet, far up the history, too.
-    messagesContainerRef.current?.scrollToKey({ key: String(messageId), animated: true, viewPosition: 0.5 })
+    messagesContainerRef.current?.scrollToKey({ key: messageListKey(message), animated: true, viewPosition: 0.5 })
   }, [messagesContainerRef, messagesRef])
 
   // Tapping a quote jumps to the message it quotes and flashes it. The scroll-to-bottom button

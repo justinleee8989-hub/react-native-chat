@@ -1,7 +1,7 @@
 import React, { useCallback, useLayoutEffect, useMemo, useState } from 'react'
 import { SharedValue } from 'react-native-reanimated'
 
-import { IMessage } from '../Models'
+import { IMessage, messageListKey } from '../Models'
 import { createStore } from '../store'
 import { MessageRow } from './components/Item'
 import { RowTargets, useStableRowConfig } from './rowConfig'
@@ -116,7 +116,7 @@ export function useMessageRows<TMessage extends IMessage> (
     <MessageRow id={String((item as TMessage)._id)} />
   , [])
 
-  const keyExtractor = useCallback((item: unknown) => (item as TMessage)._id.toString(), [])
+  const keyExtractor = useCallback((item: unknown) => messageListKey(item as TMessage), [])
 
   return { rowStore, orderedData, initialScroll, rowConfig, rowTargets, renderItem, keyExtractor }
 }

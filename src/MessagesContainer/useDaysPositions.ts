@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from 'react'
 import { SharedValue } from 'react-native-reanimated'
 
-import { IMessage } from '../Models'
+import { IMessage, messageListKey } from '../Models'
 import { isSameDay } from '../utils'
 import { ListState } from './listState'
 import { MessageRowStore } from './rowStore'
@@ -64,19 +64,20 @@ export function useDaysPositions<TMessage extends IMessage> ({
     const initial: DaysPositions = {}
     const unsubscribes = dayStartIds.map(id => {
       const message = rowStore.getMessage(id)
+      const key = message ? messageListKey(message) : id
       const date = new Date(message?.createdAt ?? 0)
       const entry = (y: number): DaysPositions[string] => ({
         x: 0,
         width: 0,
         y,
-        height: state.sizes.get(id) ?? 0,
+        height: state.sizes.get(key) ?? 0,
         createdAt: date.getTime(),
         dayKey: date.getFullYear() * 10000 + date.getMonth() * 100 + date.getDate(),
       })
-      const y = state.positionByKey(id)
+      const y = state.positionByKey(key)
       if (y != null)
         initial[id] = entry(y)
-      return state.listenToPosition(id, position => {
+      return state.listenToPosition(key, position => {
         if (pending == null)
           pending = {}
         pending[id] = entry(position)
