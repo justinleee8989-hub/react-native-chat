@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { Platform, Text, View } from 'react-native'
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router'
-import { Room, RoomEvent } from 'livekit-client'
+import { Room, RoomEvent, type Participant } from 'livekit-client'
 import { calls, useOpenIM } from '../application/store'
 import LoginScreen from '../auth/LoginScreen'
 import type { MessageKey } from '../i18n'
@@ -10,6 +10,7 @@ import { errorMessage } from '../shared/error-message'
 import { ProductToast, showProductToast } from '../shared/ProductToast'
 import { useTask } from '../shared/useTask'
 import { ProductModal } from '../ui/ProductModal'
+import { callPage } from './call-page'
 import { CallControl, CallPresentation, callConnectionLabel } from './CallPresentation'
 import { callConnectError, callError, callJoinError } from './errors'
 import { assertActiveInvitation } from './invitation'
@@ -17,6 +18,9 @@ import { applyInitialMedia, stopLocalCapture } from './media-setup'
 import { MediaTrack, prepareAudio, releaseAudio, setCallSpeaker } from './platform'
 import { requestCallToken } from './token-api'
 import { useCallKeepAlive } from './useCallKeepAlive'
+
+/** How long a dropped call's page says so before it closes. */
+const DROPPED_NOTICE_MS = 2000
 
 export default function CallScreen () {
   const {
@@ -98,12 +102,21 @@ function Call ({
   // own connection failed) is said as such, rather than the page just closing.
   const joined = useRef(false)
   const endedHere = useRef(false)
+  // A dropped call is said here, then the page closes by itself. A notice of its own could not
+  // open over this page while it closes: on iOS it would stay, unseen, and take every touch.
+  const [dropped, setDropped] = useState(false)
+  useEffect(() => callPage.open(), [])
   useEffect(() => {
     if (!managed || callState.active?.room === roomID)
       return
     void room.disconnect().catch(() => {})
-    if (!joined.current && !endedHere.current)
+    if (!joined.current && !endedHere.current) {
       showProductToast(translate.current('call.endedBeforeConnect'))
+    } else if (!endedHere.current && calls.snapshot().notice === 'call.droppedEnded') {
+      setDropped(true)
+      const timer = setTimeout(() => router.back(), DROPPED_NOTICE_MS)
+      return () => clearTimeout(timer)
+    }
     router.back()
   }, [managed, callState.active?.room, roomID, room, router])
   useFocusEffect(
@@ -238,13 +251,18 @@ function Call ({
   )
   const participants = [room.localParticipant, ...room.remoteParticipants.values()]
   const active = callState.active?.room === roomID ? callState.active : undefined
+  // The call this page shows, kept while it says the call dropped: the store has let it go by then.
+  const [lastActive, setLastActive] = useState(active)
+  if (active && active !== lastActive)
+    setLastActive(active)
+  const shown = active || (dropped ? lastActive : undefined)
   const conversation =
-    active && (active.groupID || active.peer)
+    shown && (shown.groupID || shown.peer)
       ? conversations.find(item =>
-        active.groupID ? item.groupID === active.groupID : item.userID === active.peer
+        shown.groupID ? item.groupID === shown.groupID : item.userID === shown.peer
       )
       : undefined
-  const name = conversation?.showName || active?.name || active?.peer || tr(active?.groupID ? 'call.group' : 'call.title')
+  const name = conversation?.showName || shown?.name || shown?.peer || tr(shown?.groupID ? 'call.group' : 'call.title')
   useCallKeepAlive(
     mediaSet && room.state !== 'disconnected' && (!managed || active)
       ? {
@@ -255,6 +273,24 @@ function Call ({
       : undefined
   )
   const disabled = task.busy || room.state !== 'connected'
+  // A camera turned off stays published, muted, and would show its last frame. One not yet
+  // subscribed has no stream: a video view mounted without one stays black on Android once it comes.
+  const shownTracks = (participant: Participant) =>
+    [...participant.trackPublications.values()].filter(
+      publication => publication.kind !== 'video' || (!publication.isMuted && !!publication.track)
+    )
+  const camera = (participant: Participant) => {
+    const publication = shownTracks(participant).find(item => item.kind === 'video')
+    return publication && { participant, publication }
+  }
+  // With one other person, their camera fills the page and yours sits in a corner; without
+  // theirs, yours fills it. A group shows every camera in a list.
+  const oneOnOne = !active?.groupID && participants.length <= 2
+  const own = camera(room.localParticipant)
+  const theirs = oneOnOne ? [...room.remoteParticipants.values()].map(camera).find(Boolean) : undefined
+  const stage = oneOnOne ? theirs || own : undefined
+  const inset = theirs && own
+  const placed = new Set([stage?.publication, inset?.publication])
   const peerAway = !!active && !active.groupID && peerSeen && room.state === 'connected' && room.remoteParticipants.size === 0
   const hangUp = () => {
     endedHere.current = true
@@ -268,47 +304,68 @@ function Call ({
     void room.disconnect().catch(() => {})
   }
   return (
-    <ProductModal onRequestClose={hangUp}>
+    <ProductModal onRequestClose={dropped ? () => router.back() : hangUp}>
       <CallPresentation
-        group={!!active?.groupID}
+        group={!!shown?.groupID}
         name={name}
-        id={active?.groupID || active?.peer || roomID}
+        id={shown?.groupID || shown?.peer || roomID}
         uri={conversation?.faceURL}
         status={
-          peerAway
-            ? tr('call.peerAway')
-            : room.state === 'connected' && connectedAt
-              ? `${Math.floor(elapsed / 60)
-                .toString()
-                .padStart(
-                  2,
-                  '0'
-                )}:${(elapsed % 60).toString().padStart(2, '0')}${active?.groupID ? ` · ${tr('chatInfo.memberCount', { count: participants.length })}` : ''}`
-              : tr(status)
+          dropped
+            ? tr('call.droppedEnded')
+            : peerAway
+              ? tr('call.peerAway')
+              : room.state === 'connected' && connectedAt
+                ? `${Math.floor(elapsed / 60)
+                  .toString()
+                  .padStart(
+                    2,
+                    '0'
+                  )}:${(elapsed % 60).toString().padStart(2, '0')}${active?.groupID ? ` · ${tr('chatInfo.memberCount', { count: participants.length })}` : ''}`
+                : tr(status)
         }
         error={task.error}
+        stage={stage && (
+          <MediaTrack
+            audible={active?.media.speaker !== false}
+            key={stage.publication.trackSid}
+            layout='stage'
+            participant={stage.participant}
+            publication={stage.publication}
+          />
+        )}
+        inset={inset && (
+          <MediaTrack
+            audible={active?.media.speaker !== false}
+            key={inset.publication.trackSid}
+            layout='inset'
+            participant={inset.participant}
+            publication={inset.publication}
+          />
+        )}
         media={
           <View style={{ width: '100%', marginTop: 12 }}>
-            {participants.map(participant => (
-              <React.Fragment key={participant.identity || 'self'}>
-                {[...participant.trackPublications.values()].some(
-                  publication => publication.kind === 'video'
-                ) && (
-                  <Text style={{ color: '#fff', fontSize: 12, marginTop: 4 }}>
-                    {participant.name || participant.identity || session.userID}
-                    {participant.isLocal ? tr('call.me') : ''}
-                  </Text>
-                )}
-                {[...participant.trackPublications.values()].map(publication => (
-                  <MediaTrack
-                    audible={active?.media.speaker !== false}
-                    key={publication.trackSid}
-                    participant={participant}
-                    publication={publication}
-                  />
-                ))}
-              </React.Fragment>
-            ))}
+            {participants.map(participant => {
+              const publications = shownTracks(participant).filter(publication => !placed.has(publication))
+              return (
+                <React.Fragment key={participant.identity || 'self'}>
+                  {publications.some(publication => publication.kind === 'video') && (
+                    <Text style={{ color: '#fff', fontSize: 12, marginTop: 4 }}>
+                      {participant.name || participant.identity || session.userID}
+                      {participant.isLocal ? tr('call.me') : ''}
+                    </Text>
+                  )}
+                  {publications.map(publication => (
+                    <MediaTrack
+                      audible={active?.media.speaker !== false}
+                      key={publication.trackSid}
+                      participant={participant}
+                      publication={publication}
+                    />
+                  ))}
+                </React.Fragment>
+              )
+            })}
           </View>
         }
       >
@@ -386,7 +443,7 @@ function Call ({
             }}
           />
         </View>
-        <CallControl label={tr('call.hangUp')} icon='phone' tone='red' onPress={hangUp} />
+        <CallControl label={tr('call.hangUp')} icon='phone' tone='red' disabled={dropped} onPress={hangUp} />
       </CallPresentation>
       {/* A failed call says why at once, here: this modal covers every other page's toast, and it
           can stay up for seconds after the failure, until the server ends the call. The pages

@@ -7,6 +7,7 @@ import { errorMessage } from '../shared/error-message'
 import { showProductToast } from '../shared/ProductToast'
 import { useTask } from '../shared/useTask'
 import { ProductModal } from '../ui/ProductModal'
+import { callPage } from './call-page'
 import { CallControl, CallPresentation } from './CallPresentation'
 import { useRingtone } from './useRingtone'
 
@@ -14,6 +15,7 @@ export default function CallOverlay () {
   const tr = useT()
   const { session, conversations } = useOpenIM()
   const state = useSyncExternalStore(calls.subscribe, calls.snapshot, calls.snapshot)
+  const covered = useSyncExternalStore(callPage.subscribe, callPage.covered, callPage.covered)
   const task = useTask()
   const router = useRouter()
   const navigated = useRef('')
@@ -53,10 +55,13 @@ export default function CallOverlay () {
       })
     }
   }, [call, router])
-  if (!session)
+  // On iOS this modal could not open over the call page, open or closing, and would take every
+  // touch unseen: it waits, ringing meanwhile, and shows once the page has closed.
+  if (!session || (covered && Platform.OS === 'ios'))
     return null
   const visible = !!call && call.phase !== 'connected'
-  const showNotice = !!state.error || state.notice === 'call.droppedEnded'
+  // A dropped call is said on its own page, which closes by itself.
+  const showNotice = !!state.error
   if (!visible && !showNotice)
     return null
   const conversation =

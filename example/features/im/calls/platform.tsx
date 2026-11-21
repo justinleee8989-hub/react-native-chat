@@ -27,17 +27,21 @@ export async function setCallSpeaker (enabled: boolean) {
 export function MediaTrack ({
   publication,
   participant,
+  layout,
 }: {
   publication: TrackPublication
   participant: Participant
   audible?: boolean
+  layout?: 'stage' | 'inset'
 }) {
   if (publication.kind !== Track.Kind.Video)
     return null
   return (
     <VideoTrack
       trackRef={{ participant, publication, source: publication.source }}
-      style={{ width: '100%', height: 240 }}
+      style={layout ? { width: '100%', height: '100%' } : { width: '100%', height: 240 }}
+      // Android draws each video on its own surface: the corner one has to sit above the stage.
+      zOrder={layout === 'inset' ? 1 : 0}
     />
   )
 }

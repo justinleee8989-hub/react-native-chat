@@ -1,9 +1,10 @@
 import React from 'react'
 import { AppState } from 'react-native'
 import { beforeEach, expect, it, jest } from '@jest/globals'
-import { fireEvent, render } from '@testing-library/react-native'
+import { act, fireEvent, render } from '@testing-library/react-native'
 import { calls } from '../application/store'
 import { ProductError } from '../shared/product-error'
+import { callPage } from './call-page'
 import CallOverlay from './CallOverlay'
 const mockSnapshot: { active: undefined, notice: string, error: unknown } = { active: undefined, notice: 'call.canceled', error: '' }
 jest.mock('../application/store', () => ({ calls: { snapshot: () => mockSnapshot, subscribe: () => () => {}, tick: () => {}, recheck: () => {}, finish: jest.fn(() => Promise.resolve()), accept: jest.fn(() => Promise.resolve()), setMediaPreference: jest.fn(), dismiss: () => {} }, useOpenIM: () => ({ session: { userID: 'me' }, conversations: [{ conversationID: 'c', userID: 'peer', showName: '真实联系人' }] }) }))
@@ -35,10 +36,10 @@ beforeEach(() => {
   jest.mocked(calls.accept).mockClear()
   jest.mocked(calls.finish).mockClear()
 })
-it('keeps the server disconnection notice visible', async () => {
+it('leaves a dropped call to its own page, which says so and closes', async () => {
   mockSnapshot.notice = 'call.droppedEnded'
   const view = await render(<CallOverlay />)
-  expect(view.getByText('知道了')).toBeTruthy()
+  expect(view.queryByText('知道了')).toBeNull()
   mockSnapshot.notice = 'call.canceled'
 })
 
@@ -60,6 +61,23 @@ it('routes incoming accept and decline buttons to answering and finishing the ca
   expect(calls.accept).toHaveBeenCalledTimes(1)
   await fireEvent.press(view.getByRole('button', { name: '拒接' }))
   expect(calls.finish).toHaveBeenCalledTimes(1)
+})
+
+it('waits on iOS until the call page has closed, so it never opens over it', async () => {
+  jest.useFakeTimers()
+  try {
+    mockSnapshot.active = mockCall('incoming') as any
+    const close = callPage.open()
+    const view = await render(<CallOverlay />)
+    expect(view.queryByText('邀请你进行音视频通话')).toBeNull()
+    close()
+    await act(async () => jest.advanceTimersByTime(500))
+    expect(view.queryByText('邀请你进行音视频通话')).toBeNull()
+    await act(async () => jest.advanceTimersByTime(100))
+    expect(view.getByText('邀请你进行音视频通话')).toBeTruthy()
+  } finally {
+    jest.useRealTimers()
+  }
 })
 
 it('routes an outgoing cancel button to finishing the call', async () => {

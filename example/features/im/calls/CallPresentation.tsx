@@ -1,7 +1,7 @@
 import React from 'react'
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg'
+import Svg, { Defs, LinearGradient, RadialGradient, Rect, Stop } from 'react-native-svg'
 import type { MessageKey } from '../i18n'
 import { useProductLayout } from '../ui/preferences'
 import { ProductAvatar } from '../ui/primitives'
@@ -81,6 +81,8 @@ export function CallPresentation ({
   error,
   children,
   media,
+  stage,
+  inset,
 }: React.PropsWithChildren<{
   name: string
   id: string
@@ -89,6 +91,10 @@ export function CallPresentation ({
   status: string
   error?: string
   media?: React.ReactNode
+  /** Video that fills the page, in place of the avatar. */
+  stage?: React.ReactNode
+  /** A small video in the corner, over the stage. */
+  inset?: React.ReactNode
 }>) {
   const { desktop } = useProductLayout()
   const { height } = useProductOverlayBounds()
@@ -115,55 +121,75 @@ export function CallPresentation ({
           boxShadow: desktop ? '0 30px 80px rgba(0,0,0,.5)' : undefined,
         }}
       >
-        <Svg pointerEvents='none' width='100%' height='100%' style={StyleSheet.absoluteFill}>
-          <Defs>
-            <RadialGradient
-              id='callGradient'
-              cx={0}
-              cy={0}
-              r={1}
-              gradientUnits='objectBoundingBox'
-              gradientTransform='matrix(1.2 0 0 0.8 0.5 0)'
-            >
-              <Stop offset='0%' stopColor='#2b3350' />
-              <Stop offset='60%' stopColor='#12141c' />
-              <Stop offset='100%' stopColor='#0a0a0d' />
-            </RadialGradient>
-          </Defs>
-          <Rect width='100%' height='100%' fill='url(#callGradient)' />
-        </Svg>
+        {stage ? (
+          <>
+            <View style={StyleSheet.absoluteFill}>{stage}</View>
+            {/* Shades the top and bottom so the name and the controls stay readable over the video. */}
+            <Svg pointerEvents='none' width='100%' height='100%' style={StyleSheet.absoluteFill}>
+              <Defs>
+                <LinearGradient id='callShade' x1={0} y1={0} x2={0} y2={1}>
+                  <Stop offset='0%' stopColor='#000' stopOpacity={0.55} />
+                  <Stop offset='25%' stopColor='#000' stopOpacity={0} />
+                  <Stop offset='60%' stopColor='#000' stopOpacity={0} />
+                  <Stop offset='100%' stopColor='#000' stopOpacity={0.7} />
+                </LinearGradient>
+              </Defs>
+              <Rect width='100%' height='100%' fill='url(#callShade)' />
+            </Svg>
+          </>
+        ) : (
+          <Svg pointerEvents='none' width='100%' height='100%' style={StyleSheet.absoluteFill}>
+            <Defs>
+              <RadialGradient
+                id='callGradient'
+                cx={0}
+                cy={0}
+                r={1}
+                gradientUnits='objectBoundingBox'
+                gradientTransform='matrix(1.2 0 0 0.8 0.5 0)'
+              >
+                <Stop offset='0%' stopColor='#2b3350' />
+                <Stop offset='60%' stopColor='#12141c' />
+                <Stop offset='100%' stopColor='#0a0a0d' />
+              </RadialGradient>
+            </Defs>
+            <Rect width='100%' height='100%' fill='url(#callGradient)' />
+          </Svg>
+        )}
         <ScrollView
           contentContainerStyle={{
             flexGrow: 1,
             alignItems: 'center',
-            paddingTop: desktop ? 64 : insets.top + 72,
+            paddingTop: stage ? (desktop ? 32 : insets.top + 24) : desktop ? 64 : insets.top + 72,
             paddingHorizontal: 24,
             paddingBottom: desktop ? 48 : insets.bottom + 48,
           }}
         >
-          <View style={{ width: 112, height: 112 }}>
-            <View
-              pointerEvents='none'
-              style={{
-                position: 'absolute',
-                inset: -14,
-                borderRadius: group ? 47.6 : 70,
-                borderWidth: 8,
-                borderColor: 'rgba(255,255,255,.04)',
-              }}
-            />
-            <View
-              pointerEvents='none'
-              style={{
-                position: 'absolute',
-                inset: -6,
-                borderRadius: group ? 39.6 : 62,
-                borderWidth: 6,
-                borderColor: 'rgba(255,255,255,.08)',
-              }}
-            />
-            <ProductAvatar group={group} id={id} title={name} uri={uri} size={112} />
-          </View>
+          {!stage && (
+            <View style={{ width: 112, height: 112 }}>
+              <View
+                pointerEvents='none'
+                style={{
+                  position: 'absolute',
+                  inset: -14,
+                  borderRadius: group ? 47.6 : 70,
+                  borderWidth: 8,
+                  borderColor: 'rgba(255,255,255,.04)',
+                }}
+              />
+              <View
+                pointerEvents='none'
+                style={{
+                  position: 'absolute',
+                  inset: -6,
+                  borderRadius: group ? 39.6 : 62,
+                  borderWidth: 6,
+                  borderColor: 'rgba(255,255,255,.08)',
+                }}
+              />
+              <ProductAvatar group={group} id={id} title={name} uri={uri} size={112} />
+            </View>
+          )}
           <Text
             numberOfLines={2}
             style={{
@@ -171,7 +197,7 @@ export function CallPresentation ({
               fontSize: 28,
               lineHeight: 34,
               fontWeight: '700',
-              marginTop: 26,
+              marginTop: stage ? 0 : 26,
               textAlign: 'center',
             }}
           >
@@ -200,6 +226,22 @@ export function CallPresentation ({
           <View style={{ flex: 1, minHeight: 24 }} />
           {children}
         </ScrollView>
+        {inset && (
+          <View
+            style={{
+              position: 'absolute',
+              top: desktop ? 112 : insets.top + 112,
+              right: 16,
+              width: 104,
+              height: 148,
+              borderRadius: 14,
+              overflow: 'hidden',
+              backgroundColor: '#000',
+            }}
+          >
+            {inset}
+          </View>
+        )}
       </View>
     </View>
   )
